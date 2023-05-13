@@ -1,0 +1,62 @@
+# used to test routes
+
+GET http://localhost:3000/api/posts/645f4636e5b42a263b5df79c
+
+###
+
+POST http://localhost:3000/api/posts
+Content-Type: application/json
+
+{
+    "creator_id": "6021fde84705d830b8f458ab",
+    "content_links": ["string1", "string2"]
+}
+
+###
+
+PATCH http://localhost:3000/api/posts/645f4575e5b42a263b5df79a
+Content-Type: application/json
+
+{
+    "content_links": "modifiedagain"
+}
+
+###
+
+DELETE http://localhost:3000/api/posts/645f4575e5b42a263b5df79a
+
+###
+
+GET http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/comments
+
+###
+
+POST http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/comments
+Content-Type: application/json
+
+{
+    "creator_id": "6021fde84705d830b8f458ab",
+    "content": "hello nice post 2"
+}
+
+###
+
+DELETE http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/comments/645f8730d46e16b104456e2e
+
+###
+
+POST http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/like
+Content-Type: application/json
+
+{
+    "creator_id": "6021fde84705d830b8f458ab"
+}
+
+###
+
+DELETE http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/like
+Content-Type: application/json
+
+{
+    "creator_id": "6021fde84705d830b8f458ab"
+}
