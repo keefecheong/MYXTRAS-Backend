@@ -1,7 +1,55 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    
+    email: {
+        type: String,
+        required: true
+    },
+    username: {
+        type: String,
+        required: true
+    },
+    profile_pic_link: {
+        type: String
+    },
+    biography: {
+        type: String,
+        default: function() {
+            return `Hi! I am ${this.username}.`;
+        }
+    },
+    following: {
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'User'
+        }],
+        default: []
+    },
+    followers: {
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'User'
+        }],
+        default: []
+    },
+    saved_posts: {
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'Post'
+        }],
+        default: []
+    },
+    is_admin: {
+        type: Boolean,
+        default: false
+    },
+    blocked: {
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'User'
+        }],
+        default: []
+    }
 });
 
 module.exports = mongoose.model('User', userSchema);

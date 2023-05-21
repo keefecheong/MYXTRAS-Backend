@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/post.js');
 const Comment = require('../models/comment.js');
+const User = require('../models/user.js');
 const multer = require('multer');
 const crypto = require('crypto');
 const { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } = require('firebase/storage');
@@ -16,6 +17,30 @@ router.get('/', async (req, res) => {
     }
     catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+// retrieve all posts by users followed
+router.get('/following/:userId', async (req, res) => {
+    let target;
+
+    try {
+        target = await User.findById(req.params.userId);
+
+        if (!target) {
+            return res.status(404).json({ message: 'Unable to find the specified user.' });
+        }
+
+        let posts = []
+
+        if (target.following.length > 0) {
+            posts = await Post.where('creator_id').in(target.following);
+        }
+
+        res.status(200).json(posts);
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
     }
 });
 
