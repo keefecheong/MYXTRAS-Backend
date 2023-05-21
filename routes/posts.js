@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/post.js');
 const Comment = require('../models/comment.js');
+const multer = require('multer');
+const crypto = require('crypto');
+const { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } = require('firebase/storage');
+
+const firebaseStorage = getStorage();
 
 // retrieve all posts
 router.get('/', async (req, res) => {
@@ -20,18 +25,32 @@ router.get('/:postId', getPost, async (req, res) => {
 });
 
 // create a post
-router.post('/', async (req, res) => {
-    // check if creator_id and content_links are provided in the body
+router.post('/', multerConfig.array('selectedImages'), multerErrorHandler, async (req, res) => {
+    // check if creator_id and images are provided in the body
     // if provided, continue to create post
     // otherwise, check which fields are missing and return 400 error
-    if (req.body.creator_id && req.body.content_links) {
-        const post = new Post({
-            creator_id: req.body.creator_id,
-            content_links: req.body.content_links
-        });
-    
+    const creatorPresent = req.body.creator_id != null;
+    const imagePresent = req.files.length > 0;
+
+    if (creatorPresent && imagePresent) {
         try {
+            const post = new Post({
+                creator_id: req.body.creator_id,
+                content_links: []
+            });
+
+            // save post to make post_id available
             await post.save();
+
+            // upload images and store the links in content_links of the new post
+            const uploadSuccessful = await uploadImages(req.files, post.content_links, post.id);
+
+            // if failed to upload images then delete the post from database and return error message
+            if (!uploadSuccessful) {
+                await Post.findByIdAndDelete(post.id);
+                res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+            }
+
             res.status(200).json({ message: 'Post created.' });
         }
         catch (error) {
@@ -39,10 +58,10 @@ router.post('/', async (req, res) => {
         }
     }
     else {
-        if (!req.body.creator_id && !req.body.content_links) {
+        if (!creatorPresent && !imagePresent) {
             res.status(400).json({ message: 'Creator and at least one image is required.' });
         }
-        else if (!req.body.creator_id) {
+        else if (!creatorPresent) {
             res.status(400).json({ message: 'Creator is required.' });
         }
         else {
@@ -52,15 +71,26 @@ router.post('/', async (req, res) => {
 });
 
 // modify a post
-router.patch('/:postId', getPost, async (req, res) => {
-    // check if content_links is provided in the body
+router.patch('/:postId', multerConfig.array('selectedImages'), multerErrorHandler, getPost, async (req, res) => {
+    // check if images are provided in the body
     // if provided, continue to update post,
     // otherwise, return 400 error
-    if (req.body.content_links) {
-        res.post.content_links = req.body.content_links;
-
+    if (req.files.length > 0) {
         try {
+            var newImageLinks = [];
+
+            const uploadSuccessful = await uploadImages(req.files, newImageLinks, req.params.postId);
+
+            // if failed to upload images then send error message
+            if (!uploadSuccessful) {
+                res.status(500).json({ message: 'Failed to update post, please try again later.' });
+            }
+
+            // otherwise update content_links and save the post
+            res.post.content_links = newImageLinks;
+            
             await res.post.save();
+
             res.status(200).json({ message: 'Post updated.' });
         }
         catch (error) {
@@ -75,6 +105,9 @@ router.patch('/:postId', getPost, async (req, res) => {
 // delete a post
 router.delete('/:postId', getPost, async (req, res) => {
     try {
+        // delete associated images
+        deleteImages(res.post.content_links);
+
         await Post.findByIdAndDelete(req.params.postId);
         res.status(200).json({ message: 'Post removed.' });
     }
@@ -95,7 +128,7 @@ router.get('/:postId/comments', getPost, async (req, res) => {
 });
 
 // create a comment and update the post's comments field
-router.post('/:postId/comments', getPost, async (req, res) => {
+router.post('/:postId/comments', express.json(), getPost, async (req, res) => {
     // check if creator_id and content are provided in the body
     // if provided, continue to create comment
     // otherwise, check which fields are missing and return 400 error
@@ -155,7 +188,7 @@ router.delete('/:postId/comments/:commentId', getPost, async (req, res) => {
 });
 
 // like a post and update the post's likes field
-router.post('/:postId/like', getPost, async (req, res) => {
+router.post('/:postId/like', express.json(), getPost, async (req, res) => {
     // check if creator_id is provided in the body
     // if provided, continue to add the like
     // otherwise, return 400 error
@@ -234,6 +267,95 @@ async function getPost(req, res, next) {
 
     res.post = target;
     next();
+}
+
+// set up multer to validate images
+const acceptedFileTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+const maxImageSize = 5242880;
+const maxImageCount = 10;
+
+const multerConfig = multer({
+    fileFilter: function(req, file, callback) {
+        if (acceptedFileTypes.indexOf(file.mimetype) != -1) {
+            callback(null, true);
+        }
+        else {
+            callback(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file), false);
+        }
+    },
+    limits: {
+        fileSize: maxImageSize,
+        files: maxImageCount
+    }
+});
+
+const multerErrorHandler = function(error, req, res, next) {
+    if (error instanceof multer.MulterError) {
+        var errorMessage = '';
+
+        if (error.code === "LIMIT_FILE_SIZE") {
+            errorMessage = `File is too large, maximum file size is ${maxFileSize}MB.`;
+        }
+        else if (error.code === "LIMIT_FILE_COUNT") {
+            errorMessage = `File limit reached, up to ${maxFileCount} files are allowed.`;
+        }
+        else if (error.code === "LIMIT_UNEXPECTED_FILE") {
+            errorMessage = `Illegal file type, allowed file types: ${acceptedFileTypes.join(', ')}`;
+        }
+
+        return res.status(400).json({ message: errorMessage });
+    }
+}
+
+// upload image to firebase storage and update image links
+// if uploading fails then delete all the uploaded images (ask user to retry later)
+async function uploadImages(images, imageLinks, postId) {
+    for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+
+        // create new file name with hash
+        const newName = crypto.createHash('md5').update(image.originalName).update(Date.now().toString()).digest('hex');
+
+        const metadata = {
+            contentType: image.mimetype
+        }
+
+        const imageRef = ref(storage, `posts/${postId}/${newName}`);
+        await uploadBytes(imageRef, image.buffer, metadata)
+            .then(async (result) => {
+                await getDownloadURL(result.ref)
+                    .then((downloadURL) => {
+                        imageLinks.push(downloadURL.split('&token')[0]);
+                    })
+                    .catch(async (error) => {
+                        console.log(error);
+                        deleteImages(imageLinks);
+                        return false;
+                    });
+
+            })
+            .catch(async (error) => {
+                console.log(error);
+                deleteImages(imageLinks);
+                return false;
+            });
+    }
+
+    return true;
+}
+
+// delete images based on a list of URLs from firebase storage
+function deleteImages(imageLinks) {
+    const baseURL = process.env.FIREBASE_STORAGE_BASE_URL;
+    
+    for (let i = 0; i < imageLinks.length; i++) {
+        let path = decodeURIComponent(imageLinks[i].replace(baseURL, '').split('?')[0]);
+        const imageRef = ref(firebaseStorage, path);
+        deleteObject(imageRef)
+            .catch((error) => {
+                console.log(error);
+            });
+    }
 }
 
 module.exports = router;

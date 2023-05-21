@@ -1,22 +1,35 @@
-// import required libraries
+// use dotenv for .env variables
 require('dotenv').config();
 
 const express = require('express');
 const app = express();
-const mongoose = require('mongoose');
 
-// make connection with mongodb (create .env file and put mongodb URL as variable DATABASE_URL)
+const cors = require('cors');
+app.use(cors());
+
+// make connection with mongodb
+const mongoose = require('mongoose');
 mongoose.connect(process.env.DATABASE_URL);
+
 const db = mongoose.connection;
 db.on('error', (error) => console.error(error));
 db.once('open', () => console.log('Connected to database.'));
 
-// use express json middleware
-app.use(express.json());
+// initialize Firebase (for storing files/images)
+const { initializeApp } = require('firebase/app');
+
+const firebaseConfig = {
+    apiKey: process.env.FIREBASE_API_KEY,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    appId: process.env.FIREBASE_APP_ID
+}
+
+const firebaseApp = initializeApp(firebaseConfig);
 
 // routes
 const postsRouter = require('./routes/posts.js');
 app.use('/api/posts', postsRouter);
 
-// start server (put port number as variable PORT in .env file)
+// start server
 app.listen(process.env.PORT, () => console.log(`Listening on Port ${process.env.PORT}...`));
