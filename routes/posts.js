@@ -9,6 +9,44 @@ const { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } = require('
 
 const firebaseStorage = getStorage();
 
+// set up multer to validate images
+const acceptedFileTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+const maxImageSize = 5242880;
+const maxImageCount = 10;
+
+const multerConfig = multer({
+    fileFilter: function(req, file, callback) {
+        if (acceptedFileTypes.indexOf(file.mimetype) != -1) {
+            callback(null, true);
+        }
+        else {
+            callback(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file), false);
+        }
+    },
+    limits: {
+        fileSize: maxImageSize,
+        files: maxImageCount
+    }
+});
+
+const multerErrorHandler = function(error, req, res, next) {
+    if (error instanceof multer.MulterError) {
+        var errorMessage = '';
+
+        if (error.code === "LIMIT_FILE_SIZE") {
+            errorMessage = `File is too large, maximum file size is ${maxFileSize}MB.`;
+        }
+        else if (error.code === "LIMIT_FILE_COUNT") {
+            errorMessage = `File limit reached, up to ${maxFileCount} files are allowed.`;
+        }
+        else if (error.code === "LIMIT_UNEXPECTED_FILE") {
+            errorMessage = `Illegal file type, allowed file types: ${acceptedFileTypes.join(', ')}`;
+        }
+
+        return res.status(400).json({ message: errorMessage });
+    }
+}
+
 // retrieve all posts
 router.get('/', async (req, res) => {
     try {
@@ -292,44 +330,6 @@ async function getPost(req, res, next) {
 
     res.post = target;
     next();
-}
-
-// set up multer to validate images
-const acceptedFileTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-const maxImageSize = 5242880;
-const maxImageCount = 10;
-
-const multerConfig = multer({
-    fileFilter: function(req, file, callback) {
-        if (acceptedFileTypes.indexOf(file.mimetype) != -1) {
-            callback(null, true);
-        }
-        else {
-            callback(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file), false);
-        }
-    },
-    limits: {
-        fileSize: maxImageSize,
-        files: maxImageCount
-    }
-});
-
-const multerErrorHandler = function(error, req, res, next) {
-    if (error instanceof multer.MulterError) {
-        var errorMessage = '';
-
-        if (error.code === "LIMIT_FILE_SIZE") {
-            errorMessage = `File is too large, maximum file size is ${maxFileSize}MB.`;
-        }
-        else if (error.code === "LIMIT_FILE_COUNT") {
-            errorMessage = `File limit reached, up to ${maxFileCount} files are allowed.`;
-        }
-        else if (error.code === "LIMIT_UNEXPECTED_FILE") {
-            errorMessage = `Illegal file type, allowed file types: ${acceptedFileTypes.join(', ')}`;
-        }
-
-        return res.status(400).json({ message: errorMessage });
-    }
 }
 
 // upload image to firebase storage and update image links
