@@ -1,6 +1,18 @@
 # used to test routes
 
+POST http://localhost:8081/api/users
+Content-Type: application/json
+
+{
+    "emailAddress": "jasonleeweekang@gmail.com",
+    "phoneNumber": "123",
+    "password": "123"
+}
+
+###
+
 GET http://localhost:3000/api/posts/645f4636e5b42a263b5df79c
+
 
 ###
 
@@ -45,7 +57,7 @@ DELETE http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/comments/645f873
 
 ###
 
-POST http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/like
+POST http://localhost:8081/api/posts/645f4636e5b42a263b5df79c/like
 Content-Type: application/json
 
 {
