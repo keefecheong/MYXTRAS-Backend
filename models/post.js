@@ -9,13 +9,7 @@ const postSchema = new mongoose.Schema({
     },
     content_links: {
         type: [String],
-        required: true,
-        validate: {
-            validator: function(links) {
-                return links.length > 0;
-            },
-            message: 'At least one image is required.'
-        }
+        required: true
     },
     creation_time: {
         type: Date,

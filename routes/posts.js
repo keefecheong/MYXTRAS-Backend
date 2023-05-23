@@ -11,40 +11,39 @@ const firebaseStorage = getStorage();
 
 // set up multer to validate images
 const acceptedFileTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-const maxImageSize = 5242880;
+const maxImageSize = 2 * 1024 * 1024;
 const maxImageCount = 10;
 
 const multerConfig = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        files: maxImageCount,
+        fileSize: maxImageSize
+    },
     fileFilter: function(req, file, callback) {
         if (acceptedFileTypes.indexOf(file.mimetype) != -1) {
             callback(null, true);
         }
         else {
-            callback(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file), false);
+            return callback(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file), false);
         }
-    },
-    limits: {
-        fileSize: maxImageSize,
-        files: maxImageCount
     }
 });
 
 const multerErrorHandler = function(error, req, res, next) {
     if (error instanceof multer.MulterError) {
-        var errorMessage = '';
-
-        if (error.code === "LIMIT_FILE_SIZE") {
-            errorMessage = `File is too large, maximum file size is ${maxFileSize}MB.`;
+        if (error.code === "LIMIT_UNEXPECTED_FILE") {
+            return res.status(400).json({ message: `Illegal file type, allowed file types: ${acceptedFileTypes.join(', ')}` });
+        }
+        else if (error.code === "LIMIT_FILE_SIZE") {
+            return res.status(400).json({ message: `File is too large, maximum file size is ${maxImageSize / 1024 / 1024}MB.` });
         }
         else if (error.code === "LIMIT_FILE_COUNT") {
-            errorMessage = `File limit reached, up to ${maxFileCount} files are allowed.`;
+            return res.status(400).json({ message: `File limit reached, up to ${maxImageCount} files are allowed.` });
         }
-        else if (error.code === "LIMIT_UNEXPECTED_FILE") {
-            errorMessage = `Illegal file type, allowed file types: ${acceptedFileTypes.join(', ')}`;
-        }
-
-        return res.status(400).json({ message: errorMessage });
     }
+
+    next();
 }
 
 // retrieve all posts
@@ -339,13 +338,13 @@ async function uploadImages(images, imageLinks, postId) {
         const image = images[i];
 
         // create new file name with hash
-        const newName = crypto.createHash('md5').update(image.originalName).update(Date.now().toString()).digest('hex');
+        const newName = crypto.createHash('md5').update(image.originalname).update(Date.now().toString()).digest('hex');
 
         const metadata = {
             contentType: image.mimetype
         }
 
-        const imageRef = ref(storage, `posts/${postId}/${newName}`);
+        const imageRef = ref(firebaseStorage, `posts/${postId}/${newName}`);
         await uploadBytes(imageRef, image.buffer, metadata)
             .then(async (result) => {
                 await getDownloadURL(result.ref)
