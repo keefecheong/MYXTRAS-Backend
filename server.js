@@ -30,6 +30,8 @@ const firebaseApp = initializeApp(firebaseConfig);
 // routes
 const postsRouter = require('./routes/posts.js');
 app.use('/api/posts', postsRouter);
+const usersRouter = require('./routes/users.js');
+app.use('/api/users', usersRouter);
 
 // start server
 app.listen(process.env.PORT, () => console.log(`Listening on Port ${process.env.PORT}...`));
