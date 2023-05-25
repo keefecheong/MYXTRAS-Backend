@@ -73,7 +73,7 @@ router.post('/register', express.json(), async (req, res) => {
         })
         
         //res.json({ accessToken: accessToken})
-        return res.redirect('http://localhost:5173/setupprofile.html')
+        return res.redirect('http://127.0.0.1:5173/setupprofile.html')
 
 
         // send verification email
