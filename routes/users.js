@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
+// login
 router.get('/login', authenticateToken, async (req, res) => {
     // Retrieve user credentials from request body
     const { email, password } = req.body;
@@ -22,6 +23,7 @@ router.get('/login', authenticateToken, async (req, res) => {
     // Send the token back to the client
     res.json({ token });
 })
+
 // 
 router.get('/:id', (req, res) => {
    
@@ -60,9 +62,7 @@ router.post('/', express.json(), async (req, res) => {
         // Save user into database
         await newUser.save();
 
-        const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-            expiresIn: process.env.JWT_EXPIRES_IN,
-          });
+        const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
 
         // res.cookie("auth-api", token, {
         //     httpOnly: true,
@@ -96,10 +96,10 @@ router.post('/', express.json(), async (req, res) => {
 })
 function authenticateToken(req, res, next) {
     const authHeader = req.headers["authorization"]
-    
+    console.log(authHeader)
     // Checks if authHeader exists or return undefined
     const token = authHeader && authHeader.split(' ')[1]
-
+    console.log(token)
     if (token == null) return res.sendStatus(401)
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {

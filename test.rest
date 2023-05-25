@@ -1,13 +1,14 @@
 # used to test routes
 GET http://localhost:8081/api/users/login
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NmY2MThhZGY2ZjQ2MmVlZmRmZGUxNyIsImlhdCI6MTY4NTAyMTA2NiwiZXhwIjoxNjg1MDIxMDY2fQ.NqsQWOrECJ4ky7fNX8AjSkRFCFW1D0H8jqXYbPL9IBE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NmY2MzU3NWI4MTc3NzUyMTE4ZmM2ZiIsImlhdCI6MTY4NTAyMTUyN30.OHg4i-Fd-V4Mdm24CVqeL1vA0X_lXABhEmqmEp8gHF0
+
 ###
 POST http://localhost:8081/api/users
 Content-Type: application/json
 
 {
-    "emailAddress": "wee@gmail.com",
-    "phoneNumber": "123",
+    "emailAddress": "w1ee@gmail.com",
+    "phoneNumber": "1123",
     "password": "123"
 }
 
