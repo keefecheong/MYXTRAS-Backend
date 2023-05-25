@@ -1,10 +1,12 @@
 # used to test routes
-
+GET http://localhost:8081/api/users/login
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NmY2MThhZGY2ZjQ2MmVlZmRmZGUxNyIsImlhdCI6MTY4NTAyMTA2NiwiZXhwIjoxNjg1MDIxMDY2fQ.NqsQWOrECJ4ky7fNX8AjSkRFCFW1D0H8jqXYbPL9IBE
+###
 POST http://localhost:8081/api/users
 Content-Type: application/json
 
 {
-    "emailAddress": "jasonleeweekang@gmail.com",
+    "emailAddress": "wee@gmail.com",
     "phoneNumber": "123",
     "password": "123"
 }

@@ -15,12 +15,10 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     school: {
-        type: String,
-        required: true
+        type: String
     },
     course: {
-        type: String,
-        required: true
+        type: String
     },
     profile_pic_link: {
         type: String

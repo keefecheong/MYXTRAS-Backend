@@ -1,16 +1,12 @@
 const express = require('express');
 const User = require('../models/user');
-const bodyParser = require('body-parser');
 const router = express.Router();
 const app = express();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-app.use(bodyParser.json());
-
-//
-router.get('/login', async (req, res) => {
+router.get('/login', authenticateToken, async (req, res) => {
     // Retrieve user credentials from request body
     const { email, password } = req.body;
 
@@ -63,11 +59,26 @@ router.post('/', express.json(), async (req, res) => {
 
         // Save user into database
         await newUser.save();
-        
-        const token = jwt.sign({ userId: user._id }, 'your-secret-key');
-        // Send the token back to the client
-        res.json({ token });
-        res.status(201).json({ message: 'User created.' });
+
+        const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+            expiresIn: process.env.JWT_EXPIRES_IN,
+          });
+
+        // res.cookie("auth-api", token, {
+        //     httpOnly: true,
+        //     //secure: process.env.NODE_ENV === "production",
+        //     //signed: true,
+        //     //maxAge: 1000000
+        // })
+        // res.status(201).json({ 
+        //     token,
+        //     data: {
+        //         newUser,
+        //     },
+        //     message: 'User created.' });
+        // console.log("test");
+
+        res.json({ accessToken: accessToken})
 
         // send verification email
         // const verificationUrl = `http://localhost:3000/api/users/verify/${newUser.activeToken}`;
@@ -83,7 +94,22 @@ router.post('/', express.json(), async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 })
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers["authorization"]
+    
+    // Checks if authHeader exists or return undefined
+    const token = authHeader && authHeader.split(' ')[1]
 
+    if (token == null) return res.sendStatus(401)
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        // Check of error
+        console.log(err)
+        if (err) return res.sendStatus(403)
+        req.user = user
+        next()
+    })
+}
 // Setupprofile / Profile Management
 router.patch('/:userId', async (req, res) => {
     const userId = req.params.userId;
