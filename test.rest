@@ -3,12 +3,13 @@ GET http://localhost:8081/api/users/login
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NmY2MzU3NWI4MTc3NzUyMTE4ZmM2ZiIsImlhdCI6MTY4NTAyMTUyN30.OHg4i-Fd-V4Mdm24CVqeL1vA0X_lXABhEmqmEp8gHF0
 
 ###
-POST http://localhost:8081/api/users
+POST http://localhost:8081/api/users/register
 Content-Type: application/json
+credentials: "include"
 
 {
-    "emailAddress": "w1ee@gmail.com",
-    "phoneNumber": "1123",
+    "emailAddress": "w111ee@gmail.com",
+    "phoneNumber": "11113",
     "password": "123"
 }
 
