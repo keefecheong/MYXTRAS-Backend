@@ -5,15 +5,7 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const cors = require('cors');
 
-router.options('/register', (req, res) => {
-    console.log("1")
-    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5173');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Credentials', 'true'); 
-    res.sendStatus(200); // Respond with a success status code
-})
 // login
 router.get('/login', authenticateToken, async (req, res) => {
     // Retrieve user credentials from request body
@@ -39,8 +31,7 @@ router.get('/:id', (req, res) => {
 
 // Registration
 router.post('/register', express.json(), async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', "http://localhost:5371"); // Set the appropriate origin
-    res.setHeader('Access-Control-Allow-Credentials', 'true'); 
+    
     console.log(res.headers)
     if (!req.body) {
         res.status(400).json({ error: 'Invalid request body' });
@@ -82,7 +73,7 @@ router.post('/register', express.json(), async (req, res) => {
         })
         
         //res.json({ accessToken: accessToken})
-        return res.redirect('http://localhost:5371/setupprofile.html')
+        return res.redirect('http://localhost:5173/setupprofile.html')
 
 
         // send verification email
@@ -99,8 +90,11 @@ router.post('/register', express.json(), async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 })
-router.get("/", (req, res) => {
-    res.send(req.cookies);
+
+// send cookies
+router.get("/cookie", (req, res) => {
+    //res.send(req.cookies);
+    return res.json("hii")
  });
 
  
