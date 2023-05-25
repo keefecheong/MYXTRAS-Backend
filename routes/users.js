@@ -7,12 +7,13 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const cors = require('cors');
 
-app.options('/', (req, res) => {
-    // Set the appropriate CORS headers for the pre-flight request
-    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5173'); // Replace with your allowed origin
+router.options('/register', (req, res) => {
+    console.log("1")
+    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5173');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Credentials', 'true'); 
     res.sendStatus(200); // Respond with a success status code
-  });
-
+})
 // login
 router.get('/login', authenticateToken, async (req, res) => {
     // Retrieve user credentials from request body
@@ -38,9 +39,9 @@ router.get('/:id', (req, res) => {
 
 // Registration
 router.post('/register', express.json(), async (req, res) => {
-
     res.setHeader('Access-Control-Allow-Origin', "http://localhost:5371"); // Set the appropriate origin
     res.setHeader('Access-Control-Allow-Credentials', 'true'); 
+    console.log(res.headers)
     if (!req.body) {
         res.status(400).json({ error: 'Invalid request body' });
         return;
