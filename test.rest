@@ -1,11 +1,21 @@
 # used to test routes
+GET http://localhost:8081/api/users/login
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NmY2MzU3NWI4MTc3NzUyMTE4ZmM2ZiIsImlhdCI6MTY4NTAyMTUyN30.OHg4i-Fd-V4Mdm24CVqeL1vA0X_lXABhEmqmEp8gHF0
 
-POST http://localhost:8081/api/users
+###
+GET http://localhost:8081/api/users/cookie
+
+###
+OPTIONS http://localhost:8081/api/users/register
+
+###
+POST http://localhost:8081/api/users/register
 Content-Type: application/json
+credentials: "include"
 
 {
-    "emailAddress": "jasonleeweekang@gmail.com",
-    "phoneNumber": "123",
+    "emailAddress": "w1111ee@gmail.com",
+    "phoneNumber": "111113",
     "password": "123"
 }
 

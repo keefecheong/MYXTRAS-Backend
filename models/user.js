@@ -1,4 +1,4 @@
-const { required } = require('joi');
+const { required, string } = require('joi');
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -13,6 +13,12 @@ const userSchema = new mongoose.Schema({
     phonenumber: {
         type: String,
         required: true
+    },
+    school: {
+        type: String
+    },
+    course: {
+        type: String
     },
     profile_pic_link: {
         type: String
@@ -44,6 +50,10 @@ const userSchema = new mongoose.Schema({
         }],
         default: []
     },
+    interests: {
+        type: [String],
+        default: []
+    },
     is_admin: {
         type: Boolean,
         default: false
@@ -58,6 +68,10 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
+    },
+    profilesetup: {
+        type: Boolean,
+        default: false
     }
 });
 
