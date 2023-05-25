@@ -5,6 +5,13 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const cors = require('cors');
+
+app.options('/', (req, res) => {
+    // Set the appropriate CORS headers for the pre-flight request
+    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5173'); // Replace with your allowed origin
+    res.sendStatus(200); // Respond with a success status code
+  });
 
 // login
 router.get('/login', authenticateToken, async (req, res) => {
@@ -30,8 +37,10 @@ router.get('/:id', (req, res) => {
 })
 
 // Registration
-router.post('/', express.json(), async (req, res) => {
-    
+router.post('/register', express.json(), async (req, res) => {
+
+    res.setHeader('Access-Control-Allow-Origin', "http://localhost:5371"); // Set the appropriate origin
+    res.setHeader('Access-Control-Allow-Credentials', 'true'); 
     if (!req.body) {
         res.status(400).json({ error: 'Invalid request body' });
         return;
@@ -61,24 +70,19 @@ router.post('/', express.json(), async (req, res) => {
 
         // Save user into database
         await newUser.save();
-
+        
+        
         const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+        //res.setHeader("Authorization", "Bearer " + accessToken)
+        res.cookie("auth-api", accessToken, {
+            httpOnly: true,
+            sameSite: 'none',
+            //secure: true,
+        })
+        
+        //res.json({ accessToken: accessToken})
+        return res.redirect('http://localhost:5371/setupprofile.html')
 
-        // res.cookie("auth-api", token, {
-        //     httpOnly: true,
-        //     //secure: process.env.NODE_ENV === "production",
-        //     //signed: true,
-        //     //maxAge: 1000000
-        // })
-        // res.status(201).json({ 
-        //     token,
-        //     data: {
-        //         newUser,
-        //     },
-        //     message: 'User created.' });
-        // console.log("test");
-
-        res.json({ accessToken: accessToken})
 
         // send verification email
         // const verificationUrl = `http://localhost:3000/api/users/verify/${newUser.activeToken}`;
@@ -94,11 +98,17 @@ router.post('/', express.json(), async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 })
+router.get("/", (req, res) => {
+    res.send(req.cookies);
+ });
+
+ 
 function authenticateToken(req, res, next) {
     const authHeader = req.headers["authorization"]
     console.log(authHeader)
     // Checks if authHeader exists or return undefined
     const token = authHeader && authHeader.split(' ')[1]
+
     console.log(token)
     if (token == null) return res.sendStatus(401)
 
