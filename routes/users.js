@@ -5,6 +5,15 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const axios = require('axios');
+
+router.get('/setupprofile', (req, res) => {
+    // Set CORS headers
+    res.set('Access-Control-Allow-Origin', "http://127.0.0.1:5173");
+    res.set('Access-Control-Allow-Methods', 'GET, POST');
+    // Redirect to a different HTML page
+    res.redirect(process.env.FRONTEND_SERVER_URL + '/setupprofile.html');
+});
 
 // login
 router.get('/login', authenticateToken, async (req, res) => {
@@ -18,7 +27,7 @@ router.get('/login', authenticateToken, async (req, res) => {
     }
 
     // Generate JWT token
-    const token = jwt.sign({ userId: user._id }, 'your-secret-key');
+    //const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
     // Send the token back to the client
     res.json({ token });
@@ -32,7 +41,6 @@ router.get('/:id', (req, res) => {
 // Registration
 router.post('/register', express.json(), async (req, res) => {
     
-    console.log(res.headers)
     if (!req.body) {
         res.status(400).json({ error: 'Invalid request body' });
         return;
@@ -68,13 +76,12 @@ router.post('/register', express.json(), async (req, res) => {
         //res.setHeader("Authorization", "Bearer " + accessToken)
         res.cookie("auth-api", accessToken, {
             httpOnly: true,
-            sameSite: 'none',
+            //sameSite: 'none',
             //secure: true,
         })
         
         //res.json({ accessToken: accessToken})
-        return res.redirect('http://127.0.0.1:5173/setupprofile.html')
-
+        return res.json();
 
         // send verification email
         // const verificationUrl = `http://localhost:3000/api/users/verify/${newUser.activeToken}`;
