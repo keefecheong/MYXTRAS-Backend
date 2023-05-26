@@ -12,7 +12,7 @@ router.get('/setupprofile', (req, res) => {
     res.set('Access-Control-Allow-Origin', "http://127.0.0.1:5173");
     res.set('Access-Control-Allow-Methods', 'GET, POST');
     // Redirect to a different HTML page
-    res.redirect('http://127.0.0.1:5173/setupprofile.html');
+    res.redirect(process.env.FRONTEND_SERVER_URL + '/setupprofile.html');
 });
 
 // login
