@@ -15,6 +15,14 @@ router.get('/setupprofile', (req, res) => {
     res.redirect(process.env.FRONTEND_SERVER_URL + '/setupprofile.html');
 });
 
+router.get('/feed', (req, res) => {
+    // Set CORS headers
+    res.set('Access-Control-Allow-Origin', "http://127.0.0.1:5173");
+    res.set('Access-Control-Allow-Methods', 'GET, POST');
+    // Redirect to a different HTML page
+    res.redirect(process.env.FRONTEND_SERVER_URL + '/feed.html');
+});
+
 // login
 router.get('/login', authenticateToken, async (req, res) => {
     // Retrieve user credentials from request body
@@ -84,7 +92,7 @@ router.post('/register', express.json(), async (req, res) => {
         return res.json();
 
         // send verification email
-        // const verificationUrl = `http://localhost:3000/api/users/verify/${newUser.activeToken}`;
+        // const verificationUrl = `http://127.0.0.1:3000/api/users/verify/${newUser.activeToken}`;
         // const mailOptions = {
         //     to: email,
         //     subject: 'Verify your email address',
@@ -123,22 +131,46 @@ function authenticateToken(req, res, next) {
     })
 }
 // Setupprofile / Profile Management
-router.patch('/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    const updates = req.body;
+router.patch('/setup', express.json(), async (req, res) => {
+    
+    const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedOption} = req.body;
     try {
-        const user = await User.findById(userId);
+        const user = await User.findOne({ email: emailAddress });
+    
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+          return res.status(404).json({ error: 'User not found' });
         }
-        Object.assign(user, updates);
+    
+        user.name = realName;
+        user.username = userName;
+        user.biography = biography;
+        user.school = selectedSchool;
+        user.course = selectedCourse;
+        user.interests = selectedOption;
+    
         const updatedUser = await user.save();
         res.json(updatedUser);
-
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        console.log(error);
+        res.status(400).json({ error: 'Failed to update user' });
     }
+    // const userId = req.params.userId;
+    // const updates = req.body;
+    // console.log(updates);
+    // try {
+    //     const user = await User.findById(userId);
+    //     if (!user) {
+    //         return res.status(404).json({ error: 'User not found' });
+    //     }
+    //     Object.assign(user, updates);
+    //     const updatedUser = await user.save();
+    //     res.json(updatedUser);
+
+
+    // } catch (error) {
+    //     console.error(error);
+    //     res.status(500).json({ error: 'Server error' });
+    // }
 
 
 })  

@@ -7,7 +7,7 @@ const app = express();
 const cors = require('cors');
 app.use(cors({
     origin: process.env.FRONTEND_SERVER_URL,
-    methods: ['GET', 'POST', 'OPTIONS'],
+    methods: ['GET', 'POST', 'OPTIONS', 'PATCH'],
     credentials: true,
 }));
 
