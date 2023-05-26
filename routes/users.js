@@ -90,7 +90,14 @@ router.post('/register', express.json(), async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 })
-
+router.get('/setupprofile', (req, res) => {
+    // Set CORS headers
+    res.set('Access-Control-Allow-Origin', req.headers.origin);
+    res.set('Access-Control-Allow-Methods', 'GET, POST');
+  
+    // Redirect to a different HTML page
+    res.redirect('http://127.0.0.1:5173/setupprofile.html');
+  });
 // send cookies
 router.get("/cookie", (req, res) => {
     //res.send(req.cookies);
