@@ -49,7 +49,8 @@ const multerErrorHandler = function(error, req, res, next) {
 // retrieve all posts
 router.get('/', async (req, res) => {
     try {
-        var posts = await Post.find();
+        // populate post data to get creator's username and profile pic link
+        var posts = await Post.find().populate({ path: 'creator_id', select: 'username profile_pic_link'});
         res.status(200).json(posts);
     }
     catch (error) {
@@ -71,7 +72,8 @@ router.get('/following/:userId', async (req, res) => {
         let posts = []
 
         if (target.following.length > 0) {
-            posts = await Post.where('creator_id').in(target.following);
+            // populate post data to get creator's username and profile pic link
+            posts = await Post.where('creator_id').in(target.following).populate({ path: 'creator_id', select: 'username profile_pic_link'});
         }
 
         res.status(200).json(posts);
@@ -112,6 +114,8 @@ router.post('/', multerConfig.array('selectedImages'), multerErrorHandler, async
                 await Post.findByIdAndDelete(post.id);
                 res.status(500).json({ message: 'Failed to upload images, please try again later.' });
             }
+
+            await post.save();
 
             res.status(200).json({ message: 'Post created.' });
         }
@@ -317,7 +321,8 @@ async function getPost(req, res, next) {
     let target;
 
     try {
-        target = await Post.findById(req.params.postId);
+        // populate post data to get creator's username and profile pic link
+        target = await Post.findById(req.params.postId).populate({ path: 'creator_id', select: 'username profile_pic_link'});
 
         if (!target) {
             return res.status(404).json({ message: 'Unable to find the specified post.' });
