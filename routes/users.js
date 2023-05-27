@@ -1,28 +1,30 @@
 const express = require('express');
 const User = require('../models/user');
 const router = express.Router();
-const app = express();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const axios = require('axios');
 
+// Redirect from register to setupprofile
 router.get('/setupprofile', (req, res) => {
-    // Set CORS headers
-    res.set('Access-Control-Allow-Origin', "http://127.0.0.1:5173");
-    res.set('Access-Control-Allow-Methods', 'GET, POST');
     // Redirect to a different HTML page
     res.redirect(process.env.FRONTEND_SERVER_URL + '/setupprofile.html');
 });
 
+// Redirect from setupprofile to feed
 router.get('/feed', (req, res) => {
     // Set CORS headers
-    res.set('Access-Control-Allow-Origin', "http://127.0.0.1:5173");
-    res.set('Access-Control-Allow-Methods', 'GET, POST');
+    // res.set('Access-Control-Allow-Origin', "http://127.0.0.1:5173");
+    // res.set('Access-Control-Allow-Methods', 'GET, POST');
     // Redirect to a different HTML page
     res.redirect(process.env.FRONTEND_SERVER_URL + '/feed.html');
 });
 
+// Redirect from anypage to login
+router.get('/redirect-login', (req, res) => {
+    res.clearCookie("authapi");
+    res.redirect(process.env.FRONTEND_SERVER_URL + '/login.html');
+});
 // login
 router.get('/login', authenticateToken, async (req, res) => {
     // Retrieve user credentials from request body
@@ -41,9 +43,40 @@ router.get('/login', authenticateToken, async (req, res) => {
     res.json({ token });
 })
 
-// 
-router.get('/:id', (req, res) => {
-   
+// Middlewawre to verfiy cookie
+async function authenticateToken(req, res, next) {
+    try {
+        // Get the JWT token from the cookie
+        const token = req.cookies.authapi;
+
+        if (!token) {
+          // No token found, handle unauthorized access
+          return res.status(401).json({ message: 'Unauthorized' });
+        }
+        // Verify and decode the JWT token
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        // Get the user ID from the decoded token
+        const userId = decodedToken.id;
+
+        // Retrieve the user from the database
+        const user = await User.findById(userId);
+        if (!user) {
+          // User not found, handle unauthorized access
+          return res.status(401).json({ message: 'Unauthorized' });
+        }
+        // Attach the user object to the request for further processing
+        req.user = user;
+        // Proceed to the next middleware or route handler
+        next();
+      } catch (error) {
+        // Handle token verification or database errors
+        return res.status(500).json({ message: 'Internal Server Error' });
+      }
+}
+// Get user from session cookie
+router.get('/', authenticateToken, async (req, res) => {
+    const user = req.user;
+    res.json(user);
 })
 
 // Registration
@@ -81,11 +114,16 @@ router.post('/register', express.json(), async (req, res) => {
         
         
         const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+
         //res.setHeader("Authorization", "Bearer " + accessToken)
-        res.cookie("auth-api", accessToken, {
+        res.cookie("authapi", accessToken, {
+            expires: new Date(
+                Date.now() + process.env.JWT_EXPIRES_IN * 24 * 60 * 60 * 1000
+            ),
             httpOnly: true,
+            // enable sameSite only when secure is true
             //sameSite: 'none',
-            //secure: true,
+            secure: process.env.NODE_ENV === 'production',
         })
         
         //res.json({ accessToken: accessToken})
@@ -106,30 +144,35 @@ router.post('/register', express.json(), async (req, res) => {
     }
 })
 
-// send cookies
-router.get("/cookie", (req, res) => {
-    //res.send(req.cookies);
-    return res.json("hii")
- });
+// Logging in 
+router.post('/login', express.json(), async (req, res) => {
+    try {
+        const { emailAddress, password } = req.body;
+        
+        // Find the user by email
+        const user = await User.findOne({ email: emailAddress });
+        
+        if (!user) {
+          // User not found
+          return res.status(401).json({ message: 'Invalid email or password' });
+        }
+        
+        // Check if the password is correct
+        // if (password !== user.password) {
+        if (!bcrypt.compareSync(password, user.password)){
+          // Incorrect password
+          return res.status(401).json({ message: 'Invalid email or password' });
+        }
+    
+        // Authentication successful
+        res.status(200).json({ message: 'Login successful' });
+      } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+});
 
- 
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers["authorization"]
-    console.log(authHeader)
-    // Checks if authHeader exists or return undefined
-    const token = authHeader && authHeader.split(' ')[1]
 
-    console.log(token)
-    if (token == null) return res.sendStatus(401)
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        // Check of error
-        console.log(err)
-        if (err) return res.sendStatus(403)
-        req.user = user
-        next()
-    })
-}
 // Setupprofile / Profile Management
 router.patch('/setup', express.json(), async (req, res) => {
     
@@ -141,13 +184,13 @@ router.patch('/setup', express.json(), async (req, res) => {
           return res.status(404).json({ error: 'User not found' });
         }
     
-        user.name = realName;
+        user.realname = realName;
         user.username = userName;
         user.biography = biography;
         user.school = selectedSchool;
         user.course = selectedCourse;
         user.interests = selectedOption;
-    
+        user.profilesetup = true;
         const updatedUser = await user.save();
         res.json(updatedUser);
     } catch (error) {
