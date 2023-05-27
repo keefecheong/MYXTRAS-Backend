@@ -144,6 +144,35 @@ router.post('/register', express.json(), async (req, res) => {
     }
 })
 
+// Logging in 
+router.post('/login', express.json(), async (req, res) => {
+    try {
+        const { emailAddress, password } = req.body;
+        
+        // Find the user by email
+        const user = await User.findOne({ email: emailAddress });
+        
+        if (!user) {
+          // User not found
+          return res.status(401).json({ message: 'Invalid email or password' });
+        }
+        
+        // Check if the password is correct
+        // if (password !== user.password) {
+        if (!bcrypt.compareSync(password, user.password)){
+          // Incorrect password
+          return res.status(401).json({ message: 'Invalid email or password' });
+        }
+    
+        // Authentication successful
+        res.status(200).json({ message: 'Login successful' });
+      } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+});
+
+
 // Setupprofile / Profile Management
 router.patch('/setup', express.json(), async (req, res) => {
     
