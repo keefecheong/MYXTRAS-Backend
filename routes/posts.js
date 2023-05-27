@@ -60,10 +60,8 @@ router.get('/', async (req, res) => {
 
 // retrieve all posts by users followed
 router.get('/following/:userId', async (req, res) => {
-    let target;
-
     try {
-        target = await User.findById(req.params.userId);
+        const target = await User.findById(req.params.userId);
 
         if (!target) {
             return res.status(404).json({ message: 'Unable to find the specified user.' });
@@ -98,6 +96,13 @@ router.post('/', multerConfig.array('selectedImages'), multerErrorHandler, async
 
     if (creatorPresent && imagePresent) {
         try {
+            // check if creator exists
+            const target = await User.findById(req.body.creator_id);
+
+            if (!target) {
+                return res.status(404).json({ message: 'Invalid user.' });
+            }
+    
             const post = new Post({
                 creator_id: req.body.creator_id,
                 content_links: []
@@ -174,6 +179,11 @@ router.delete('/:postId', getPost, async (req, res) => {
         // delete associated images
         deleteImages(res.post.content_links);
 
+        // delete associated comments
+        for (let i = 0; i < res.post.comments.length; i++) {
+            Comment.findByIdAndDelete(res.post.comments[i]);
+        }
+
         await Post.findByIdAndDelete(req.params.postId);
         res.status(200).json({ message: 'Post removed.' });
     }
@@ -199,6 +209,13 @@ router.post('/:postId/comments', express.json(), getPost, async (req, res) => {
     // if provided, continue to create comment
     // otherwise, check which fields are missing and return 400 error
     if (req.body.creator_id && req.body.content) {
+        // check if creator exists
+        const target = await User.findById(req.body.creator_id);
+
+        if (!target) {
+            return res.status(404).json({ message: 'Invalid user.' });
+        }
+
         const comment = new Comment({
             creator_id: req.body.creator_id,
             content: req.body.content
@@ -259,6 +276,13 @@ router.post('/:postId/like', express.json(), getPost, async (req, res) => {
     // if provided, continue to add the like
     // otherwise, return 400 error
     if (req.body.creator_id) {
+        // check if creator exists
+        const target = await User.findById(req.body.creator_id);
+
+        if (!target) {
+            return res.status(404).json({ message: 'Invalid user.' });
+        }
+
         // check if the specified post is liked by the user
         const likeExists = res.post.likes.find(creator_id => creator_id == req.body.creator_id);
         
@@ -285,34 +309,33 @@ router.post('/:postId/like', express.json(), getPost, async (req, res) => {
 });
 
 // remove like from a post and update the post's likes field
-router.delete('/:postId/like', getPost, async (req, res) => {
-    // check if creator_id is provided in the body
-    // if provided, continue to remove the like
-    // otherwise, return 400 error
-    if (req.body.creator_id) {
-        // check if the specified post is liked by the user
-        const likeExists = res.post.likes.find(creator_id => creator_id == req.body.creator_id);
-        
-        // if the user has liked the post, continue to remove the like
-        // otherwise, return 400 error
-        if (likeExists) {
-            const likeIndex = res.post.likes.indexOf(req.body.creator_id);
-            res.post.likes.splice(likeIndex, 1);
+router.delete('/:postId/like/:creatorId', getPost, async (req, res) => {
+    // check if creator exists
+    const target = await User.findById(req.body.creator_id);
+
+    if (!target) {
+        return res.status(404).json({ message: 'Invalid user.' });
+    }
+
+    // check if the specified post is liked by the user
+    const likeExists = res.post.likes.find(creator_id => creator_id == req.params.creatorId);
     
-            try {
-                await res.post.save();
-                res.status(204);
-            }
-            catch (error) {
-                res.status(500).json({ message: error.message });
-            }
+    // if the user has liked the post, continue to remove the like
+    // otherwise, return 400 error
+    if (likeExists) {
+        const likeIndex = res.post.likes.indexOf(req.body.creator_id);
+        res.post.likes.splice(likeIndex, 1);
+
+        try {
+            await res.post.save();
+            res.status(204);
         }
-        else {
-            res.status(400).json({ message: 'You have not liked this post.' });
+        catch (error) {
+            res.status(500).json({ message: error.message });
         }
     }
     else {
-        res.status(400).json({ message: 'Creator is required.' });
+        res.status(400).json({ message: 'You have not liked this post.' });
     }
 });
 
