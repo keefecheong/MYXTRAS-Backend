@@ -8,9 +8,6 @@ const crypto = require('crypto');
 const axios = require('axios');
 
 router.get('/setupprofile', (req, res) => {
-    // Set CORS headers
-    res.set('Access-Control-Allow-Origin', "http://127.0.0.1:5173");
-    res.set('Access-Control-Allow-Methods', 'GET, POST');
     // Redirect to a different HTML page
     res.redirect(process.env.FRONTEND_SERVER_URL + '/setupprofile.html');
 });
@@ -73,11 +70,16 @@ router.post('/register', express.json(), async (req, res) => {
         
         
         const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+
         //res.setHeader("Authorization", "Bearer " + accessToken)
         res.cookie("auth-api", accessToken, {
+            expires: new Date(
+                Date.now() + process.env.JWT_EXPIRES_IN * 24 * 60 * 60 * 1000
+            ),
             httpOnly: true,
+            // enable sameSite only when secure is true
             //sameSite: 'none',
-            //secure: true,
+            secure: process.env.NODE_ENV === 'production',
         })
         
         //res.json({ accessToken: accessToken})
