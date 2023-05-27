@@ -10,12 +10,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    realname: {
+        type: String
+    },
     phonenumber: {
         type: String,
         required: true
-    },
-    name:{
-        type: String
     },
     school: {
         type: String
