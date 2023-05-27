@@ -176,7 +176,8 @@ router.post('/login', express.json(), async (req, res) => {
 // Setupprofile / Profile Management
 router.patch('/setup', express.json(), async (req, res) => {
     
-    const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedOption} = req.body;
+    const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
+
     try {
         const user = await User.findOne({ email: emailAddress });
     
@@ -189,7 +190,7 @@ router.patch('/setup', express.json(), async (req, res) => {
         user.biography = biography;
         user.school = selectedSchool;
         user.course = selectedCourse;
-        user.interests = selectedOption;
+        user.interests = selectedInterests.sort();
         user.profilesetup = true;
         const updatedUser = await user.save();
         res.json(updatedUser);
