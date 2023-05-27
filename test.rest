@@ -49,7 +49,7 @@ DELETE http://localhost:3000/api/posts/645f4575e5b42a263b5df79a
 
 ###
 
-GET http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/comments
+GET http://localhost:8081/api/posts/645f4636e5b42a263b5df79c/comments
 
 ###
 
@@ -76,9 +76,23 @@ Content-Type: application/json
 
 ###
 
-DELETE http://localhost:3000/api/posts/645f4636e5b42a263b5df79c/like
+DELETE http://localhost:8081/api/posts/645f4636e5b42a263b5df79c/like
 Content-Type: application/json
 
 {
+    "creator_id": "6021fde84705d830b8f458ab"
+}
+
+###
+
+GET http://localhost:8081/api/posts/646f9c4e7a3e4209d92540ad/comments
+
+###
+
+POST http://localhost:8081/api/posts/646f9c4e7a3e4209d92540ad/comments
+Content-Type: application/json
+
+{
+    "content": "new comment",
     "creator_id": "6021fde84705d830b8f458ab"
 }
