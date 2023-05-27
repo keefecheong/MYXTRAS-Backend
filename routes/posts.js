@@ -195,7 +195,14 @@ router.delete('/:postId', getPost, async (req, res) => {
 // retrieve all comments for a post
 router.get('/:postId/comments', getPost, async (req, res) => {
     try {
-        const comments = await Post.findById(req.params.postId).select('comments').populate('comments');
+        // populate comment data to get creator's username and profile pic link
+        const comments = await Post.findById(req.params.postId).select('comments').populate({
+            path: 'comments',
+            populate: {
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            }
+        });
         res.status(200).json(comments);
     }
     catch (error) {
@@ -226,7 +233,13 @@ router.post('/:postId/comments', express.json(), getPost, async (req, res) => {
         try {
             await comment.save();
             await res.post.save();
-            res.status(200).json({ message: 'Comment created.' });
+
+            const newComment = await Comment.findById(comment._id).populate({
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            });
+
+            res.status(200).json({ message: 'Comment created.', comment: newComment });
         }
         catch (error) {
             res.status(400).json({ message: error.message })
