@@ -22,6 +22,7 @@ router.get('/feed', (req, res) => {
 
 // Redirect from anypage to login
 router.get('/redirect-login', (req, res) => {
+    res.clearCookie("authapi");
     res.redirect(process.env.FRONTEND_SERVER_URL + '/login.html');
 });
 // login
@@ -46,7 +47,7 @@ router.get('/login', authenticateToken, async (req, res) => {
 async function authenticateToken(req, res, next) {
     try {
         // Get the JWT token from the cookie
-        const token = req.cookies.cookietoken;
+        const token = req.cookies.authapi;
 
         if (!token) {
           // No token found, handle unauthorized access
@@ -61,7 +62,6 @@ async function authenticateToken(req, res, next) {
         const user = await User.findById(userId);
         if (!user) {
           // User not found, handle unauthorized access
-          console.log('3')
           return res.status(401).json({ message: 'Unauthorized' });
         }
         // Attach the user object to the request for further processing
@@ -116,7 +116,7 @@ router.post('/register', express.json(), async (req, res) => {
         const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
 
         //res.setHeader("Authorization", "Bearer " + accessToken)
-        res.cookie("cookietoken", accessToken, {
+        res.cookie("authapi", accessToken, {
             expires: new Date(
                 Date.now() + process.env.JWT_EXPIRES_IN * 24 * 60 * 60 * 1000
             ),
