@@ -19,7 +19,22 @@ router.get('/feed', (req, res) => {
     // Redirect to a different HTML page
     res.redirect(process.env.FRONTEND_SERVER_URL + '/feed.html');
 });
-
+router.get('/get-cookie', async (req, res) => {
+    const token = req.cookies.authapi;
+    if (req.cookies && token){
+        console.log("2")
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        // Get the user ID from the decoded token
+        const userId = decodedToken.id;
+        const user = await User.findById(userId);
+        if (user.profilesetup) {
+            return res.status(401).json()
+        } 
+        return res.status(200).json()
+    } else {
+        return res.status(401).json()
+    }
+}),
 router.get('/remove-cookie', (req, res) => {
     res.clearCookie("authapi");
     return res.json();
