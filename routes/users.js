@@ -101,7 +101,7 @@ router.post('/register', express.json(), async (req, res) => {
       // User already exists, handle the error
       return res.status(409).json({ error: 'Phone Number already exists' });
     }
-    if (phonenumber.length != 8){
+    if (phoneNumber.length != 8){
         return res.status(409).json({ error: 'Inavlid phone number' });
     }
     if (!/[A-Z]/.test(password) || !/[0-9]/.test(password) || password.length <= 8){
