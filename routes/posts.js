@@ -157,7 +157,9 @@ router.patch('/:postId', multerConfig.array('selectedImages'), multerErrorHandle
                 res.status(500).json({ message: 'Failed to update post, please try again later.' });
             }
 
-            // otherwise update content_links and save the post
+            // otherwise delete old images, update content_links and save the post
+            deleteImages(res.post.content_links);
+
             res.post.content_links = newImageLinks;
             
             await res.post.save();
