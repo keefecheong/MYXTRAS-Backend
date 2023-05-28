@@ -20,9 +20,12 @@ router.get('/feed', (req, res) => {
     res.redirect(process.env.FRONTEND_SERVER_URL + '/feed.html');
 });
 
+router.get('/remove-cookie', (req, res) => {
+    res.clearCookie("authapi");
+    return res.json();
+});
 // Redirect from anypage to login
 router.get('/redirect-login', (req, res) => {
-    res.clearCookie("authapi");
     res.redirect(process.env.FRONTEND_SERVER_URL + '/login.html');
 });
 // login
@@ -104,7 +107,7 @@ router.post('/register', express.json(), async (req, res) => {
     if (phoneNumber.length != 8){
         return res.status(409).json({ error: 'Inavlid phone number' });
     }
-    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password) || password.length <= 8){
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password) || password.length < 8){
         return res.status(409).json({ error: 'Password does not meet complexity requirements' });
     }
     try {
