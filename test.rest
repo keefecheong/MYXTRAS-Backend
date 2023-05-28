@@ -2,7 +2,8 @@
 GET http://localhost:8081/api/users
 
 ###
-GET http://localhost:8081/api/users/setupprofile
+GET http://localhost:8081/api/users/redirect-login
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzJmNzE2ZWNmYjhmOGY5NmE2NTljOCIsImlhdCI6MTY4NTI1NTk1OH0.0Cz_hmaMIneDsnRc8qcpubIQReUMjDxNE2D8MpUBgA4
 
 ###
 OPTIONS http://localhost:8081/api/users/register
