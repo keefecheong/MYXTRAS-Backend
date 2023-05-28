@@ -326,7 +326,7 @@ router.post('/:postId/like', express.json(), getPost, async (req, res) => {
 // remove like from a post and update the post's likes field
 router.delete('/:postId/like/:creatorId', getPost, async (req, res) => {
     // check if creator exists
-    const target = await User.findById(req.body.creator_id);
+    const target = await User.findById(req.params.creatorId);
 
     if (!target) {
         return res.status(404).json({ message: 'Invalid user.' });
