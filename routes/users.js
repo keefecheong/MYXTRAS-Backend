@@ -43,30 +43,17 @@ router.get('/remove-cookie', (req, res) => {
 router.get('/redirect-login', (req, res) => {
     res.redirect(process.env.FRONTEND_SERVER_URL + '/login.html');
 });
-// login
-router.get('/login', authenticateToken, async (req, res) => {
-    // Retrieve user credentials from request body
-    const { email, password } = req.body;
 
-    // Validate credentials (e.g., check if user exists and password is correct)
-    const user = await User.findOne({ email });
-    if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // Generate JWT token
-    //const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
-
-    // Send the token back to the client
-    res.json({ token });
+// Get user from session cookie
+router.get('/', authenticateToken, async (req, res) => {
+    const user = req.user;
+    res.json(user);
 })
-
 // Middlewawre to verfiy cookie
 async function authenticateToken(req, res, next) {
     try {
         // Get the JWT token from the cookie
         const token = req.cookies.authapi;
-
         if (!token) {
           // No token found, handle unauthorized access
           return res.status(401).json({ message: 'Unauthorized' });
@@ -75,7 +62,6 @@ async function authenticateToken(req, res, next) {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
         // Get the user ID from the decoded token
         const userId = decodedToken.id;
-
         // Retrieve the user from the database
         const user = await User.findById(userId);
         if (!user) {
@@ -91,11 +77,6 @@ async function authenticateToken(req, res, next) {
         return res.status(500).json({ message: 'Internal Server Error' });
       }
 }
-// Get user from session cookie
-router.get('/', authenticateToken, async (req, res) => {
-    const user = req.user;
-    res.json(user);
-})
 
 // Registration
 router.post('/register', express.json(), async (req, res) => {
@@ -135,7 +116,6 @@ router.post('/register', express.json(), async (req, res) => {
 
         // Save user into database
         await newUser.save();
-        
         
         const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
 
@@ -188,6 +168,20 @@ router.post('/login', express.json(), async (req, res) => {
           return res.status(401).json({ message: 'Invalid email or password' });
         }
     
+        // Generate JWT token
+        const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+
+        // Send the token back to the client
+        res.cookie("authapi", accessToken, {
+            expires: new Date(
+                Date.now() + process.env.JWT_EXPIRES_IN * 24 * 60 * 60 * 1000
+            ),
+            httpOnly: true,
+            // enable sameSite only when secure is true
+            //sameSite: 'none',
+            secure: process.env.NODE_ENV === 'production',
+        })
+
         // Authentication successful
         res.status(200).json({ message: 'Login successful' });
       } catch (error) {
