@@ -6,6 +6,7 @@ const User = require('../models/user.js');
 const multer = require('multer');
 const crypto = require('crypto');
 const { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } = require('firebase/storage');
+const jwt = require('jsonwebtoken');
 
 const firebaseStorage = getStorage();
 
@@ -46,11 +47,22 @@ const multerErrorHandler = function(error, req, res, next) {
     next();
 }
 
+// validate user for all routes
+router.use(validateUser);
+
 // retrieve all posts
 router.get('/', async (req, res) => {
     try {
         // populate post data to get creator's username and profile pic link
-        var posts = await Post.find().populate({ path: 'creator_id', select: 'username profile_pic_link'});
+        var posts = await Post
+            .find()
+            .populate({ 
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            });
+
+        posts = checkPostAttributesAll(posts, req.user._id);
+
         res.status(200).json(posts);
     }
     catch (error) {
@@ -58,86 +70,70 @@ router.get('/', async (req, res) => {
     }
 });
 
-// retrieve all posts by users followed
-router.get('/following/:userId', async (req, res) => {
+// retrieve user's own posts and posts by users followed
+router.get('/following', async (req, res) => {
     try {
-        const target = await User.findById(req.params.userId);
+        // list of user ids to get posts from
+        let targetUsers = Array.from(req.user.following).push(req.user._id);
 
-        if (!target) {
-            return res.status(404).json({ message: 'Unable to find the specified user.' });
-        }
+        // populate post data to get creator's username and profile pic link
+        var posts = await Post
+            .where('creator_id')
+            .in(targetUsers)
+            .populate({ 
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            });
 
-        let posts = []
-
-        if (target.following.length > 0) {
-            // populate post data to get creator's username and profile pic link
-            posts = await Post.where('creator_id').in(target.following).populate({ path: 'creator_id', select: 'username profile_pic_link'});
-        }
-
+        posts = checkPostAttributesAll(posts, req.user._id);
+        
         res.status(200).json(posts);
     }
     catch (error) {
-        return res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 });
 
 // retrieve a post by id
 router.get('/:postId', getPost, async (req, res) => {
+    res.post = checkPostAttributes(res.post, req.user._id);
+
     res.status(200).json(res.post);
 });
 
 // create a post
 router.post('/', multerConfig.array('selectedImages'), multerErrorHandler, async (req, res) => {
-    // check if creator_id and images are provided in the body
+    // check if images are provided in the body
     // if provided, continue to create post
-    // otherwise, check which fields are missing and return 400 error
-    const creatorPresent = req.body.creator_id != null;
-    const imagePresent = req.files.length > 0;
-
-    if (creatorPresent && imagePresent) {
-        try {
-            // check if creator exists
-            const target = await User.findById(req.body.creator_id);
-
-            if (!target) {
-                return res.status(404).json({ message: 'Invalid user.' });
-            }
-    
-            const post = new Post({
-                creator_id: req.body.creator_id,
-                content_links: []
-            });
-
-            // save post to make post_id available
-            await post.save();
-
-            // upload images and store the links in content_links of the new post
-            const uploadSuccessful = await uploadImages(req.files, post.content_links, post.id);
-
-            // if failed to upload images then delete the post from database and return error message
-            if (!uploadSuccessful) {
-                await Post.findByIdAndDelete(post.id);
-                res.status(500).json({ message: 'Failed to upload images, please try again later.' });
-            }
-
-            await post.save();
-
-            res.status(200).json({ message: 'Post created.' });
-        }
-        catch (error) {
-            res.status(400).json({ message: error.message });
-        }
+    // otherwise return 400 error
+    if (req.files.length <= 0) {
+        return res.status(400).json({ message: 'At least one image is required.' });
     }
-    else {
-        if (!creatorPresent && !imagePresent) {
-            res.status(400).json({ message: 'Creator and at least one image is required.' });
+
+    try {
+        const post = new Post({
+            creator_id: req.user._id,
+            content_links: []
+        });
+
+        // save post to make post_id available
+        await post.save();
+
+        // upload images and store the links in content_links of the new post
+        const uploadSuccessful = await uploadImages(req.files, post.content_links, post.id);
+
+        // if failed to upload images then delete the post from database and return error message
+        if (!uploadSuccessful) {
+            await Post.findByIdAndDelete(post.id);
+            res.status(500).json({ message: 'Failed to upload images, please try again later.' });
         }
-        else if (!creatorPresent) {
-            res.status(400).json({ message: 'Creator is required.' });
-        }
-        else {
-            res.status(400).json({ message: 'At least one image is required.' });
-        }
+
+        await post.save();
+
+        res.status(200).json({ message: 'Post created.' });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
     }
 });
 
@@ -146,37 +142,48 @@ router.patch('/:postId', multerConfig.array('selectedImages'), multerErrorHandle
     // check if images are provided in the body
     // if provided, continue to update post,
     // otherwise, return 400 error
-    if (req.files.length > 0) {
-        try {
-            var newImageLinks = [];
-
-            const uploadSuccessful = await uploadImages(req.files, newImageLinks, req.params.postId);
-
-            // if failed to upload images then send error message
-            if (!uploadSuccessful) {
-                res.status(500).json({ message: 'Failed to update post, please try again later.' });
-            }
-
-            // otherwise delete old images, update content_links and save the post
-            deleteImages(res.post.content_links);
-
-            res.post.content_links = newImageLinks;
-            
-            await res.post.save();
-
-            res.status(200).json({ message: 'Post updated.' });
-        }
-        catch (error) {
-            res.status(400).json({ message: error.message });
-        }
+    if (req.files.length <= 0) {
+        return res.status(400).json({ message: 'At least one image is required.' });   
     }
-    else {
-        res.status(400).json({ message: 'At least one image is required.' });
+
+    // check if the creator of the post is the requesting user
+    // if creator is not the requesting user return 401 error
+    if (req.user._id.toString() != res.post.creator_id._id.toString()) {
+        return res.status(401).json({ message: 'Unauthorized.' });
+    }
+
+    try {
+        var newImageLinks = [];
+
+        const uploadSuccessful = await uploadImages(req.files, newImageLinks, req.params.postId);
+
+        // if failed to upload images then send error message
+        if (!uploadSuccessful) {
+            res.status(500).json({ message: 'Failed to update post, please try again later.' });
+        }
+
+        // otherwise delete old images, update content_links and save the post
+        deleteImages(res.post.content_links);
+
+        res.post.content_links = newImageLinks;
+        
+        await res.post.save();
+
+        res.status(200).json({ message: 'Post updated.' });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
     }
 });
 
 // delete a post
 router.delete('/:postId', getPost, async (req, res) => {
+    // check if the creator of the post is the requesting user
+    // if creator is not the requesting user return 401 error
+    if (req.user._id.toString() != res.post.creator_id._id.toString()) {
+        return res.status(401).json({ message: 'Unauthorized.' });
+    }
+
     try {
         // delete associated images
         deleteImages(res.post.content_links);
@@ -186,6 +193,7 @@ router.delete('/:postId', getPost, async (req, res) => {
             Comment.findByIdAndDelete(res.post.comments[i]);
         }
 
+        // delete post
         await Post.findByIdAndDelete(req.params.postId);
         res.status(200).json({ message: 'Post removed.' });
     }
@@ -198,13 +206,19 @@ router.delete('/:postId', getPost, async (req, res) => {
 router.get('/:postId/comments', getPost, async (req, res) => {
     try {
         // populate comment data to get creator's username and profile pic link
-        const comments = await Post.findById(req.params.postId).select('comments').populate({
-            path: 'comments',
-            populate: {
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            }
-        });
+        const postComments = await Post
+            .findById(req.params.postId)
+            .select('comments')
+            .populate({
+                path: 'comments',
+                populate: {
+                    path: 'creator_id',
+                    select: 'username profile_pic_link'
+                }
+            });
+
+        const comments = checkCommentAttributesAll(postComments.comments, req.user._id);
+
         res.status(200).json(comments);
     }
     catch (error) {
@@ -214,143 +228,122 @@ router.get('/:postId/comments', getPost, async (req, res) => {
 
 // create a comment and update the post's comments field
 router.post('/:postId/comments', express.json(), getPost, async (req, res) => {
-    // check if creator_id and content are provided in the body
+    // check if content is provided in the body
     // if provided, continue to create comment
-    // otherwise, check which fields are missing and return 400 error
-    if (req.body.creator_id && req.body.content) {
-        // check if creator exists
-        const target = await User.findById(req.body.creator_id);
+    // otherwise return 400 error
+    if (!req.body.content) {
+        res.status(400).json({ message: 'Comment content is required.' });
+    }
 
-        if (!target) {
-            return res.status(404).json({ message: 'Invalid user.' });
-        }
+    const comment = new Comment({
+        creator_id: req.user._id,
+        content: req.body.content
+    });
 
-        const comment = new Comment({
-            creator_id: req.body.creator_id,
-            content: req.body.content
-        });
-    
-        res.post.comments.push(comment._id);
-    
-        try {
-            await comment.save();
-            await res.post.save();
+    // update post's comments list
+    res.post.comments.push(comment._id);
 
-            const newComment = await Comment.findById(comment._id).populate({
+    try {
+        // update database
+        await comment.save();
+        await res.post.save();
+
+        // return the new comment data to update dom
+        var newComment = await Comment
+            .findById(comment._id)
+            .populate({
                 path: 'creator_id',
                 select: 'username profile_pic_link'
             });
 
-            res.status(200).json({ message: 'Comment created.', comment: newComment });
-        }
-        catch (error) {
-            res.status(400).json({ message: error.message })
-        }
+        newComment = checkCommentAttributes(newComment, req.user._id);
+
+        res.status(200).json({ message: 'Comment created.', comment: newComment });
     }
-    else {
-        if (!req.body.creator_id && !req.body.content) {
-            res.status(400).json({ message: 'Both creator and comment content are required.' });
-        }
-        else if (!req.body.creator_id) {
-            res.status(400).json({ message: 'Creator is required.' });
-        }
-        else {
-            res.status(400).json({ message: 'Comment content is required.' });
-        }
+    catch (error) {
+        res.status(400).json({ message: error.message })
     }
 });
 
 // delete a comment and update the post's comments field
 router.delete('/:postId/comments/:commentId', getPost, async (req, res) => {
-    // check if the specified comment exists under the specified post
-    const commentExists = res.post.comments.find(commentId => commentId == req.params.commentId);
+    // check if comment exists
+    const targetComment = await Comment.findById(req.params.commentId);
 
-    // if comment exists, continue to delete comment
-    // otherwise, return 404 error
-    if (commentExists) {
-        const commentIndex = res.post.comments.indexOf(req.params.commentId);
-        res.post.comments.splice(commentIndex, 1);
-
-        try {
-            await Comment.findByIdAndDelete(req.params.commentId);
-            await res.post.save();
-            res.status(200).json({ message: 'Comment deleted.' });
-        }
-        catch (error) {
-            res.status(500).json({ message: error.message });
-        }
+    // check if the comment is posted by the requesting user
+    // if creator is not the requesting user return 401 error
+    if (targetComment.creator_id._id.toString() != req.user._id.toString()) {
+        return res.status(401).json({ message: 'Unauthorized.' });
     }
-    else {
-        res.status(404).json({ message: 'Unable to find the specified comment.' });
+
+    // check if the specified comment exists under the specified post
+    const commentUnderPost = res.post.comments.find(commentId => commentId == req.params.commentId);
+
+    // if comment exists and is under the specified post, continue to delete comment
+    // otherwise, return 404 error
+    if (!targetComment || !commentUnderPost) {
+        return res.status(404).json({ message: 'Unable to find the specified comment.' })
+    }
+
+    // remove comment id from post's comments list
+    const commentIndex = res.post.comments.indexOf(req.params.commentId);
+    res.post.comments.splice(commentIndex, 1);
+
+    try {
+        // update database
+        await Comment.findByIdAndDelete(req.params.commentId);
+        await res.post.save();
+
+        res.status(200).json({ message: 'Comment deleted.' });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 
 // like a post and update the post's likes field
-router.post('/:postId/like', express.json(), getPost, async (req, res) => {
-    // check if creator_id is provided in the body
-    // if provided, continue to add the like
-    // otherwise, return 400 error
-    if (req.body.creator_id) {
-        // check if creator exists
-        const target = await User.findById(req.body.creator_id);
-
-        if (!target) {
-            return res.status(404).json({ message: 'Invalid user.' });
-        }
-
-        // check if the specified post is liked by the user
-        const likeExists = res.post.likes.find(creator_id => creator_id == req.body.creator_id);
-        
-        // if the user has not liked the post, continue to add the like
-        // otherwise, return 400 error
-        if (!likeExists) {
-            res.post.likes.push(req.body.creator_id);
+router.post('/:postId/like', getPost, async (req, res) => {
+    // check if the specified post is liked by the user
+    const likeExists = res.post.likes.find(creator_id => creator_id == req.user._id);
     
-            try {
-                await res.post.save();
-                res.status(201);
-            }
-            catch (error) {
-                res.status(500).json({ message: error.message });
-            }
-        }
-        else {
-            res.status(400).json({ message: 'You have already liked this post.' });
-        }
+    // if the user has not liked the post, continue to add the like
+    // otherwise, return 400 error
+    if (likeExists) {
+        return res.status(400).json({ message: 'You have already liked this post.' });
     }
-    else {
-        res.status(400).json({ message: 'Creator is required.' });
+
+    // update post's likes list
+    res.post.likes.push(req.user._id);
+
+    try {
+        await res.post.save();
+        res.status(201).end();
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 
 // remove like from a post and update the post's likes field
-router.delete('/:postId/like/:creatorId', getPost, async (req, res) => {
-    // check if creator exists
-    const target = await User.findById(req.params.creatorId);
-
-    if (!target) {
-        return res.status(404).json({ message: 'Invalid user.' });
-    }
-
+router.delete('/:postId/like', getPost, async (req, res) => {
     // check if the specified post is liked by the user
-    const likeExists = res.post.likes.find(creator_id => creator_id == req.params.creatorId);
+    const likeIndex = res.post.likes.indexOf(req.user._id);
     
     // if the user has liked the post, continue to remove the like
     // otherwise, return 400 error
-    if (likeExists) {
-        const likeIndex = res.post.likes.indexOf(req.body.creator_id);
-        res.post.likes.splice(likeIndex, 1);
-
-        try {
-            await res.post.save();
-            res.status(204);
-        }
-        catch (error) {
-            res.status(500).json({ message: error.message });
-        }
+    if (likeIndex == -1) {
+        return res.status(400).json({ message: 'You have not liked this post.' });
     }
-    else {
-        res.status(400).json({ message: 'You have not liked this post.' });
+
+    // remove user id from post's likes list
+    res.post.likes.splice(likeIndex, 1);
+
+    try {
+        await res.post.save();
+        res.status(204).end();
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 
@@ -423,6 +416,86 @@ function deleteImages(imageLinks) {
                 console.log(error);
             });
     }
+}
+
+// make sure jwt is valid and user is authenticated
+async function validateUser(req, res, next) {
+    try {
+        // Get the JWT token from the cookie
+        const token = req.cookies.authapi;
+
+        // return 401 error if there is no authapi cookie
+        if (!token) {
+          return res.status(401).json({ message: 'Unauthorized.' });
+        }
+        
+        // Verify and decode the JWT token
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // get user based on id in jwt token
+        const userId = decodedToken.id;
+        const user = await User.findById(userId);
+
+        // return 404 error if user not found
+        if (!user) {
+          return res.status(404).json({ message: 'Invalid user.' });
+        }
+
+        // Attach the user object to the request for further processing
+        req.user = user;
+        
+        next();
+    }
+    // Handle token verification or database errors
+    catch (error) {
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
+// adds fields to the post object:
+// 1. check if the requesting user is the owner of the post
+// 2. check if the requesting user has liked the post
+// for an array of posts
+function checkPostAttributesAll(posts, userId) {
+    let result = [];
+
+    for (let i = 0; i < posts.length; i ++) {
+        result.push(checkPostAttributes(posts[i], userId));
+    }
+
+    return result;
+}
+
+// for one post
+function checkPostAttributes(post, userId) {
+    post = post.toObject();
+
+    post.isOwner = post.creator_id._id.toString() == userId.toString();
+    post.liked = post.likes.findIndex((creator_id) => creator_id.toString() == userId.toString()) != -1;
+
+    return post;
+}
+
+// add fields to the comment object:
+// check if the requesting user is the owner of the comment
+// for an array of comments
+function checkCommentAttributesAll(comments, userId) {
+    let result = [];
+
+    for (let i = 0; i < comments.length; i++) {
+        result.push(checkCommentAttributes(comments[i], userId));
+    }
+
+    return result;
+}
+
+// for one comment
+function checkCommentAttributes(comment, userId) {
+    comment = comment.toObject();
+
+    comment.isOwner = comment.creator_id._id.toString() == userId.toString();
+
+    return comment;
 }
 
 module.exports = router;
