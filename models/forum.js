@@ -12,10 +12,12 @@ const forumSchema = new mongoose.Schema({
         immutable: true,
         default: Date.now()
     },
+    // Ex. NP InfoComm
     forumTitle: {
         type: String,
         required: true,
     },
+    // Ex. NPICT
     forumAlias: {
         type: String,
         required: true,
