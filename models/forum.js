@@ -12,6 +12,14 @@ const forumSchema = new mongoose.Schema({
         immutable: true,
         default: Date.now()
     },
+    forumTitle: {
+        type: String,
+        required: true,
+    },
+    forumAlias: {
+        type: String,
+        required: true,
+    },
     threads: {
         type: [{ type: mongoose.SchemaTypes.ObjectId, 
             ref: 'Thread' }],
