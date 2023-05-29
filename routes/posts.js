@@ -157,7 +157,9 @@ router.patch('/:postId', multerConfig.array('selectedImages'), multerErrorHandle
                 res.status(500).json({ message: 'Failed to update post, please try again later.' });
             }
 
-            // otherwise update content_links and save the post
+            // otherwise delete old images, update content_links and save the post
+            deleteImages(res.post.content_links);
+
             res.post.content_links = newImageLinks;
             
             await res.post.save();
@@ -324,7 +326,7 @@ router.post('/:postId/like', express.json(), getPost, async (req, res) => {
 // remove like from a post and update the post's likes field
 router.delete('/:postId/like/:creatorId', getPost, async (req, res) => {
     // check if creator exists
-    const target = await User.findById(req.body.creator_id);
+    const target = await User.findById(req.params.creatorId);
 
     if (!target) {
         return res.status(404).json({ message: 'Invalid user.' });
