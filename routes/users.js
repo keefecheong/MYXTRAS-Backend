@@ -111,6 +111,7 @@ router.post('/register', express.json(), async (req, res) => {
             username: 'user' + crypto.randomBytes(4).toString("hex"),
             email: emailAddress,
             phonenumber: phoneNumber,
+            profile_pic_link: "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg",
             password: await bcrypt.hash(password, 10),
         });
 
