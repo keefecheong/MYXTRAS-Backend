@@ -86,6 +86,7 @@ Content-Type: application/json
 ###
 
 GET http://localhost:8081/api/posts/646f9c4e7a3e4209d92540ad/comments
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzQ1OTk4NzUzOWMwMWY5ZTQ3YzhjZiIsImlhdCI6MTY4NTM2MjkyNH0.Gr8lOjQT98cOVTFUtAz0sN1RAH1RXLeO0JrH_y-OAW4
 
 ###
 

@@ -26,6 +26,9 @@ const userSchema = new mongoose.Schema({
     profile_pic_link: {
         type: String
     },
+    gender:{
+        type: String
+    },
     biography: {
         type: String,
         default: function() {
