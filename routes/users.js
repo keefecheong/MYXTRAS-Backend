@@ -36,7 +36,6 @@ router.get('/profilePage', (req, res) => {
 router.get('/get-cookie', async (req, res) => {
     const token = req.cookies.authapi;
     if (req.cookies && token){
-        console.log("2")
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
         // Get the user ID from the decoded token
         const userId = decodedToken.id;
@@ -110,19 +109,19 @@ router.post('/register', express.json(), async (req, res) => {
 
     if (existingEmail) {
       // User already exists, handle the error
-      return res.status(409).json({ error: 'Email already exists' });
+      return res.status(400).json({ error: 'Email already exists' });
     }
     const existingPhone = await User.findOne({ phonenumber: phoneNumber });
 
     if (existingPhone) {
       // User already exists, handle the error
-      return res.status(409).json({ error: 'Phone Number already exists' });
+      return res.status(400).json({ error: 'Phone Number already exists' });
     }
     if (phoneNumber.length != 8){
-        return res.status(409).json({ error: 'Inavlid phone number' });
+        return res.status(400).json({ error: 'Inavlid phone number' });
     }
     if (!/[A-Z]/.test(password) || !/[0-9]/.test(password) || password.length < 8){
-        return res.status(409).json({ error: 'Password does not meet complexity requirements' });
+        return res.status(400).json({ error: 'Password does not meet complexity requirements' });
     }
     try {
         const newUser = new User({
@@ -136,6 +135,7 @@ router.post('/register', express.json(), async (req, res) => {
         // Save user into database
         await newUser.save();
         
+        // Signs JWT token to be stored in HTTP cookie
         const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
 
         //res.setHeader("Authorization", "Bearer " + accessToken)
@@ -151,16 +151,6 @@ router.post('/register', express.json(), async (req, res) => {
         
         //res.json({ accessToken: accessToken})
         return res.json();
-
-        // send verification email
-        // const verificationUrl = `http://127.0.0.1:3000/api/users/verify/${newUser.activeToken}`;
-        // const mailOptions = {
-        //     to: email,
-        //     subject: 'Verify your email address',
-        //     html: `Please click this link to verify your email address: <a href="${verificationUrl}">${verificationUrl}</a>`,
-        // };
-
-        // // send verification email using NodeMailer or a similar email service
 
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -213,14 +203,41 @@ router.post('/login', express.json(), async (req, res) => {
 // Setupprofile
 router.patch('/setup', express.json(), authenticateToken, async (req, res) => {
     
-    const {realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
+    const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
 
+    var detailsList = [realName, userName, selectedSchool, selectedCourse]
     try {
         const user = req.user;
-        if (!user) {
-          return res.status(404).json({ error: 'User not found' });
-        }
-    
+        // TO DO (add validation for course in courses)
+        // ||!(Object.values(this.courses).flat().includes(selectedCourse)
+        //|| !(selectedSchool in this.selectedCourse)
+        if (
+            detailsList.some(item => item === "") ||
+            /^[0-9]+$/.test(realName) ||
+            realName.length > 32 ||
+            userName.length > 16 
+            ) {
+                if (detailsList.some(item => item === "")) {
+                    return res.status(400).json({error: "Please enter all fields"});
+
+                } else if (/^[0-9]+$/.test(realName)) {
+                    return res.status(400).json({error: "No integers in your real name"});
+
+                } else if (realName.length > 32) {
+                    return res.status(400).json({error: "Real name must not be more than 32 characters long"});
+
+                } else if (userName.length > 16) {
+                    return res.status(400).json({error: "Username must not be more than 16 characters long"});
+
+                } 
+                // else if (!(school in this.courses)) {
+                //     return res.status(400).json({error: "School does not exist"});
+
+                // } else if (!Object.values(this.courses).flat().includes(course)) {
+                //     return res.status(400).json({error: "Course does not exist"});
+                // }
+            }
+
         user.realname = realName;
         user.username = userName;
         user.biography = biography;
