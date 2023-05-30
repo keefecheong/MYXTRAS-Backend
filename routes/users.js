@@ -204,10 +204,10 @@ router.post('/login', express.json(), async (req, res) => {
 router.patch('/setup', express.json(), authenticateToken, async (req, res) => {
     
     const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
-    console.log(req.body)
+    
     var detailsList = [realName, userName, selectedSchool, selectedCourse]
     try {
-        const user = await User.findOne({ email: emailAddress });
+        const user = req.user;
         // TO DO (add validation for course in courses)
         // ||!(Object.values(this.courses).flat().includes(selectedCourse)
         //|| !(selectedSchool in this.selectedCourse)
