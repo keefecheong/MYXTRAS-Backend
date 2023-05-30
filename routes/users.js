@@ -204,7 +204,7 @@ router.post('/login', express.json(), async (req, res) => {
 router.patch('/setup', express.json(), authenticateToken, async (req, res) => {
     
     const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
-    
+
     var detailsList = [realName, userName, selectedSchool, selectedCourse]
     try {
         const user = req.user;
@@ -229,12 +229,13 @@ router.patch('/setup', express.json(), authenticateToken, async (req, res) => {
                 } else if (userName.length > 16) {
                     return res.status(400).json({error: "Username must not be more than 16 characters long"});
 
-                } else if (!(school in this.courses)) {
-                    return res.status(400).json({error: "School does not exist"});
+                } 
+                // else if (!(school in this.courses)) {
+                //     return res.status(400).json({error: "School does not exist"});
 
-                } else if (!Object.values(this.courses).flat().includes(course)) {
-                    return res.status(400).json({error: "Course does not exist"});
-                }
+                // } else if (!Object.values(this.courses).flat().includes(course)) {
+                //     return res.status(400).json({error: "Course does not exist"});
+                // }
             }
 
         user.realname = realName;
