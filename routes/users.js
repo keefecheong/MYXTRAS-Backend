@@ -27,7 +27,7 @@ router.get('/get-cookie', async (req, res) => {
         // Get the user ID from the decoded token
         const userId = decodedToken.id;
         const user = await User.findById(userId);
-        if (user.profilesetup) {
+        if (!user.profilesetup) {
             return res.status(401).json()
         } 
         return res.status(200).json()
