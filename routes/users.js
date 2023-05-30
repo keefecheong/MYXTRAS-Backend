@@ -3,7 +3,11 @@ const User = require('../models/user');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
 const crypto = require('crypto');
+const { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } = require('firebase/storage');
+
+const firebaseStorage = getStorage();
 
 // Redirect from register to setupprofile
 router.get('/setupprofile', (req, res) => {
@@ -19,6 +23,16 @@ router.get('/feed', (req, res) => {
     // Redirect to a different HTML page
     res.redirect(process.env.FRONTEND_SERVER_URL + '/feed.html');
 });
+
+// Redirect from profileManagement to profilePage
+router.get('/profilePage', (req, res) => {
+    // Set CORS headers
+    // res.set('Access-Control-Allow-Origin', "http://127.0.0.1:5173");
+    // res.set('Access-Control-Allow-Methods', 'GET, POST');
+    // Redirect to a different HTML page
+    res.redirect(process.env.FRONTEND_SERVER_URL + '/profilePage.html');
+});
+
 router.get('/get-cookie', async (req, res) => {
     const token = req.cookies.authapi;
     if (req.cookies && token){
@@ -35,10 +49,12 @@ router.get('/get-cookie', async (req, res) => {
         return res.status(401).json()
     }
 }),
+
 router.get('/remove-cookie', (req, res) => {
     res.clearCookie("authapi");
     return res.json();
 });
+
 // Redirect from anypage to login
 router.get('/redirect-login', (req, res) => {
     res.redirect(process.env.FRONTEND_SERVER_URL + '/login.html');
@@ -49,6 +65,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const user = req.user;
     res.json(user);
 })
+
 // Middlewawre to verfiy cookie
 async function authenticateToken(req, res, next) {
     try {
@@ -192,14 +209,13 @@ router.post('/login', express.json(), async (req, res) => {
 });
 
 
-// Setupprofile / Profile Management
-router.patch('/setup', express.json(), async (req, res) => {
+// Setupprofile
+router.patch('/setup', express.json(), authenticateToken, async (req, res) => {
     
-    const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
+    const {realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
 
     try {
-        const user = await User.findOne({ email: emailAddress });
-    
+        const user = req.user;
         if (!user) {
           return res.status(404).json({ error: 'User not found' });
         }
@@ -217,25 +233,33 @@ router.patch('/setup', express.json(), async (req, res) => {
         console.log(error);
         res.status(400).json({ error: 'Failed to update user' });
     }
-    // const userId = req.params.userId;
-    // const updates = req.body;
-    // console.log(updates);
-    // try {
-    //     const user = await User.findById(userId);
-    //     if (!user) {
-    //         return res.status(404).json({ error: 'User not found' });
-    //     }
-    //     Object.assign(user, updates);
-    //     const updatedUser = await user.save();
-    //     res.json(updatedUser);
+}),
 
+// ProfileManagement
+router.patch('/update', express.json(), authenticateToken, async (req, res) => {
+    
+    const {userName, biography, selectedInterests, gender} = req.body;
 
-    // } catch (error) {
-    //     console.error(error);
-    //     res.status(500).json({ error: 'Server error' });
-    // }
-
-
+    try {
+       
+        const user = req.user;
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+    
+        user.username = userName;
+        user.biography = biography;
+        user.interests = selectedInterests.sort();
+        user.gender = gender
+        const updatedUser = await user.save();
+        res.json(updatedUser);
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: 'Failed to update user' });
+    }
 })  
+
+
+
 
 module.exports = router;
