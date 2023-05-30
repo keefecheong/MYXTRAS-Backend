@@ -204,28 +204,29 @@ router.post('/login', express.json(), async (req, res) => {
 router.patch('/setup', express.json(), authenticateToken, async (req, res) => {
     
     const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
+    console.log(req.body)
     var detailsList = [realName, userName, selectedSchool, selectedCourse]
     try {
         const user = await User.findOne({ email: emailAddress });
-    
+        // TO DO (add validation for course in courses)
+        // ||!(Object.values(this.courses).flat().includes(selectedCourse)
+        //|| !(selectedSchool in this.selectedCourse)
         if (
             detailsList.some(item => item === "") ||
-            /^[0-9]+$/.test(realname) ||
+            /^[0-9]+$/.test(realName) ||
             realName.length > 32 ||
-            userName.length > 16 ||
-            !(school in this.courses) ||
-            !(Object.values(this.courses).flat().includes(course))
+            userName.length > 16 
             ) {
                 if (detailsList.some(item => item === "")) {
                     return res.status(400).json({error: "Please enter all fields"});
 
-                } else if (/^[0-9]+$/.test(realname)) {
+                } else if (/^[0-9]+$/.test(realName)) {
                     return res.status(400).json({error: "No integers in your real name"});
 
-                } else if (realname.length > 32) {
+                } else if (realName.length > 32) {
                     return res.status(400).json({error: "Real name must not be more than 32 characters long"});
 
-                } else if (username.length > 16) {
+                } else if (userName.length > 16) {
                     return res.status(400).json({error: "Username must not be more than 16 characters long"});
 
                 } else if (!(school in this.courses)) {
