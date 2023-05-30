@@ -35,8 +35,9 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 
 // routes
-const postsRouter = require('./routes/posts.js');
+const postsRouter = require('./routes/posts/mainRouter.js');
 app.use('/api/posts', postsRouter);
+
 const usersRouter = require('./routes/users.js');
 app.use('/api/users', usersRouter);
 

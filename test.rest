@@ -85,15 +85,21 @@ Content-Type: application/json
 
 ###
 
-GET http://localhost:8081/api/posts/646f9c4e7a3e4209d92540ad/comments
-Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzQ1OTk4NzUzOWMwMWY5ZTQ3YzhjZiIsImlhdCI6MTY4NTM2MjkyNH0.Gr8lOjQT98cOVTFUtAz0sN1RAH1RXLeO0JrH_y-OAW4
+GET http://127.0.0.1:8081/api/posts/comments/647593717e5cbd1fba80f0db
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NTQ1ODk0M30.7QATwzOI8ERXAZPpLgsi0JGfOcMHqnl32IS53hdK9_8
 
 ###
 
-POST http://localhost:8081/api/posts/646f9c4e7a3e4209d92540ad/comments
+DELETE http://127.0.0.1:8081/api/posts/likes/647593717e5cbd1fba80f0db
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NTQ1ODk0M30.7QATwzOI8ERXAZPpLgsi0JGfOcMHqnl32IS53hdK9_8
+
+###
+
+POST http://127.0.0.1:8081/api/posts/comments/647593717e5cbd1fba80f0db
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NTQ1ODk0M30.7QATwzOI8ERXAZPpLgsi0JGfOcMHqnl32IS53hdK9_8
 Content-Type: application/json
 
 {
     "content": "new comment",
-    "creator_id": "6021fde84705d830b8f458ab"
+    "creator_id": "6475929dd0b97c5c353602af"
 }

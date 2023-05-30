@@ -11,6 +11,10 @@ const postSchema = new mongoose.Schema({
         type: [String],
         required: true
     },
+    original_names: {
+        type: [String],
+        required: true
+    },
     creation_time: {
         type: Date,
         immutable: true,
