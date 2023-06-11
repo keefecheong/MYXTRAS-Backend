@@ -16,8 +16,16 @@ const forumSchema = new mongoose.Schema({
         type: [{ type: mongoose.SchemaTypes.ObjectId, 
             ref: 'Comment' }],
         default: []
+    },
+    numOfComments: {
+        type: Number,
+        default: 0,
     }
 })
 
+threadSchema.pre('save', function (next) {
+    this.numOfComments = this.comments.length;
+    next();
+  });
 
 module.exports = mongoose.model('Thread', threadSchema);

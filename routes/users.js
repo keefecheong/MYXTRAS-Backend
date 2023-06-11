@@ -9,6 +9,68 @@ const { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } = require('
 
 const firebaseStorage = getStorage();
 
+function passwordRequirements(password) {
+    const consecutiveLimit = 3;
+    if (password.length < 4 || isPasswordSingleType(password)) {
+        return 'very-weak';
+    }
+    this.passwordStrength = 0;
+
+    if (/[A-Z]/.test(password)) {
+        this.passwordStrength++;
+    }
+
+    if (/\d/.test(password)) {
+        this.passwordStrength++;
+    }
+    if (password.length > 14) {
+        this.passwordStrength++;
+    }
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        this.passwordStrength++;
+    }
+    // checks for 3 consecutive characters
+    for (let i = 0; i < password.length - consecutiveLimit + 1; i++) {
+        let isConsecutive = true;
+        for (let j = i + 1; j < i + consecutiveLimit; j++) {
+        if (password[j] !== password[i]) {
+            isConsecutive = false;
+            break;
+        }
+        }
+        if (isConsecutive) {
+            if (this.passwordStrength === 0){
+                break;
+            }
+            this.passwordStrength--;
+        }
+    }
+    if (this.passwordStrength === 0) {
+        return 'very-weak';
+    } else if (this.passwordStrength === 1) {
+        return 'weak';
+    } else if (this.passwordStrength === 2 || this.passwordStrength === 3) {
+        return 'strong';
+    } else {
+        return 'very-strong';
+    }
+}
+function isPasswordSingleType(password) {
+    const lowercaseRegex = /^[a-z]+$/;
+    const uppercaseRegex = /^[A-Z]+$/;
+    const symbolRegex = /^[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/;
+    const numberRegex = /^[0-9]+$/;
+    if (
+        lowercaseRegex.test(password) ||
+        uppercaseRegex.test(password) ||
+        symbolRegex.test(password) ||
+        numberRegex.test(password)
+    ) {
+        return true;
+    }
+
+    return false;
+}
 // Redirect from register to setupprofile
 router.get('/setupprofile', (req, res) => {
     // Redirect to a different HTML page
@@ -66,35 +128,6 @@ router.get('/', authenticateToken, async (req, res) => {
     res.json(user);
 })
 
-// Middlewawre to verfiy cookie
-async function authenticateToken(req, res, next) {
-    try {
-        // Get the JWT token from the cookie
-        const token = req.cookies.authapi;
-        if (!token) {
-          // No token found, handle unauthorized access
-          return res.status(401).json({ message: 'Unauthorized' });
-        }
-        // Verify and decode the JWT token
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-        // Get the user ID from the decoded token
-        const userId = decodedToken.id;
-        // Retrieve the user from the database
-        const user = await User.findById(userId);
-        if (!user) {
-          // User not found, handle unauthorized access
-          return res.status(401).json({ message: 'Unauthorized' });
-        }
-        // Attach the user object to the request for further processing
-        req.user = user;
-        // Proceed to the next middleware or route handler
-        next();
-      } catch (error) {
-        // Handle token verification or database errors
-        return res.status(500).json({ message: 'Internal Server Error' });
-      }
-}
-
 // Registration
 router.post('/register', express.json(), async (req, res) => {
     
@@ -105,13 +138,20 @@ router.post('/register', express.json(), async (req, res) => {
     const { emailAddress, phoneNumber, password } = req.body;
 
     // check if user already exists in database
-    const existingEmail = await User.findOne({ email: emailAddress });
-
+    const [existingEmail, existingPhone] = await Promise.all([
+        User.findOne({ email: emailAddress }),
+        User.findOne({ phonenumber: phoneNumber })
+    ]);
+    
     if (existingEmail) {
-      // User already exists, handle the error
-      return res.status(400).json({ error: 'Email already exists' });
+        // User with the same email already exists, handle the error
+        return res.status(400).json({ error: 'Email already exists' });
     }
-    const existingPhone = await User.findOne({ phonenumber: phoneNumber });
+    
+    if (existingPhone) {
+        // User with the same phone number already exists, handle the error
+        return res.status(400).json({ error: 'Phone Number already exists' });
+    }
 
     if (existingPhone) {
       // User already exists, handle the error
@@ -120,9 +160,11 @@ router.post('/register', express.json(), async (req, res) => {
     if (phoneNumber.length != 8){
         return res.status(400).json({ error: 'Inavlid phone number' });
     }
-    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password) || password.length < 8){
+
+    if (passwordRequirements(password) in ['very-weak', 'weak']){
         return res.status(400).json({ error: 'Password does not meet complexity requirements' });
     }
+
     try {
         const newUser = new User({
             username: 'user' + crypto.randomBytes(4).toString("hex"),
@@ -278,6 +320,33 @@ router.patch('/update', express.json(), authenticateToken, async (req, res) => {
 })  
 
 
-
+// Middlewawre to verfiy cookie
+async function authenticateToken(req, res, next) {
+    try {
+        // Get the JWT token from the cookie
+        const token = req.cookies.authapi;
+        if (!token) {
+          // No token found, handle unauthorized access
+          return res.status(401).json({ message: 'Unauthorized' });
+        }
+        // Verify and decode the JWT token
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        // Get the user ID from the decoded token
+        const userId = decodedToken.id;
+        // Retrieve the user from the database
+        const user = await User.findById(userId);
+        if (!user) {
+          // User not found, handle unauthorized access
+          return res.status(401).json({ message: 'Unauthorized' });
+        }
+        // Attach the user object to the request for further processing
+        req.user = user;
+        // Proceed to the next middleware or route handler
+        next();
+      } catch (error) {
+        // Handle token verification or database errors
+        return res.status(500).json({ message: 'Internal Server Error' });
+      }
+}
 
 module.exports = router;

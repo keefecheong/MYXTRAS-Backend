@@ -30,10 +30,16 @@ const forumSchema = new mongoose.Schema({
     subscribers: {
         type: [{ type: mongoose.SchemaTypes.ObjectId, 
             ref: 'User' }],
+            default: []
     },
     numOfSubs: {
-        type: [],
+        type: Number,
+        default: 0,
     }
 })
 
+forumSchema.pre('save', function (next) {
+    this.numOfSubs = this.subscribers.length;
+    next();
+  });
 module.exports = mongoose.model('Forum', forumSchema);

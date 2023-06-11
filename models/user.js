@@ -56,6 +56,13 @@ const userSchema = new mongoose.Schema({
         }],
         default: []
     },
+    subscribedForums: {
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'Forum'
+        }],
+        default: []
+    },
     interests: {
         type: [String],
         default: []
