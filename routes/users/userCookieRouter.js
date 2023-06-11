@@ -5,13 +5,13 @@ const express = require('express');
 const cookieRouter = express.Router();
 
 // get middleware
-const { validateUser } = require('../../middleware/authMiddleware.js');
+const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
 
 // get controller functions
 const { verifyCookie, clearCookie } = require('../../controllers/users/userCookieController.js');
 
 // to verify jwt cookie
-cookieRouter.get('/verify', validateUser, verifyCookie);
+cookieRouter.get('/verify', validateUserHTTP, verifyCookie);
 
 // to clear jwt cookie
 cookieRouter.get('/remove', clearCookie);

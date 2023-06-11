@@ -2,17 +2,21 @@
 require('dotenv').config();
 
 const express = require('express');
-const cookieParser = require('cookie-parser');
-
 const app = express();
+
+const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+// configure cors
 const cors = require('cors');
-app.use(cors({
+const corsOptions = {
     origin: process.env.FRONTEND_SERVER_URL,
     methods: ['GET', 'POST', 'OPTIONS', 'DELETE', 'PATCH'],
     credentials: true,
-}));
+};
+
+app.use(cors(corsOptions));
+
 // make connection with mongodb
 const mongoose = require('mongoose');
 mongoose.connect(process.env.DATABASE_URL);
@@ -64,6 +68,12 @@ School.countDocuments({})
     console.error('Error:', error);
   });
 
-// start server
-app.listen(process.env.PORT, () => console.log(`Listening on Port ${process.env.PORT}...`));
+  const chatRouter = require('./routes/chats/mainRouter.js');
+  app.use('/api/chats', chatRouter);
 
+// start server
+const server = app.listen(process.env.PORT, () => console.log(`Listening on Port ${process.env.PORT}...`));
+
+// initialize socket
+const { initSocket } = require('./sockets/init.js');
+initSocket(server, corsOptions);

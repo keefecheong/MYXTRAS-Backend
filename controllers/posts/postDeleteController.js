@@ -2,7 +2,7 @@
 
 const Post = require('../../models/post.js');
 const Comment = require('../../models/comment.js');
-const { deleteImages } = require('../../utils/firebaseStorageDelete.js');
+const { deleteImages } = require('../../utils/posts/firebaseStorageDelete.js');
 
 const deletePost = async (req, res) => {
     // check if the creator of the post is the requesting user
