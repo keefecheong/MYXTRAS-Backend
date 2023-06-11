@@ -10,10 +10,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    realname: {
+    real_name: {
         type: String
     },
-    phonenumber: {
+    phone_number: {
         type: String,
         required: true
     },
@@ -24,7 +24,8 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     profile_pic_link: {
-        type: String
+        type: String,
+        default: "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
     },
     gender:{
         type: String
@@ -75,7 +76,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    profilesetup: {
+    is_profile_setup: {
         type: Boolean,
         default: false
     }
