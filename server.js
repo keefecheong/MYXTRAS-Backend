@@ -13,7 +13,6 @@ app.use(cors({
     methods: ['GET', 'POST', 'OPTIONS', 'DELETE', 'PATCH'],
     credentials: true,
 }));
-
 // make connection with mongodb
 const mongoose = require('mongoose');
 mongoose.connect(process.env.DATABASE_URL);
@@ -41,5 +40,30 @@ app.use('/api/posts', postsRouter);
 const usersRouter = require('./routes/users/mainRouter.js');
 app.use('/api/users', usersRouter);
 
+const schoolRouter = require('./routes/schools.js');
+app.use('/api/school', schoolRouter);
+
+// initialize data
+const School = require('./models/schools.js');
+School.countDocuments({})
+  .then(count => {
+    if (count > 0) {
+      console.log('The School has documents.');
+    } else {
+      const schoolInstance = new School()
+        schoolInstance.save()
+            .then(() => {
+                console.log('School instance saved successfully');
+              })
+              .catch((err) => {
+                console.error('Failed to save school instance:', err);
+              });
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+
 // start server
 app.listen(process.env.PORT, () => console.log(`Listening on Port ${process.env.PORT}...`));
+
