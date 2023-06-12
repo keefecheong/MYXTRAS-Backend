@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const forumSchema = new mongoose.Schema({
+const threadSchema = new mongoose.Schema({
     creator_id: {
         type: mongoose.SchemaTypes.ObjectId,
         ref: 'User',
@@ -20,6 +20,10 @@ const forumSchema = new mongoose.Schema({
     numOfComments: {
         type: Number,
         default: 0,
+    },
+    interests: {
+        type: [String],
+        default: []
     }
 })
 

@@ -4,13 +4,6 @@ const router = express.Router();
 // Retrieve schools
 
 router.get('/get-schools/:id', async (req, res) => {
-    // School.findById(documentId, { _id: 0 }, (err, document) => {
-    //     if (err) {
-    //       console.error('Failed to retrieve document:', err);
-    //     } else {
-    //       console.log('Document without _id:', document);
-    //     }
-    //   });
     const id = req.params.id;
     try {
         const school = await School.findOne({});
@@ -37,7 +30,6 @@ router.get('/get-courses/:id', async (req, res) => {
         }
     
         const courseList = school.courses[0][id];
-        console.log(courseList)
         return res.json({ courseList });
       } catch (error) {
         console.error('Error retrieving courses:', error);

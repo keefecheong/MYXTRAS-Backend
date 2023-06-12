@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const crypto = require('crypto');
 const { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } = require('firebase/storage');
-
+const { validateUser } = require('../middleware/authMiddleware.js');
 const firebaseStorage = getStorage();
 
 function passwordRequirements(password) {
@@ -112,6 +112,7 @@ router.get('/get-cookie', async (req, res) => {
     }
 }),
 
+// Logging out
 router.get('/remove-cookie', (req, res) => {
     res.clearCookie("authapi");
     return res.json();
@@ -123,7 +124,7 @@ router.get('/redirect-login', (req, res) => {
 });
 
 // Get user from session cookie
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', validateUser, async (req, res) => {
     const user = req.user;
     res.json(user);
 })
@@ -243,7 +244,7 @@ router.post('/login', express.json(), async (req, res) => {
 
 
 // Setupprofile
-router.patch('/setup', express.json(), authenticateToken, async (req, res) => {
+router.patch('/setup', express.json(), validateUser, async (req, res) => {
     
     const { emailAddress, realName, userName, biography, selectedSchool, selectedCourse, selectedInterests} = req.body;
 
@@ -296,7 +297,7 @@ router.patch('/setup', express.json(), authenticateToken, async (req, res) => {
 }),
 
 // ProfileManagement
-router.patch('/update', express.json(), authenticateToken, async (req, res) => {
+router.patch('/update', express.json(), validateUser, async (req, res) => {
     
     const {userName, biography, selectedInterests, gender} = req.body;
 
@@ -320,33 +321,33 @@ router.patch('/update', express.json(), authenticateToken, async (req, res) => {
 })  
 
 
-// Middlewawre to verfiy cookie
-async function authenticateToken(req, res, next) {
-    try {
-        // Get the JWT token from the cookie
-        const token = req.cookies.authapi;
-        if (!token) {
-          // No token found, handle unauthorized access
-          return res.status(401).json({ message: 'Unauthorized' });
-        }
-        // Verify and decode the JWT token
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-        // Get the user ID from the decoded token
-        const userId = decodedToken.id;
-        // Retrieve the user from the database
-        const user = await User.findById(userId);
-        if (!user) {
-          // User not found, handle unauthorized access
-          return res.status(401).json({ message: 'Unauthorized' });
-        }
-        // Attach the user object to the request for further processing
-        req.user = user;
-        // Proceed to the next middleware or route handler
-        next();
-      } catch (error) {
-        // Handle token verification or database errors
-        return res.status(500).json({ message: 'Internal Server Error' });
-      }
-}
+// // Middlewawre to verfiy cookie
+// async function authenticateToken(req, res, next) {
+//     try {
+//         // Get the JWT token from the cookie
+//         const token = req.cookies.authapi;
+//         if (!token) {
+//           // No token found, handle unauthorized access
+//           return res.status(401).json({ message: 'Unauthorized' });
+//         }
+//         // Verify and decode the JWT token
+//         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+//         // Get the user ID from the decoded token
+//         const userId = decodedToken.id;
+//         // Retrieve the user from the database
+//         const user = await User.findById(userId);
+//         if (!user) {
+//           // User not found, handle unauthorized access
+//           return res.status(401).json({ message: 'Unauthorized' });
+//         }
+//         // Attach the user object to the request for further processing
+//         req.user = user;
+//         // Proceed to the next middleware or route handler
+//         next();
+//       } catch (error) {
+//         // Handle token verification or database errors
+//         return res.status(500).json({ message: 'Internal Server Error' });
+//       }
+// }
 
 module.exports = router;

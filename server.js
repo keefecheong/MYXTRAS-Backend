@@ -43,7 +43,10 @@ app.use('/api/users', usersRouter);
 const schoolRouter = require('./routes/schools.js');
 app.use('/api/school', schoolRouter);
 
+const forumRouter = require('./routes/forums/forumRouter.js');
+app.use('/api/forums', forumRouter);
 // initialize data
+
 const School = require('./models/schools.js');
 School.countDocuments({})
   .then(count => {

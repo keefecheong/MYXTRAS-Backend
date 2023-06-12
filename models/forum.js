@@ -13,12 +13,20 @@ const forumSchema = new mongoose.Schema({
         default: Date.now()
     },
     // Ex. NP InfoComm
-    forumTitle: {
+    forumName: {
         type: String,
         required: true,
     },
     // Ex. NPICT
-    forumAlias: {
+    forumID: {
+        type: String,
+        required: true,
+    },
+    banner_link: {
+        type: String,
+        required: true,
+    },
+    category: {
         type: String,
         required: true,
     },
