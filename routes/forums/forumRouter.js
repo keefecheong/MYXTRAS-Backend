@@ -1,11 +1,11 @@
 const express = require('express');
 const Forum = require('../../models/forum.js');
 const router = express.Router();
-const { validateUser } = require('../../middleware/authMiddleware.js');
+const { validateUserSocket } = require('../../middleware/general/authMiddleware.js');
 
 // Retrieve schools
 
-router.post('/createForum', validateUser, express.json(), async (req, res) => {
+router.post('/createForum', validateUserSocket, express.json(), async (req, res) => {
     
     if (!req.body) {
         res.status(400).json({ error: 'Invalid request body' });
