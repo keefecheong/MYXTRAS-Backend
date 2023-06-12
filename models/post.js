@@ -22,7 +22,7 @@ const postSchema = new mongoose.Schema({
     },
     last_modified_time: {
         type: Date,
-        default: null
+        default: Date.now()
     },
     likes: {
         type: [{
@@ -42,7 +42,7 @@ const postSchema = new mongoose.Schema({
 
 // automatically update last_modified_time with the current time when an existing document is saved (updated)
 postSchema.pre('save', function(next) {
-    if (!this.isNew) {
+    if (!this.isNew && this.content_links.length > 0) {
         this.last_modified_time = Date.now();
     }
 

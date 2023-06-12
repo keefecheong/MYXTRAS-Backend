@@ -10,11 +10,11 @@ const postLikeRouter = require('./postLikeRouter.js');
 const postCommentRouter = require('./postCommentRouter.js');
 
 // get middleware
-const { validateUser } = require('../../middleware/authMiddleware.js');
+const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
 const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
 
 // validate user for all routes
-mainRouter.use(validateUser);
+mainRouter.use(validateUserHTTP);
 
 // mount various routes
 // handle post requests

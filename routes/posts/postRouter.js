@@ -6,7 +6,7 @@ const postRouter = express.Router();
 
 // get middleware
 const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
-const { multerConfig, multerErrorHandler } = require('../../middleware/multerMiddleware.js');
+const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // get controller functions
 const { getAllPosts, getFollowingPosts, getOnePost } = require('../../controllers/posts/postController.js');
