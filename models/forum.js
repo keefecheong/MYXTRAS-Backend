@@ -22,9 +22,13 @@ const forumSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    forum_pic_link: {
+        type: [String],
+        default: []
+    },
     banner_link: {
         type: [String],
-        required: true,
+        default: []
     },
     category: {
         type: String,

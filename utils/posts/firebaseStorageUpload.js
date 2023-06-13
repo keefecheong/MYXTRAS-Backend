@@ -11,7 +11,6 @@ const firebaseStorage = getStorage();
 const uploadImages = async (images, imageLinks, objId, type) => {
     for (let i = 0; i < images.length; i++) {
         const image = images[i];
-
         // create new file name with hash
         const newName = crypto.createHash('md5').update(image.originalname).update(Date.now().toString()).digest('hex');
 
@@ -47,7 +46,11 @@ const uploadImages = async (images, imageLinks, objId, type) => {
                 .then(async (result) => {
                     await getDownloadURL(result.ref)
                         .then((downloadURL) => {
+                            console.log(downloadURL)
+
                             imageLinks.push(downloadURL.split('&token')[0]);
+                            console.log(imageLinks)
+
                         })
                         .catch(async (error) => {
                             console.log(error);
