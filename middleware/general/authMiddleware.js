@@ -72,6 +72,7 @@ async function validateUserSocket(socket, next) {
     }
     // Handle token verification or database errors
     catch (error) {
+        console.log(error)
         socket.disconnect(true);
         socket.emit('server-error', { message: 'Internal Server Error' });
     }

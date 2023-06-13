@@ -8,7 +8,7 @@ const firebaseStorage = getStorage();
 
 // upload image to firebase storage and update image links
 // if uploading fails then delete all the uploaded images (ask user to retry later)
-const uploadImages = async (images, imageLinks, postId) => {
+const uploadImages = async (images, imageLinks, objId, type) => {
     for (let i = 0; i < images.length; i++) {
         const image = images[i];
 
@@ -20,26 +20,70 @@ const uploadImages = async (images, imageLinks, postId) => {
             cacheControl: 'max-age=300',
             contentType: image.mimetype
         }
-
-        const imageRef = ref(firebaseStorage, `posts/${postId}/${newName}`);
-        await uploadBytes(imageRef, image.buffer, metadata)
-            .then(async (result) => {
-                await getDownloadURL(result.ref)
-                    .then((downloadURL) => {
-                        imageLinks.push(downloadURL.split('&token')[0]);
-                    })
-                    .catch(async (error) => {
-                        console.log(error);
-                        deleteImages(imageLinks);
-                        return false;
-                    });
-
-            })
-            .catch(async (error) => {
-                console.log(error);
-                deleteImages(imageLinks);
-                return false;
-            });
+        if (type === "post"){
+            const imageRef = ref(firebaseStorage, `posts/${objId}/${newName}`);
+            await uploadBytes(imageRef, image.buffer, metadata)
+                .then(async (result) => {
+                    await getDownloadURL(result.ref)
+                        .then((downloadURL) => {
+                            imageLinks.push(downloadURL.split('&token')[0]);
+                        })
+                        .catch(async (error) => {
+                            console.log(error);
+                            deleteImages(imageLinks);
+                            return false;
+                        });
+    
+                })
+                .catch(async (error) => {
+                    console.log(error);
+                    deleteImages(imageLinks);
+                    return false;
+                });
+        }
+        else if (type === 'forum'){
+            const imageRef = ref(firebaseStorage, `forums/${objId}/${newName}`);
+            await uploadBytes(imageRef, image.buffer, metadata)
+                .then(async (result) => {
+                    await getDownloadURL(result.ref)
+                        .then((downloadURL) => {
+                            imageLinks.push(downloadURL.split('&token')[0]);
+                        })
+                        .catch(async (error) => {
+                            console.log(error);
+                            deleteImages(imageLinks);
+                            return false;
+                        });
+    
+                })
+                .catch(async (error) => {
+                    console.log(error);
+                    deleteImages(imageLinks);
+                    return false;
+                });
+            }
+        else if (type === 'thread'){
+            // TO ADD {forumId later} !!
+            const imageRef = ref(firebaseStorage, `threads/${forumId}/${objId}/${newName}`);
+            await uploadBytes(imageRef, image.buffer, metadata)
+                .then(async (result) => {
+                    await getDownloadURL(result.ref)
+                        .then((downloadURL) => {
+                            imageLinks.push(downloadURL.split('&token')[0]);
+                        })
+                        .catch(async (error) => {
+                            console.log(error);
+                            deleteImages(imageLinks);
+                            return false;
+                        });
+    
+                })
+                .catch(async (error) => {
+                    console.log(error);
+                    deleteImages(imageLinks);
+                    return false;
+                });
+        }
     }
 
     return true;

@@ -24,7 +24,7 @@ const createPost = async (req, res) => {
         await post.save();
 
         // upload images and store the links in content_links of the new post
-        const uploadSuccessful = await uploadImages(req.files, post.content_links, post.id);
+        const uploadSuccessful = await uploadImages(req.files, post.content_links, post.id, 'post');
 
         // if failed to upload images then delete the post from database and return error message
         if (!uploadSuccessful) {
@@ -58,7 +58,7 @@ const updatePost = async (req, res) => {
     try {
         var newImageLinks = [];
 
-        const uploadSuccessful = await uploadImages(req.files, newImageLinks, req.params.postId);
+        const uploadSuccessful = await uploadImages(req.files, newImageLinks, req.params.postId, 'post');
 
         // if failed to upload images then send error message
         if (!uploadSuccessful) {
