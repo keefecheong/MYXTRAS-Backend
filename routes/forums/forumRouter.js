@@ -58,7 +58,25 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
         res.status(400).json({ message: error.message });
     }
 });
+router.post('/subscribe/:forumID', async (req, res) => {
 
+    // Update subbed forums
+    User.updateOne(
+        { _id: ObjectId(req.user.id) },
+        { $push: { subscribed_forums: forumID } }
+      )
+      .then(() => {
+        console.log('String pushed successfully');
+        // Handle success
+      })
+      .catch((error) => {
+        console.error('Error pushing string:', error);
+        // Handle error
+      });
+
+      return res.json();
+
+})
 // Retrieve one page
 router.get('/get-forum/:forumID', async (req, res) => {
     let forum;
@@ -74,13 +92,27 @@ router.get('/get-forum/:forumID', async (req, res) => {
     }
     res.status(200).json(forum);
 });
+// Retrieve user created forum list
+router.get('/get-created-forums/', async (req, res) => {
 
+    try {
+        const forums =  await Forum.find({ creator_id: req.user.id }, { forumName: 1, forum_pic_link: 1 }).exec();
+            // Extract the desired fields from the forums
+            const result = forums.map(({ forumName, forum_pic_link }) => ({ forumName, forum_pic_link }));
+
+            // Return the result as a JSON array
+            res.status(200).json(result);
+    } catch (error) {
+        
+        return res.status(500).json({ message: error.message });
+    }
+});
 // Retrieve user subscribed forum list
-router.get('/get-forum/:uid', async (req, res) => {
+router.get('/get-subbed-forums/', async (req, res) => {
     let forum;
 
     try {
-        forum = await User.findById(req.params.uid).populate({ path: 'subscribed_forums', select: 'banner_link profile_pic_link'})
+        forum = await User.findById(req.params.uid).populate({ path: 'subscribed_forums', select: 'profile_pic_link forumName'})
         if (!forum) {
             return res.status(404).json({ message: 'Unable to find the specified post.' });
         }
