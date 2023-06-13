@@ -10,7 +10,6 @@ const getComments = async (req, res) => {
         // populate comment data to get creator's username and profile pic link
         const postComments = await Post
             .findById(res.post._id)
-            .select('comments')
             .populate({
                 path: 'comments',
                 populate: {

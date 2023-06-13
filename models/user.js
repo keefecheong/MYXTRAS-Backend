@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema({
         }],
         default: []
     },
-    subscribedForums: {
+    subscribed_forums: {
         type: [{
             type: mongoose.SchemaTypes.ObjectId,
             ref: 'Forum'

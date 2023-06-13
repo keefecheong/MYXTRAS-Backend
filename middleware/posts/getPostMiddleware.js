@@ -9,7 +9,6 @@ const getPost = async (req, res, next) => {
     try {
         // populate post data to get creator's username and profile pic link
         target = await Post.findById(req.params.postId).populate({ path: 'creator_id', select: 'username profile_pic_link'});
-
         if (!target) {
             return res.status(404).json({ message: 'Unable to find the specified post.' });
         }
