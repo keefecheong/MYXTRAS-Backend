@@ -103,3 +103,9 @@ Content-Type: application/json
     "content": "new comment",
     "creator_id": "6475929dd0b97c5c353602af"
 }
+
+###
+
+GET http://127.0.0.1:8081/api/users/profile/all
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NjYyMzQ0NH0.ENGOI3ImgOgtum-dK44X5kLxbE0yUmjmC0qBzfANOVQ
+

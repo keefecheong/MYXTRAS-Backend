@@ -161,11 +161,20 @@ const setupUser = async (req, res) => {
     }
 }
 
+// temp - for creating chats
+// get all users except current requesting user
+const getAllUsers = async (req, res) => {
+    // only getting username and id
+    const users = await User.find({ _id: { $ne: req.user._id } }).select('username _id profile_pic_link');
+    res.status(200).json(users);
+}
+
 module.exports = {
     getUser,
     registerUser,
     updateUser,
-    setupUser
+    setupUser,
+    getAllUsers
 }
 
 function passwordRequirements(password) {
