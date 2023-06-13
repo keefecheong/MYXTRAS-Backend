@@ -19,74 +19,37 @@ const uploadImages = async (images, imageLinks, objId, type) => {
             cacheControl: 'max-age=300',
             contentType: image.mimetype
         }
-        if (type === "post"){
-            const imageRef = ref(firebaseStorage, `posts/${objId}/${newName}`);
-            await uploadBytes(imageRef, image.buffer, metadata)
-                .then(async (result) => {
-                    await getDownloadURL(result.ref)
-                        .then((downloadURL) => {
-                            imageLinks.push(downloadURL.split('&token')[0]);
-                        })
-                        .catch(async (error) => {
-                            console.log(error);
-                            deleteImages(imageLinks);
-                            return false;
-                        });
-    
-                })
-                .catch(async (error) => {
-                    console.log(error);
-                    deleteImages(imageLinks);
-                    return false;
-                });
+        let imageRef;
+
+        if (type === "post") {
+            imageRef = ref(firebaseStorage, `posts/${objId}/${newName}`);
         }
         else if (type === 'forum'){
-            const imageRef = ref(firebaseStorage, `forums/${objId}/${newName}`);
-            await uploadBytes(imageRef, image.buffer, metadata)
-                .then(async (result) => {
-                    await getDownloadURL(result.ref)
-                        .then((downloadURL) => {
-                            console.log(downloadURL)
-
-                            imageLinks.push(downloadURL.split('&token')[0]);
-                            console.log(imageLinks)
-
-                        })
-                        .catch(async (error) => {
-                            console.log(error);
-                            deleteImages(imageLinks);
-                            return false;
-                        });
-    
-                })
-                .catch(async (error) => {
-                    console.log(error);
-                    deleteImages(imageLinks);
-                    return false;
-                });
-            }
-        else if (type === 'thread'){
-            // TO ADD {forumId later} !!
-            const imageRef = ref(firebaseStorage, `threads/${forumId}/${objId}/${newName}`);
-            await uploadBytes(imageRef, image.buffer, metadata)
-                .then(async (result) => {
-                    await getDownloadURL(result.ref)
-                        .then((downloadURL) => {
-                            imageLinks.push(downloadURL.split('&token')[0]);
-                        })
-                        .catch(async (error) => {
-                            console.log(error);
-                            deleteImages(imageLinks);
-                            return false;
-                        });
-    
-                })
-                .catch(async (error) => {
-                    console.log(error);
-                    deleteImages(imageLinks);
-                    return false;
-                });
+            imageRef = ref(firebaseStorage, `forums/${objId}/${newName}`);
         }
+        else if (type === 'thread'){
+            imageRef = ref(firebaseStorage, `threads/${forumId}/${objId}/${newName}`);
+
+        }
+        await uploadBytes(imageRef, image.buffer, metadata)
+            .then(async (result) => {
+                await getDownloadURL(result.ref)
+                    .then((downloadURL) => {
+                        imageLinks.push(downloadURL.split('&token')[0]);
+                    })
+                    .catch(async (error) => {
+                        console.log(error);
+                        deleteImages(imageLinks);
+                        return false;
+                    });
+
+            })
+            .catch(async (error) => {
+                console.log(error);
+                deleteImages(imageLinks);
+                return false;
+            });
+        
     }
 
     return true;
