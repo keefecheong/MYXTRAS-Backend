@@ -22,17 +22,23 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
     }
 
     try {
-        const forum = JSON.parse(req.body.forumObject)
+        
+        const formData = req.body;
+        const forumObjectString = formData.forumObject;
+        const forumObject = JSON.parse(forumObjectString);
+        
+        const { forumName, forumID, forumDesc, category } = forumObject;
+        
         // Check for existing forum
-        if (Forum.find({ forumID: forum.forumID }) === null){
+        if (Forum.find({ forumID: forumID }) === null){
             return res.status(400).json({ error: 'ForumID already exists' });
         }
         const newForum = new Forum({
             creator_id: req.user._id,
-            forumName: forum.forumName,
-            forumID: forum.forumID,
-            forumDesc: forum.forumDesc,
-            category: forum.category
+            forumName: forumName,
+            forumID: forumID,
+            forumDesc: forumDesc,
+            category: category
         });
 
         await newForum.save();
