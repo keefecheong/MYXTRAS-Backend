@@ -2,8 +2,7 @@
 GET http://localhost:8081/api/users
 
 ###
-GET http://127.0.0.1:8081/api/users/cookie/verify
-Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0ODcyMTQ3YmY2ZDk1MzU5OGU4MmRlZSIsImlhdCI6MTY4NjU3ODIxMH0.QW08OASLw_FA4oJs2JDJ0tUxXbk18uqw9qMOwmYA8h4
+GET http://127.0.0.1:8081/api/search?term=e
 
 ###
 OPTIONS http://localhost:8081/api/users/register
