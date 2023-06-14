@@ -10,6 +10,7 @@ const chatSpecificRouter = require('./chatSpecificRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
+const { getChat } = require('../../middleware/chats/getChatMiddleware.js');
 
 // validate user for all routes
 mainRouter.use(validateUserHTTP);
@@ -19,6 +20,6 @@ mainRouter.use(validateUserHTTP);
 mainRouter.use('/', chatRouter);
 
 // handle requests for specific chats
-mainRouter.use('/:chatId', chatSpecificRouter);
+mainRouter.use('/:chatId', getChat, chatSpecificRouter);
 
 module.exports = mainRouter;

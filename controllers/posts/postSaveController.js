@@ -51,7 +51,7 @@ const updatePost = async (req, res) => {
 
     // check if the creator of the post is the requesting user
     // if creator is not the requesting user return 401 error
-    if (req.user._id.toString() != res.post.creator_id._id.toString()) {
+    if (!req.user._id.equals(res.post.creator_id._id)) {
         return res.status(401).json({ message: 'Unauthorized.' });
     }
 

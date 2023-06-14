@@ -18,8 +18,8 @@ function checkPostAttributesAll(posts, userId) {
 function checkPostAttributes(post, userId) {
     post = post.toObject();
 
-    post.isOwner = post.creator_id._id.toString() == userId.toString();
-    post.liked = post.likes.findIndex((creator_id) => creator_id.toString() == userId.toString()) != -1;
+    post.isOwner = post.creator_id._id.equals(userId);
+    post.liked = post.likes.findIndex((creator_id) => creator_id.equals(userId)) != -1;
 
     return post;
 }
@@ -41,7 +41,7 @@ function checkCommentAttributesAll(comments, userId) {
 function checkCommentAttributes(comment, userId) {
     comment = comment.toObject();
 
-    comment.isOwner = comment.creator_id._id.toString() == userId.toString();
+    comment.isOwner = comment.creator_id._id.equals(userId);
 
     return comment;
 }

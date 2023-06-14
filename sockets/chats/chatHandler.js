@@ -1,4 +1,6 @@
 const { validateUserSocket } = require('../../middleware/general/authMiddleware.js');
+const Chat = require('../../models/chat.js');
+const Message = require('../../models/message.js');
 
 // store user connection information
 const connections = []
@@ -18,11 +20,14 @@ function chatHandler(io) {
 
             if (!existingConnection) {
                 validateUserSocket(socket, next);
-                
             }
             
         })
         .on('connection', (socket) => {
+            if (!socket.user) {
+                socket.disconnect(true);
+            }
+
             // manage user connection information
             let userConnectionIndex = connections.findIndex(connection => connection.userId == socket.user._id.toString());
 
@@ -31,6 +36,12 @@ function chatHandler(io) {
                 connections.push({
                     userId: socket.user._id.toString(),
                     socketId: [socket.id]
+                });
+
+                // tell all other sockets that this user is online
+                socket.broadcast.emit('update-user-presence', {
+                    userId: socket.user._id,
+                    online: true
                 });
             }
             // otherwise add the new socket id to the existing connection object
@@ -44,7 +55,7 @@ function chatHandler(io) {
             // handle user disconnect
             socket.on('disconnect', () => {
                 // remove socket id from the connections array
-                userConnectionIndex = connections.findIndex(connection => connection.userId == socket.user._id.toString());
+                let userConnectionIndex = connections.findIndex(connection => connection.userId == socket.user._id.toString());
 
                 const socketIdIndex = connections[userConnectionIndex].socketId.indexOf(socket.id);
                 connections[userConnectionIndex].socketId.splice(socketIdIndex, 1);
@@ -52,15 +63,17 @@ function chatHandler(io) {
                 // if there are no other associated sockets with the user then delete the whole object from the connections array
                 if (connections[userConnectionIndex].socketId.length <= 0) {
                     connections.splice(userConnectionIndex, 1);
+
+                    // tell all other sockets that this user is offline
+                    socket.broadcast.emit('update-user-presence', {
+                        userId: socket.user._id,
+                        online: false
+                    });
                 }
             });
 
             // handle sent messages
-            socket.on('send-message', (data) => {
-                // TODO:
-                // check if chat exists
-                // const chatExists = 
-
+            socket.on('send-message', async (data) => {
                 // send message to all other sockets associated with sender (synchronize messages sent)
                 socket.to(socket.user._id.toString()).emit('update-sent-message', {
                     message: data.message,
@@ -80,7 +93,7 @@ function chatHandler(io) {
 
                     // edit chat for recipient
                     const recipientChat = {
-                        id: data.chat.id,
+                        _id: data.chat._id,
                         targetUserId: socket.user._id.toString(),
                         name: socket.user.username,
                         pic: socket.user.profile_pic_link
@@ -90,25 +103,62 @@ function chatHandler(io) {
                         message: recipientMessage,
                         chat: recipientChat
                     });
-                }
-                // if recipient is offline just push message to database
-                else {
-                    // TODO:
-                    // add message to database
+
+                    // update typing status to false immediately
+                    socket.to(data.chat.targetUserId).emit('receive-user-typing', {
+                        userId: socket.user._id,
+                        typing: false
+                    });
                 }
 
-                // TODO:
+                // check if chat exists
+                let chat = await Chat.findById(data.chat._id);
+
                 // if chat does not exist then add to database
-                // if (!chatExists) {
+                if (!chat) {
+                    chat = new Chat({
+                        _id: data.chat._id,
+                        users: [
+                            data.chat.targetUserId,
+                            socket.user._id
+                        ]
+                    });
 
-                // }
+                    chat.save();
+                }
+                
+                // add message to database
+                const newMessage = new Message({
+                    _id: data.message._id,
+                    creator_id: socket.user._id,
+                    content: data.message.content,
+                    creation_time: data.message.creation_time,
+                    chat_id: data.chat._id
+                });
+
+                newMessage.save();
+
+                // update last_message_timestamp for the chat
+                chat.last_message_timestamp = newMessage.creation_time;
+                chat.save();
             });
 
             // get user's presence (online/offline)
-            // socket.on('query-user-presence', );
+            socket.on('query-user-presence', (data, callback) => {
+                const userOnline = connections.find(connection => connection.userId == data.targetUserId) || null;
 
-            // handle typing status
-            // socket.on('user-typing', );
+                callback({
+                    online: userOnline ? true : false
+                });
+            });
+
+            // handle typing status updates
+            socket.on('user-typing', (data) => {
+                socket.to(data.targetUserId).emit('receive-user-typing', {
+                    userId: socket.user._id,
+                    typing: data.typing
+                });
+            });
         });
 }
 

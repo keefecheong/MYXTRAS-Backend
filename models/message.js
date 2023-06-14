@@ -1,18 +1,14 @@
 const mongoose = require('mongoose');
 
-const postSchema = new mongoose.Schema({
+const messageSchema = new mongoose.Schema({
     creator_id: {
         type: mongoose.SchemaTypes.ObjectId,
         ref: 'User',
         required: true,
         immutable: true
     },
-    content_links: {
-        type: [String],
-        required: true
-    },
-    original_names: {
-        type: [String],
+    content: {
+        type: String,
         required: true
     },
     creation_time: {
@@ -26,29 +22,21 @@ const postSchema = new mongoose.Schema({
             return this.creation_time;
         }
     },
-    likes: {
-        type: [{
-            type: mongoose.SchemaTypes.ObjectId,
-            ref: 'User'
-        }],
-        default: []
-    },
-    comments: {
-        type: [{
-            type: mongoose.SchemaTypes.ObjectId,
-            ref: 'Comment'
-        }],
-        default: []
+    chat_id: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'Chat',
+        required: true,
+        immutable: true
     }
 });
 
 // automatically update last_modified_time with the current time when an existing document is saved (updated)
-postSchema.pre('save', function(next) {
-    if (!this.isNew && this.content_links.length > 0) {
+messageSchema.pre('save', function(next) {
+    if (!this.isNew > 0) {
         this.last_modified_time = Date.now();
     }
 
-    next()
+    next();
 });
 
-module.exports = mongoose.model('Post', postSchema);
+module.exports = mongoose.model('Message', messageSchema);

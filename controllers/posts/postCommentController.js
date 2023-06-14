@@ -10,6 +10,7 @@ const getComments = async (req, res) => {
         // populate comment data to get creator's username and profile pic link
         const postComments = await Post
             .findById(res.post._id)
+            .select('comments')
             .populate({
                 path: 'comments',
                 populate: {
@@ -73,7 +74,7 @@ const deleteComment = async (req, res) => {
 
     // check if the comment is posted by the requesting user
     // if creator is not the requesting user return 401 error
-    if (targetComment.creator_id._id.toString() != req.user._id.toString()) {
+    if (!targetComment.creator_id._id.equals(req.user._id)) {
         return res.status(401).json({ message: 'Unauthorized.' });
     }
 
