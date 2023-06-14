@@ -49,6 +49,9 @@ app.use('/api/school', schoolRouter);
 
 const forumRouter = require('./routes/forums/mainRouter.js');
 app.use('/api/forums', forumRouter);
+
+const searchRouter = require('./routes/searchRouter.js');
+app.use('/api/search', searchRouter);
 // initialize data
 
 const School = require('./models/schools.js');

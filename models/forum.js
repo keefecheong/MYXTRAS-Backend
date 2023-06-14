@@ -22,6 +22,9 @@ const forumSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    forumDesc: {
+        type: String
+    },
     forum_pic_link: {
         type: [String],
         default: []
