@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
     const topThreeForums = await Forum.find(
         { forumID: { $regex: searchTerm, $options: 'i' } }
       )
-        .limit(3);
+        .limit(6);
   
     res.status(200).json({ topThreeForums }); // Return the search results as JSON
   });
