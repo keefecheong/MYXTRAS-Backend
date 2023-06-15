@@ -6,6 +6,7 @@ async function getEnrolledChats(req, res) {
         // get all chats with requesting user's user id in users
         const enrolledChats = await Chat
             .find({ users: req.user._id })
+            .sort({ last_message_timestamp: -1 })
             .populate('users');
     
         const result = [];
@@ -19,7 +20,8 @@ async function getEnrolledChats(req, res) {
                     _id: chat._id,
                     targetUserId: targetUser._id,
                     name: targetUser.username,
-                    pic: targetUser.profile_pic_link
+                    pic: targetUser.profile_pic_link,
+                    last_message_timestamp: chat.last_message_timestamp
                 };
         
                 result.push(formattedChat);

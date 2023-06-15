@@ -19,8 +19,7 @@ function checkPostAttributes(post, userId) {
     post = post.toObject();
 
     post.isOwner = post.creator_id._id.equals(userId);
-    post.liked = post.likes.findIndex((creator_id) => creator_id.equals(userId)) != -1;
-
+    post.liked = post.likes.some(creator_id => creator_id.equals(userId));
     return post;
 }
 

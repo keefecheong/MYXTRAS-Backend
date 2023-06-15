@@ -4,10 +4,13 @@ const Message = require('../../models/message.js');
 // get stored messages for the specifically requested chat
 async function getChatMessages(req, res) {
     try {
-        // get messages associated with the requested chat
-        const messages = await Message.find({ chat_id: res.chat._id });
+        // get <count> messages associated with the requested chat
+        const messages = await Message
+            .find({ chat_id: res.chat._id })
+            .sort({ creation_time: -1 })
+            .limit(req.params.count);
     
-        const result = formatMessages(messages, req.user._id);
+        const result = formatMessages(messages, req.user._id).reverse();
     
         res.status(200).json({ messages: result });
     }
@@ -26,7 +29,7 @@ async function getLatestMessages(req, res) {
             .limit(5)
             .select('_id');
 
-        var result = [];
+        const result = {};
 
         // get latest 50 messages for each of the top 5 latest used chats
         for (let i = 0; i < latestChats.length; i++) {
@@ -34,12 +37,12 @@ async function getLatestMessages(req, res) {
                 .find({ chat_id: latestChats[i]._id })
                 .sort({ creation_time: -1 })
                 .limit(50);
-
-            // format the messages and add to latestFormattedMessages in ascending creation_time
-            result = result.concat(formatMessages(messages, req.user._id).reverse());
+            
+            // format the messages and add to result in ascending creation_time
+            result[latestChats[i]._id] = formatMessages(messages, req.user._id).reverse();
         }
 
-        res.status(200).json({ messages: result });
+        res.status(200).json({ data: result });
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -76,8 +79,7 @@ function formatMessages(messages, userId) {
             _id: message._id,
             content: message.content,
             is_sender: message.creator_id.equals(userId),
-            creation_time: message.creation_time,
-            chat_id: message.chat_id
+            creation_time: message.creation_time
         });
     });
     

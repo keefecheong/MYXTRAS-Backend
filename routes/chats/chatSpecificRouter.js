@@ -6,8 +6,8 @@ const chatSpecificRouter = express.Router();
 // get controllers
 const { getChatMessages, getPreviousMessages } = require('../../controllers/chats/chatMessageController.js');
 
-// get all messages of requested chat
-chatSpecificRouter.get('/', getChatMessages);
+// get <count> messages of requested chat
+chatSpecificRouter.get('/:count', getChatMessages);
 
 // get more previous messages of requested chat
 // oldestMessageTime - the creation_time of the message with the oldest creation_time
