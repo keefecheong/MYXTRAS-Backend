@@ -89,7 +89,7 @@ router.get('/get-forum/:forumID', async (req, res) => {
     try {
         forum = await Forum.findOne({forumID : req.params.forumID});
         if (!forum) {
-            return res.status(404).json({ message: 'Unable to find the specified post.' });
+            return res.status(404).json({ message: 'Unable to find the specified forum.' });
         }
         
         // Display Subscribe button in frontend logic
@@ -128,7 +128,7 @@ router.get('/get-subbed-forums/', async (req, res) => {
     try {
         forum = await User.findById(req.params.uid).populate({ path: 'subscribed_forums', select: 'forumID profile_pic_link forumName'})
         if (!forum) {
-            return res.status(404).json({ message: 'Unable to find the specified post.' });
+            return res.status(404).json({ message: 'Unable to find the user subscribed forums.' });
         }
     } catch (error) {
         

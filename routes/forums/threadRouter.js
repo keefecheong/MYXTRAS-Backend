@@ -35,9 +35,9 @@ router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req
         try {
             // populate post data to get creator's username and profile pic link
             const target = await Forum.findOne({forumID: req.params.forumID});
-            console.log(target)
+
             if (!target) {
-                return res.status(404).json({ message: 'Unable to find the specified post.' });
+                return res.status(404).json({ message: 'Unable to find the specified forum.' });
             }
             else {  
                 target.threads.push(newThread._id);
