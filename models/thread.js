@@ -1,3 +1,4 @@
+const { StringFormat } = require('firebase/storage');
 const mongoose = require('mongoose');
 
 const threadSchema = new mongoose.Schema({
@@ -12,6 +13,18 @@ const threadSchema = new mongoose.Schema({
         immutable: true,
         default: Date.now()
     },
+    thread_title: {
+        type: String,
+        required: true,
+    },
+    thread_desc: {
+        type: String,
+        required: true,
+    },
+    content_links: {
+        type: [String],
+        required: true,
+    },
     comments: {
         type: [{ type: mongoose.SchemaTypes.ObjectId, 
             ref: 'Comment' }],
@@ -21,7 +34,7 @@ const threadSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-    interests: {
+    category: {
         type: [String],
         default: []
     }

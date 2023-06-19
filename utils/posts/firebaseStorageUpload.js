@@ -8,7 +8,7 @@ const firebaseStorage = getStorage();
 
 // upload image to firebase storage and update image links
 // if uploading fails then delete all the uploaded images (ask user to retry later)
-const uploadImages = async (images, imageLinks, objId, type) => {
+const uploadImages = async (images, imageLinks, objId, type, forumID) => {
     for (let i = 0; i < images.length; i++) {
         const image = images[i];
         // create new file name with hash
@@ -28,7 +28,7 @@ const uploadImages = async (images, imageLinks, objId, type) => {
             imageRef = ref(firebaseStorage, `forums/${objId}/${newName}`);
         }
         else if (type === 'thread'){
-            imageRef = ref(firebaseStorage, `threads/${forumId}/${objId}/${newName}`);
+            imageRef = ref(firebaseStorage, `threads/${forumID}/${objId}/${newName}`);
 
         }
         await uploadBytes(imageRef, image.buffer, metadata)

@@ -8,8 +8,6 @@ const { uploadImages } = require('../../utils/posts/firebaseStorageUpload.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 const forum = require('../../models/forum.js');
 
-// Retrieve schools
-
 router.post('/create', multerConfig.array('selectedImages'), async (req, res) => {
 
     // check if images are provided in the body
@@ -113,11 +111,11 @@ router.get('/get-created-forums/', async (req, res) => {
 
     try {
         const forums =  await Forum.find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 }).exec();
-            // Extract the desired fields from the forums
-            const result = forums.map(({ forumID, forumName, forum_pic_link }) => ({ forumID, forumName, forum_pic_link }));
-
-            // Return the result as a JSON array
-            res.status(200).json(result);
+        // Extract the desired fields from the forums
+        const result = forums.map(({ forumID, forumName, forum_pic_link }) => ({ forumID, forumName, forum_pic_link }));
+        
+        // Return the result as a JSON array
+        res.status(200).json(result);
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
@@ -137,11 +135,6 @@ router.get('/get-subbed-forums/', async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
     res.status(200).json(forum);
-});
-// Retrieve courses
-router.patch('/update-courses', (req, res) => {
-
-    
 });
 
 module.exports = router;
