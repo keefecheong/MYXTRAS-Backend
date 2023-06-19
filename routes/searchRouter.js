@@ -18,7 +18,7 @@ const topSixResults = await Forum.find({
     { forumName: { $regex: regexTerm } },
     { forumDesc: { $regex: regexTerm } }
   ]
-}).limit(6);
+}).limit(6).select('forumID forumName');
 
 res.status(200).json({ topSixResults })
 });
@@ -36,8 +36,8 @@ router.get('/users', async (req, res) => {
       { username: { $regex: regexTerm } },
       { real_name: { $regex: regexTerm } }
     ]
-  }).limit(6);
-  
+  }).limit(6).select('real_name username');
+
   res.status(200).json({ topSixResults })
   });
   

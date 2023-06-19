@@ -1,6 +1,7 @@
 const express = require('express');
 const Forum = require('../../models/forum.js');
 const Thread = require('../../models/thread.js');
+const { ObjectId } = require('mongodb');
 
 const router = express.Router();
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
@@ -67,15 +68,44 @@ router.get('/get-threads/:forumID', async (req, res) => {
     try {
         const threads =  await Forum.findOne({forumID: req.params.forumID})
         .select('threads')
-        .populate({ path: 'threads', select: 'thread_title thread_desc content_links numOfComments', populate: {
-            path: 'creator_id',
-            select: 'username profile_pic_link'
-        }})
-        .sort({creation_time: 1}).lean()
+        .populate({ 
+            path: 'threads', 
+            select: 'thread_title thread_desc content_links numOfComments creation_time', 
+            populate: {
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            },
+            options: { sort: { creation_time: -1 } }
+        })
+        .lean()
+
         res.status(200).json(threads);
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
     }
+});
+router.get('/get-thread/:threadID', async (req, res) => {
+    try {
+        const threadID = new ObjectId(req.params.threadID)
+        const thread =  await Thread.findById({_id: threadID})
+        .populate({
+            path: 'creator_id',
+            select: 'username profile_pic_link'
+        })
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            }
+        })
+        .lean();
+
+        res.status(200).json(thread);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+
 });
 module.exports = router;
