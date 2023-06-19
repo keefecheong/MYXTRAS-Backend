@@ -2,7 +2,8 @@
 GET http://localhost:8081/api/users
 
 ###
-GET http://127.0.0.1:8081/api/search/users?term=e
+GET http://127.0.0.1:8081/api/forums/thread/get-threads/@dventur3
+Cookie: blocalauth=localapi7e89e863624312e4:; isNotIncognito=true; _ga=GA1.1.1226195377.1678153685; authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0ODlhYzkxMTU0ZWQ0ZTcyYjlhNmExYiIsImlhdCI6MTY4Njc1NDQ2M30.qxrqANc74iNMKL9Soj4O6VuML0_eatr8EfESAkHdoSQ
 
 ###
 OPTIONS http://localhost:8081/api/users/register
