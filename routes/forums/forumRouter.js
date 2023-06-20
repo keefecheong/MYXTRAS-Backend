@@ -76,7 +76,7 @@ router.get('/get-forum/:forumID', async (req, res) => {
         if (req.user._id.equals(forum.creator_id)){
             isCreator = true
         }
-        if (!(req.user.subscribed_forums.indexOf(req.params.forumID) != -1)){
+        if (!(req.user.subscribed_forums.indexOf(forum._id) === -1)){
             isSubscribed = true
         }
     } catch (error) {
@@ -119,7 +119,6 @@ router.get('/get-subbed-forums/', async (req, res) => {
         select: 'forumName forumID forum_pic_link'
     })
     .lean()
-    console.log(subbed_forums)
     return res.status(200).json(subbed_forums);
 });
 router.post('/subscribe-forum/:forumID', async (req, res) => {
@@ -147,7 +146,6 @@ router.post('/subscribe-forum/:forumID', async (req, res) => {
 
             // Remove userid from forum subscribers array list
             const userIndex = forum.subscribers.indexOf(req.user.id);
-            console.log(userIndex)
             forum.subscribers.splice(userIndex, 1);
 
             await forum.save()
