@@ -85,7 +85,6 @@ router.post('/subscribe/:forumID', async (req, res) => {
 router.get('/get-forum/:forumID', async (req, res) => {
     let forum;
     var isCreator = false;
-
     try {
         forum = await Forum.findOne({forumID : req.params.forumID});
         if (!forum) {
@@ -110,12 +109,13 @@ router.get('/get-forum/:forumID', async (req, res) => {
 router.get('/get-created-forums/', async (req, res) => {
 
     try {
-        const forums =  await Forum.find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 }).exec();
+        const forums =  await Forum.find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 }).select('forumID, forumName, forum_pic_link').exec();
+
         // Extract the desired fields from the forums
-        const result = forums.map(({ forumID, forumName, forum_pic_link }) => ({ forumID, forumName, forum_pic_link }));
+        //const result = forums.map(({ forumID, forumName, forum_pic_link }) => ({ forumID, forumName, forum_pic_link }));
         
         // Return the result as a JSON array
-        res.status(200).json(result);
+        res.status(200).json(forums);
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
@@ -126,7 +126,7 @@ router.get('/get-subbed-forums/', async (req, res) => {
     let forum;
 
     try {
-        forum = await User.findById(req.params.uid).populate({ path: 'subscribed_forums', select: 'forumID profile_pic_link forumName'})
+        forum = await User.findById(req.params.uid).select('subscribed_forums').populate({ path: 'subscribed_forums', select: 'forumID profile_pic_link forumName'})
         if (!forum) {
             return res.status(404).json({ message: 'Unable to find the user subscribed forums.' });
         }

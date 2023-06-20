@@ -8,13 +8,13 @@ const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js
 const { uploadImages } = require('../../utils/posts/firebaseStorageUpload.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
+// creating a new thread
 router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req, res) => {
 
     if (!req.body) {
         res.status(400).json({ error: 'Invalid request body' });
         return;
     }
-    console.log(req.params.forumID)
     try {
         
         const formData = req.body;
@@ -33,7 +33,6 @@ router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req
         await newThread.save();
 
         try {
-            // populate post data to get creator's username and profile pic link
             const target = await Forum.findOne({forumID: req.params.forumID});
 
             if (!target) {
@@ -63,8 +62,9 @@ router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req
         res.status(400).json({ message: error.message });
     }
 });
-router.get('/get-threads/:forumID', async (req, res) => {
 
+// get list of forum threads
+router.get('/get-threads/:forumID', async (req, res) => {
     try {
         const threads =  await Forum.findOne({forumID: req.params.forumID})
         .select('threads')
@@ -78,13 +78,14 @@ router.get('/get-threads/:forumID', async (req, res) => {
             options: { sort: { creation_time: -1 } }
         })
         .lean()
-
         res.status(200).json(threads);
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
     }
 });
+
+// get single thread
 router.get('/get-thread/:threadID', async (req, res) => {
     try {
         const threadID = new ObjectId(req.params.threadID)
