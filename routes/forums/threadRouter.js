@@ -102,11 +102,28 @@ router.get('/get-thread/:threadID', async (req, res) => {
             }
         })
         .lean();
+        // Find forumID to display
+        const forum = await Forum.findOne({ threads: threadID }).select('forumID forum_pic_link banner_link');
+        console.log(forum.forumID)
+        const response = {
+            thread,
+            forum
+        }
 
-        res.status(200).json(thread);
+        res.status(200).json(response);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 
+});
+// Retrieve 6 popular threads 
+router.get('/get-popular-threads/', async (req, res) => {
+
+    const topSixThreads = await Thread.find({})
+    .select('thread_title thread_desc content_links')
+    .sort({ likes: 1 })
+    .limit(6)
+    .lean()
+    return res.status(200).json(topSixThreads);
 });
 module.exports = router;

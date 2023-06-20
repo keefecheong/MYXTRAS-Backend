@@ -22,7 +22,7 @@ const createPost = async (req, res) => {
 
         // save post to make post_id available
         await post.save();
-
+        
         // upload images and store the links in content_links of the new post
         const uploadSuccessful = await uploadImages(req.files, post.content_links, post.id, 'post');
 

@@ -39,7 +39,6 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
         });
 
         await newForum.save();
-        
         const forumPicUploadSuccessful = await uploadImages([req.files[0]], newForum.forum_pic_link, newForum.id, 'forum');
         
         if (!forumPicUploadSuccessful) {
@@ -121,6 +120,17 @@ router.get('/get-subbed-forums/', async (req, res) => {
     .lean()
     return res.status(200).json(subbed_forums);
 });
+// Retrieve 6 popular forums 
+router.get('/get-recommended-forums/', async (req, res) => {
+
+    const topSixForums = await Forum.find()
+    .select('forumName forumID forum_pic_link')
+    .sort({ numOfSubs: 1 })
+    .limit(6)
+    .lean()
+    return res.status(200).json(topSixForums);
+});
+
 router.post('/subscribe-forum/:forumID', async (req, res) => {
     let isSubscribed
 

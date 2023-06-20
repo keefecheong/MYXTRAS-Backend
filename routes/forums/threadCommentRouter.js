@@ -42,6 +42,7 @@ commentRouter.get('/', async (req, res) => {
         // populate comment data to get creator's username and profile pic link
         const threadComments = await Thread
             .findById(res.thread._id)
+            .sort({ creation_time: -1 })
             .select('comments')
             .populate({
                 path: 'comments',
@@ -49,8 +50,7 @@ commentRouter.get('/', async (req, res) => {
                     path: 'creator_id',
                     select: 'username profile_pic_link real_name'
                 }
-            });
-
+            }).lean()
         //const comments = checkCommentAttributesAll(threadComments.comments, req.user._id);
 
         res.status(200).json(threadComments);
