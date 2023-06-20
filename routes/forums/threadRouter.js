@@ -5,7 +5,7 @@ const { ObjectId } = require('mongodb');
 
 const router = express.Router();
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
-const { uploadImages } = require('../../utils/posts/firebaseStorageUpload.js');
+const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // creating a new thread
