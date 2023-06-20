@@ -1,7 +1,6 @@
 const express = require('express');
 const Forum = require('../../models/forum.js');
 const User = require('../../models/user.js');
-const ObjectId = require('mongoose').Types.ObjectId;
 
 const router = express.Router();
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
@@ -113,8 +112,14 @@ router.get('/get-created-forums/', async (req, res) => {
 // Retrieve user subscribed forum list
 router.get('/get-subbed-forums/', async (req, res) => {
 
-    const subbed_forums = req.user.subscribed_forums
-   
+    const subbed_forums = await User.findById(req.user.id)
+    .select('subscribed_forums')
+    .populate({
+        path: 'subscribed_forums',
+        select: 'forumName forumID forum_pic_link'
+    })
+    .lean()
+    console.log(subbed_forums)
     return res.status(200).json(subbed_forums);
 });
 router.post('/subscribe-forum/:forumID', async (req, res) => {
