@@ -16,8 +16,6 @@ function checkPostAttributesAll(posts, userId) {
 
 // for one post
 function checkPostAttributes(post, userId) {
-    post = post.toObject();
-
     post.isOwner = post.creator_id._id.equals(userId);
     post.liked = post.likes.some(creator_id => creator_id.equals(userId));
     return post;
@@ -38,8 +36,6 @@ function checkCommentAttributesAll(comments, userId) {
 
 // for one comment
 function checkCommentAttributes(comment, userId) {
-    comment = comment.toObject();
-
     comment.isOwner = comment.creator_id._id.equals(userId);
 
     return comment;

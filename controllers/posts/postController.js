@@ -12,7 +12,8 @@ const getAllPosts = async (req, res) => {
             .populate({ 
                 path: 'creator_id',
                 select: 'username profile_pic_link'
-            });
+            })
+            .lean();
 
         posts = checkPostAttributesAll(posts, req.user._id);
 
@@ -36,7 +37,8 @@ const getFollowingPosts = async (req, res) => {
             .populate({ 
                 path: 'creator_id',
                 select: 'username profile_pic_link'
-            });
+            })
+            .lean();
 
         posts = checkPostAttributesAll(posts, req.user._id);
         
@@ -54,8 +56,30 @@ const getOnePost = async (req, res) => {
     res.status(200).json(res.post);
 }
 
+// retrieve user's own posts
+const getOwnPosts = async (req, res) => {
+    try {
+        // populate post data to get creator's username and profile pic link
+        var posts = await Post
+            .find({ creator_id: req.user._id })
+            .populate({ 
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            })
+            .lean();
+
+        posts = checkPostAttributesAll(posts, req.user._id);
+        
+        res.status(200).json(posts);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 module.exports = {
     getAllPosts,
     getFollowingPosts,
-    getOnePost
+    getOnePost,
+    getOwnPosts
 }
