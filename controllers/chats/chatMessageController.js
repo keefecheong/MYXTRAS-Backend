@@ -8,7 +8,8 @@ async function getChatMessages(req, res) {
         const messages = await Message
             .find({ chat_id: res.chat._id })
             .sort({ creation_time: -1 })
-            .limit(req.params.count);
+            .limit(req.params.count)
+            .lean();
     
         const result = formatMessages(messages, req.user._id).reverse();
     
@@ -36,7 +37,8 @@ async function getLatestMessages(req, res) {
             const messages = await Message
                 .find({ chat_id: latestChats[i]._id })
                 .sort({ creation_time: -1 })
-                .limit(50);
+                .limit(50)
+                .lean();
             
             // format the messages and add to result in ascending creation_time
             result[latestChats[i]._id] = formatMessages(messages, req.user._id).reverse();
@@ -59,7 +61,8 @@ async function getPreviousMessages(req, res) {
         const messages = await Message
             .find({ chat_id: res.chat._id, creation_time: { $lt: new Date(decodedTimestamp) }})
             .sort({ creation_time: -1 })
-            .limit(req.params.count);
+            .limit(req.params.count)
+            .lean();
 
         const result = formatMessages(messages, req.user._id).reverse();
 
@@ -75,12 +78,20 @@ function formatMessages(messages, userId) {
     const result = [];
 
     messages.forEach(message => {
-        result.push({
-            _id: message._id,
-            content: message.content,
-            is_sender: message.creator_id.equals(userId),
-            creation_time: message.creation_time
-        });
+        // set is_sender based on creator_id and requesting user id
+        message.is_sender = message.creator_id.equals(userId);
+
+        // remove unneeded fields
+        delete message.creator_id;
+        delete message.chat_id;
+        delete message.__v;
+        
+        // remove last_modified_time if not edited
+        if (message.creation_time.toString() == message.last_modified_time.toString()) {
+            delete message.last_modified_time;
+        }
+        
+        result.push(message);
     });
     
     return result;

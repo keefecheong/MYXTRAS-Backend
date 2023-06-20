@@ -5,9 +5,32 @@ const Message = require('../../models/message.js');
 
 const { emitSocketEvent } = require('../../utils/chats/emitSocketEvent.js');
 const { getUserOnline } = require('../../utils/chats/getUserStatus.js');
+const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
+const { uploadFile } = require('../../utils/general/firebaseStorageUpload.js');
 
 // handle 'send-message' event
-function handleSendMessage(data, socket, connections) {
+async function handleSendMessage(data, socket, connections) {
+    let fileUpload;
+
+    if (data.file) {
+        // receive file chunks and upload to firebase storage if message includes file
+        fileUpload = await processFileChunks(data, socket);
+        
+        // update sender on file upload results
+        socket.emit('file-upload-result', { messageId: data.message._id, uploadResult: fileUpload });
+
+        // if file upload is successful then set file attributes
+        if (fileUpload.successful) {
+            data.message.file_link = fileUpload.fileLink;
+            data.message.original_name = data.file.name;
+            data.message.file_type = data.file.type;
+        }
+        // otherwise return
+        else {
+            return;
+        }
+    }
+
     // update last_message_timestamp with the message's creation_time
     data.chat.last_message_timestamp = data.message.creation_time;
 
@@ -62,11 +85,54 @@ function handleSendMessage(data, socket, connections) {
             chat_id: data.chat._id
         });
 
+        // set file attributes
+        if (data.file) {
+            newMessage.file_link = fileUpload.fileLink;
+            newMessage.original_name = data.file.name;
+            newMessage.file_type = data.file.type;
+        }
+
         newMessage.save();
 
         // update last_message_timestamp for the chat
         chat.last_message_timestamp = newMessage.creation_time;
         chat.save();
+    });
+}
+
+// to receive file chunks and upload the file to firebase storage
+function processFileChunks(data, socket) {
+    return new Promise((resolve) => {
+        const fileChunks = [];
+        let file;
+
+        // values for max file size and chunk size (tally with frontend)
+        const maxFileSize = 2 * 1024 * 1024;
+        const chunkSize = 4 * 1024;
+    
+        // set up event listener for file chunk data
+        socket.on('file-chunk', async (chunkData) => {
+            if (chunkData.message_id == data.message._id) {
+                fileChunks.push(Buffer.from(chunkData.chunk));
+            }
+
+            // if the received number of chunks add up to be greater than maxFileSize then return upload fail
+            if (fileChunks.length > Math.ceil(maxFileSize / chunkSize)) {
+                resolve({
+                    successful: false,
+                    fileLink: ''
+                });
+            }
+    
+            // if the number of chunks received/added matches the total chunk count then reconstruct the file and upload to firebase storage
+            if (fileChunks.length == data.file.totalChunks) {
+                file = Buffer.concat(fileChunks);
+                const uploadResult = await uploadFile(file, data.chat._id, data.file.name, data.file.type);
+
+                // return the upload status and URL of the file
+                resolve(uploadResult);
+            }
+        });
     });
 }
 
@@ -87,6 +153,7 @@ function handleEditMessage(data, socket, connections) {
     // update database
     Message.findById(data.message._id).then(message => {
         message.content = data.message.content;
+        message.last_modified_time = data.message.last_modified_time
     
         message.save();
     });
@@ -107,6 +174,10 @@ function handleDeleteMessage(data, socket, connections) {
     }
 
     // update database
+    if (data.message.fileLink) {
+        deleteFiles([data.message.fileLink]);
+    }
+
     Message.findByIdAndDelete(data.message._id).catch((error) => console.log(error));
 }
 

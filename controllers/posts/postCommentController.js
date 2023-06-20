@@ -17,7 +17,8 @@ const getComments = async (req, res) => {
                     path: 'creator_id',
                     select: 'username profile_pic_link'
                 }
-            });
+            })
+            .lean();
 
         const comments = checkCommentAttributesAll(postComments.comments, req.user._id);
 
@@ -56,7 +57,8 @@ const postComment = async (req, res) => {
             .populate({
                 path: 'creator_id',
                 select: 'username profile_pic_link'
-            });
+            })
+            .lean();
 
         newComment = checkCommentAttributes(newComment, req.user._id);
 

@@ -9,12 +9,15 @@ const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // get controller functions
-const { getAllPosts, getFollowingPosts, getOnePost } = require('../../controllers/posts/postController.js');
+const { getAllPosts, getFollowingPosts, getOnePost, getOwnPosts } = require('../../controllers/posts/postController.js');
 const { createPost, updatePost } = require('../../controllers/posts/postSaveController.js');
 const { deletePost } = require('../../controllers/posts/postDeleteController.js');
 
 // retrieve all posts
 postRouter.get('/', getAllPosts);
+
+// retireve user's own posts
+postRouter.get('/self', getOwnPosts);
 
 // retrieve user's own posts and posts by users followed
 postRouter.get('/following', getFollowingPosts);
