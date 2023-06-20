@@ -1,8 +1,8 @@
 // controller functions to handle POST and PATCH requests for posts
 
 const Post = require('../../models/post.js');
-const { uploadImages } = require('../../utils/posts/firebaseStorageUpload.js');
-const { deleteImages } = require('../../utils/posts/firebaseStorageDelete.js');
+const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
+const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 // create a post
 const createPost = async (req, res) => {
@@ -66,7 +66,7 @@ const updatePost = async (req, res) => {
         }
 
         // otherwise delete old images, update content_links and save the post
-        deleteImages(res.post.content_links);
+        deleteFiles(res.post.content_links);
 
         res.post.content_links = newImageLinks;
         res.post.original_names = req.files.map(image => image.originalname);

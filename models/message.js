@@ -9,7 +9,10 @@ const messageSchema = new mongoose.Schema({
     },
     content: {
         type: String,
-        required: true
+        // specify content to be required only if file_link is empty
+        required: function () {
+            return !this.file_link;
+        }
     },
     creation_time: {
         type: Date,
@@ -27,16 +30,28 @@ const messageSchema = new mongoose.Schema({
         ref: 'Chat',
         required: true,
         immutable: true
+    },
+    file_link: {
+        type: String,
+        // specify file_link to be required only if content is empty
+        required: function() {
+            return !this.content;
+        }
+    },
+    original_name: {
+        type: String,
+        // specify original_name to be required only if file_link is provided
+        required: function() {
+            return this.file_link;
+        }
+    },
+    file_type: {
+        type: String,
+        // specify original_name to be required only if file_link is provided
+        required: function() {
+            return this.file_link;
+        }
     }
-});
-
-// automatically update last_modified_time with the current time when an existing document is saved (updated)
-messageSchema.pre('save', function(next) {
-    if (!this.isNew > 0) {
-        this.last_modified_time = Date.now();
-    }
-
-    next();
 });
 
 module.exports = mongoose.model('Message', messageSchema);

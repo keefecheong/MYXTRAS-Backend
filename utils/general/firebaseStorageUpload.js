@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 const { getStorage, ref, uploadBytes, getDownloadURL } = require('firebase/storage');
-const { deleteImages } = require('./firebaseStorageDelete.js');
+const { deleteFiles } = require('./firebaseStorageDelete.js');
 
 const firebaseStorage = getStorage();
 
@@ -37,16 +37,16 @@ const uploadImages = async (images, imageLinks, objId, type) => {
                     .then((downloadURL) => {
                         imageLinks.push(downloadURL.split('&token')[0]);
                     })
-                    .catch(async (error) => {
+                    .catch((error) => {
                         console.log(error);
-                        deleteImages(imageLinks);
+                        deleteFiles(imageLinks);
                         return false;
                     });
 
             })
-            .catch(async (error) => {
+            .catch((error) => {
                 console.log(error);
-                deleteImages(imageLinks);
+                deleteFiles(imageLinks);
                 return false;
             });
         
@@ -55,6 +55,47 @@ const uploadImages = async (images, imageLinks, objId, type) => {
     return true;
 }
 
+// upload file to firebase storage and return file link
+// if uploading fails then delete file
+const uploadFile = async (buffer, objId, name, type) => {
+    // create new file name with hash
+    const newName = crypto.createHash('md5').update(name).update(Date.now().toString()).digest('hex');
+
+    // set metadata of the file
+    const metadata = {
+        cacheControl: 'max-age=300',
+        contentType: type
+    }
+
+    const fileRef = ref(firebaseStorage, `chats/${objId}/${newName}`);
+    let fileLink = '';
+    
+    await uploadBytes(fileRef, buffer, metadata)
+        .then(async (result) => {
+            await getDownloadURL(result.ref)
+                .then((downloadURL) => {
+                    fileLink = downloadURL.split('&token')[0];
+                })
+                .catch((error) => {
+                    console.log(error);
+                    deleteFiles([fileLink]);
+                });
+
+        })
+        .catch((error) => {
+            console.log(error);
+            deleteFiles([fileLink]);
+        });
+
+    const result = {
+        successful: fileLink != '',
+        fileLink: fileLink
+    }
+
+    return result;
+}
+
 module.exports = {
-    uploadImages
+    uploadImages,
+    uploadFile
 }

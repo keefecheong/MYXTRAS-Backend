@@ -2,7 +2,7 @@
 
 const Post = require('../../models/post.js');
 const Comment = require('../../models/comment.js');
-const { deleteImages } = require('../../utils/posts/firebaseStorageDelete.js');
+const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 const deletePost = async (req, res) => {
     // check if the creator of the post is the requesting user
@@ -13,7 +13,7 @@ const deletePost = async (req, res) => {
 
     try {
         // delete associated images
-        deleteImages(res.post.content_links);
+        deleteFiles(res.post.content_links);
 
         // delete associated comments
         for (let i = 0; i < res.post.comments.length; i++) {

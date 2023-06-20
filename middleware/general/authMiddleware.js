@@ -43,9 +43,16 @@ async function validateUserHTTP(req, res, next) {
 async function validateUserSocket(socket, next) {
     try {
         // Get the JWT token from the cookie
-        const token = cookie.parse(socket.request.headers.cookie.toString()).authapi;
+        const cookies = socket.request.headers.cookie || null;
+        
+        // disconnect socket if there is no cookie
+        if (!cookies) {
+            socket.disconnect(true);
+            socket.emit('unauthorized', { message: 'Unauthorized' });
+        }
 
         // disconnect socket if there is no authapi cookie
+        const token = cookie.parse(cookies.toString()).authapi;
         if (!token) {
             socket.disconnect(true);
             socket.emit('unauthorized', { message: 'Unauthorized' });
