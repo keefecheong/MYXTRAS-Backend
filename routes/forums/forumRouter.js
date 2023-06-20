@@ -1,12 +1,12 @@
 const express = require('express');
 const Forum = require('../../models/forum.js');
 const User = require('../../models/user.js');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 const router = express.Router();
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
 const { uploadImages } = require('../../utils/posts/firebaseStorageUpload.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
-const forum = require('../../models/forum.js');
 
 router.post('/create', multerConfig.array('selectedImages'), async (req, res) => {
 
@@ -62,38 +62,23 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
         res.status(400).json({ message: error.message });
     }
 });
-router.post('/subscribe/:forumID', async (req, res) => {
-
-    // Update subbed forums
-    User.updateOne(
-        { _id: ObjectId(req.user.id) },
-        { $push: { subscribed_forums: forumID } }
-      )
-      .then(() => {
-        console.log('String pushed successfully');
-        // Handle success
-      })
-      .catch((error) => {
-        console.error('Error pushing string:', error);
-        // Handle error
-      });
-
-      return res.json();
-
-})
 // Retrieve one page
 router.get('/get-forum/:forumID', async (req, res) => {
     let forum;
+    var isSubscribed = false;
     var isCreator = false;
+    
     try {
         forum = await Forum.findOne({forumID : req.params.forumID});
         if (!forum) {
             return res.status(404).json({ message: 'Unable to find the specified forum.' });
         }
-        
         // Display Subscribe button in frontend logic
         if (req.user._id.equals(forum.creator_id)){
             isCreator = true
+        }
+        if (!(req.user.subscribed_forums.indexOf(req.params.forumID) != -1)){
+            isSubscribed = true
         }
     } catch (error) {
         
@@ -102,6 +87,7 @@ router.get('/get-forum/:forumID', async (req, res) => {
     const response = {
         forum: forum,
         isCreator: isCreator,
+        isSubscribed: isSubscribed
       };
     res.status(200).json(response);
 });
@@ -109,7 +95,10 @@ router.get('/get-forum/:forumID', async (req, res) => {
 router.get('/get-created-forums/', async (req, res) => {
 
     try {
-        const forums =  await Forum.find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 }).select('forumID, forumName, forum_pic_link').exec();
+        const forums =  await Forum.
+        find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 })
+        .select('forumID, forumName, forum_pic_link')
+        .exec();
 
         // Extract the desired fields from the forums
         //const result = forums.map(({ forumID, forumName, forum_pic_link }) => ({ forumID, forumName, forum_pic_link }));
@@ -123,18 +112,54 @@ router.get('/get-created-forums/', async (req, res) => {
 });
 // Retrieve user subscribed forum list
 router.get('/get-subbed-forums/', async (req, res) => {
-    let forum;
 
+    const subbed_forums = req.user.subscribed_forums
+   
+    return res.status(200).json(subbed_forums);
+});
+router.post('/subscribe-forum/:forumID', async (req, res) => {
+    let isSubscribed
+
+    // Note: req.param.forumID is the _id instead of forumID field
     try {
-        forum = await User.findById(req.params.uid).select('subscribed_forums').populate({ path: 'subscribed_forums', select: 'forumID profile_pic_link forumName'})
-        if (!forum) {
-            return res.status(404).json({ message: 'Unable to find the user subscribed forums.' });
+        const forum = await Forum.findById(req.params.forumID)
+
+        if (!(req.user.subscribed_forums.indexOf(req.params.forumID) != -1)) {
+            
+            // Add userid from forum subscribers array list
+            forum.subscribers.push(req.user.id);
+            await forum.save()
+
+            // Add forumid from forum subscribers array list
+            req.user.subscribed_forums.push(req.params.forumID);
+            await req.user.save()
+              
+            isSubscribed = true
+            
+            return res.status(200).json({"isSubscribed": isSubscribed})
+        }
+        else {
+
+            // Remove userid from forum subscribers array list
+            const userIndex = forum.subscribers.indexOf(req.user.id);
+            console.log(userIndex)
+            forum.subscribers.splice(userIndex, 1);
+
+            await forum.save()
+
+            // Remove forumid from user subscribed_forums array list
+            const forumIndex = req.user.subscribed_forums.indexOf(req.params.forumID);
+            req.user.subscribed_forums.splice(forumIndex, 1);
+            await req.user.save()
+
+            isSubscribed = false
+            
+            return res.status(200).json({"isSubscribed": isSubscribed})
         }
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
     }
-    res.status(200).json(forum);
-});
+})
 
 module.exports = router;
