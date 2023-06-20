@@ -4,6 +4,8 @@ const User = require('../../models/user.js');
 const { setJWT } = require('../../utils/users/setJWT.js');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
+const { deleteImages } = require('../../utils/general/firebaseStorageDelete.js');
 
 // return current user profile
 // user retrieved with authMiddleware
@@ -76,7 +78,7 @@ const updateUser = async (req, res) => {
         return;
     }
 
-    const {userName, biography, selectedInterests, gender} = req.body;
+    const {userName, biography, selectedInterests, gender} = JSON.parse(req.body.userObject);
 
     try {
         const user = req.user;
@@ -86,9 +88,18 @@ const updateUser = async (req, res) => {
         user.biography = biography;
         user.interests = selectedInterests.sort();
         user.gender = gender;
+        var profile_pic_link = [];
 
         await user.save();
         
+        const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, 'user');
+        user.profile_pic_link = profile_pic_link[0];
+        if (!uploadSuccessful) {
+            await User.findByIdAndDelete(user._id);
+            res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+        }
+        await user.save();
+
         res.status(204).end();
     } catch (error) {
         console.log(error);

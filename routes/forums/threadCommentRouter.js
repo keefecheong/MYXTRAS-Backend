@@ -1,6 +1,7 @@
 const express = require('express');
 const commentRouter = express.Router();
 const Comment = require('../../models/comment.js');
+const Thread = require('../../models/thread.js');
 
 commentRouter.post('/', express.json(), async (req, res) => {
     if (!req.body.content) {
@@ -24,7 +25,7 @@ commentRouter.post('/', express.json(), async (req, res) => {
             .findById(comment._id)
             .populate({
                 path: 'creator_id',
-                select: 'username profile_pic_link'
+                select: 'username profile_pic_link real_name'
             });
 
         //newComment = checkCommentAttributes(newComment, req.user._id);
@@ -36,7 +37,7 @@ commentRouter.post('/', express.json(), async (req, res) => {
     }
 
 });
-commentRouter.get('/:threadID', async (req, res) => {
+commentRouter.get('/', async (req, res) => {
     try {
         // populate comment data to get creator's username and profile pic link
         const threadComments = await Thread
@@ -46,13 +47,13 @@ commentRouter.get('/:threadID', async (req, res) => {
                 path: 'comments',
                 populate: {
                     path: 'creator_id',
-                    select: 'username profile_pic_link'
+                    select: 'username profile_pic_link real_name'
                 }
             });
 
         //const comments = checkCommentAttributesAll(threadComments.comments, req.user._id);
 
-        res.status(200).json(comments);
+        res.status(200).json(threadComments);
     }
     catch (error) {
         res.status(500).json({ message: error.message });

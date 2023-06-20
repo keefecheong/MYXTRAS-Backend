@@ -5,7 +5,6 @@ const Forum = require('../../models/forum.js');
 // find post by id
 const getForum = async (req, res, next) => {
     let target;
-
     try {
         // populate post data to get creator's username and profile pic link
         target = await Forum.findOne({forumID: req.params.forumID}).populate({ path: 'creator_id', select: 'username profile_pic_link'});

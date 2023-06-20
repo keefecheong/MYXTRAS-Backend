@@ -5,7 +5,6 @@ const Thread = require('../../models/thread.js');
 // find post by id
 const getThread = async (req, res, next) => {
     let target;
-    
     try {
         // populate post data to get creator's username and profile pic link
         target = await Thread.findById(req.params.threadID).populate({ path: 'creator_id', select: 'username profile_pic_link'});
