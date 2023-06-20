@@ -24,6 +24,9 @@ const uploadImages = async (images, imageLinks, objId, type, forumID) => {
         if (type === "post") {
             imageRef = ref(firebaseStorage, `posts/${objId}/${newName}`);
         }
+        else if (type === 'user'){
+            imageRef = ref(firebaseStorage, `users/${objId}/${newName}`);
+        }
         else if (type === 'forum'){
             imageRef = ref(firebaseStorage, `forums/${objId}/${newName}`);
         }
