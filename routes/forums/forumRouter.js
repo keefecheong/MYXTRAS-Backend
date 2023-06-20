@@ -8,8 +8,6 @@ const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js')
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 const forum = require('../../models/forum.js');
 
-// Retrieve schools
-
 router.post('/create', multerConfig.array('selectedImages'), async (req, res) => {
 
     // check if images are provided in the body
@@ -87,11 +85,10 @@ router.post('/subscribe/:forumID', async (req, res) => {
 router.get('/get-forum/:forumID', async (req, res) => {
     let forum;
     var isCreator = false;
-
     try {
         forum = await Forum.findOne({forumID : req.params.forumID});
         if (!forum) {
-            return res.status(404).json({ message: 'Unable to find the specified post.' });
+            return res.status(404).json({ message: 'Unable to find the specified forum.' });
         }
         
         // Display Subscribe button in frontend logic
@@ -112,12 +109,13 @@ router.get('/get-forum/:forumID', async (req, res) => {
 router.get('/get-created-forums/', async (req, res) => {
 
     try {
-        const forums =  await Forum.find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 }).exec();
-            // Extract the desired fields from the forums
-            const result = forums.map(({ forumID, forumName, forum_pic_link }) => ({ forumID, forumName, forum_pic_link }));
+        const forums =  await Forum.find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 }).select('forumID, forumName, forum_pic_link').exec();
 
-            // Return the result as a JSON array
-            res.status(200).json(result);
+        // Extract the desired fields from the forums
+        //const result = forums.map(({ forumID, forumName, forum_pic_link }) => ({ forumID, forumName, forum_pic_link }));
+        
+        // Return the result as a JSON array
+        res.status(200).json(forums);
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
@@ -128,20 +126,15 @@ router.get('/get-subbed-forums/', async (req, res) => {
     let forum;
 
     try {
-        forum = await User.findById(req.params.uid).populate({ path: 'subscribed_forums', select: 'forumID profile_pic_link forumName'})
+        forum = await User.findById(req.params.uid).select('subscribed_forums').populate({ path: 'subscribed_forums', select: 'forumID profile_pic_link forumName'})
         if (!forum) {
-            return res.status(404).json({ message: 'Unable to find the specified post.' });
+            return res.status(404).json({ message: 'Unable to find the user subscribed forums.' });
         }
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
     }
     res.status(200).json(forum);
-});
-// Retrieve courses
-router.patch('/update-courses', (req, res) => {
-
-    
 });
 
 module.exports = router;
