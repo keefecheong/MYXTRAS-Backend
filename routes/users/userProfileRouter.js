@@ -6,6 +6,8 @@ const profileRouter = express.Router();
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
+const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
+
 
 // get controller functions
 const { getUser, registerUser, updateUser, setupUser, getAllUsers } = require('../../controllers/users/userProfileController.js');
@@ -17,7 +19,7 @@ profileRouter.get('/', validateUserHTTP, getUser);
 profileRouter.post('/', express.json(), registerUser);
 
 // update user info
-profileRouter.patch('/', validateUserHTTP, express.json(), updateUser);
+profileRouter.patch('/', validateUserHTTP, multerConfig.array('selectedImages'), updateUser);
 
 // initial user info setup
 profileRouter.patch('/setup', validateUserHTTP, express.json(), setupUser);

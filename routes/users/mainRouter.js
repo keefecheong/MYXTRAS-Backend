@@ -3,6 +3,7 @@
 // initialize router
 const express = require('express');
 const mainRouter = express.Router();
+const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // nested routers
 const userLoginRouter = require('./userLoginRouter.js');
@@ -11,7 +12,7 @@ const userCookieRouter = require('./userCookieRouter.js');
 
 // mount various routes
 // handle user profile related requests
-mainRouter.use('/profile', userProfileRouter);
+mainRouter.use('/profile', express.json(), userProfileRouter);
 
 // handle login requests
 mainRouter.use('/login', userLoginRouter);

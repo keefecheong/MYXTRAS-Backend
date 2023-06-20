@@ -85,18 +85,18 @@ Content-Type: application/json
 
 ###
 
-GET http://127.0.0.1:8081/api/posts/comments/647593717e5cbd1fba80f0db
+GET http://127.0.0.1:8081/api/posts/comments/64761e921269964cd6e0990f
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NzE4OTk4N30.rcOvFrnyHpylJ_yYQ_XJiS_jccYEFFnfacXiQ_89F4M
+
+###
+
+DELETE http://127.0.0.1:8081/api/posts/comments/64761e921269964cd6e0990f/6491a62adc8b512db02c46f7
 Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NTQ1ODk0M30.7QATwzOI8ERXAZPpLgsi0JGfOcMHqnl32IS53hdK9_8
 
 ###
 
-DELETE http://127.0.0.1:8081/api/posts/likes/647593717e5cbd1fba80f0db
-Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NTQ1ODk0M30.7QATwzOI8ERXAZPpLgsi0JGfOcMHqnl32IS53hdK9_8
-
-###
-
-POST http://127.0.0.1:8081/api/posts/comments/647593717e5cbd1fba80f0db
-Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NTQ1ODk0M30.7QATwzOI8ERXAZPpLgsi0JGfOcMHqnl32IS53hdK9_8
+POST http://127.0.0.1:8081/api/posts/comments/64761e921269964cd6e0990f
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NzE4OTk4N30.rcOvFrnyHpylJ_yYQ_XJiS_jccYEFFnfacXiQ_89F4M
 Content-Type: application/json
 
 {

@@ -33,12 +33,19 @@ const postSchema = new mongoose.Schema({
         }],
         default: []
     },
-    comments: {
-        type: [{
-            type: mongoose.SchemaTypes.ObjectId,
-            ref: 'Comment'
-        }],
-        default: []
+    comment_count: {
+        type: Number,
+        default: 0
+    },
+    caption: {
+        type: String
+    },
+    location: {
+        type: String
+    },
+    comments_enabled: {
+        type: Boolean,
+        default: true
     }
 });
 
