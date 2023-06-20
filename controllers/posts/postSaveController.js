@@ -13,13 +13,28 @@ const createPost = async (req, res) => {
         return res.status(400).json({ message: 'At least one image is required.' });
     }
 
-    try {
-        const post = new Post({
-            creator_id: req.user._id,
-            content_links: [],
-            original_names: req.files.map(image => image.originalname)
-        });
+    const post = new Post({
+        creator_id: req.user._id,
+        content_links: [],
+        original_names: req.files.map(image => image.originalname)
+    });
 
+    // check if there is request body (data for other fields)
+    if (req.body) {
+        if (req.body.caption) {
+            post.caption = req.body.caption;
+        }
+
+        if (req.body.location) {
+            post.location = req.body.location;
+        }
+
+        if (req.body.commentsEnabled) {
+            post.comments_enabled = req.body.commentsEnabled == 'true';
+        }
+    }
+
+    try {
         // save post to make post_id available
         await post.save();
 
@@ -42,10 +57,18 @@ const createPost = async (req, res) => {
 }
 
 const updatePost = async (req, res) => {
+    // check if there is request body provided
+    // if no request body is present return 400 error
+    // otherwise continue to update post
+    if (!req.body) {
+        return res.status(400).json({ message: 'At least one field is required.' });
+    }
+
     // check if images are provided in the body
     // if provided, continue to update post,
-    // otherwise, return 400 error
-    if (req.files.length <= 0) {
+    // otherwise, if 'noFilesChanged' field is provided and set to true, continue to update post
+    // otherwise return 400 error
+    if (req.files.length <= 0 && req.body.noFilesChanged != 'true') {
         return res.status(400).json({ message: 'At least one image is required.' });   
     }
 
@@ -55,21 +78,37 @@ const updatePost = async (req, res) => {
         return res.status(401).json({ message: 'Unauthorized.' });
     }
 
+    // update fields
+    if (req.body.caption) {
+        res.post.caption = req.body.caption;
+    }
+
+    if (req.body.location) {
+        res.post.location = req.body.location;
+    }
+
+    if (req.body.commentsEnabled) {
+        res.post.comments_enabled = req.body.commentsEnabled == 'true';
+    }
+
     try {
-        var newImageLinks = [];
-
-        const uploadSuccessful = await uploadImages(req.files, newImageLinks, req.params.postId, 'post');
-
-        // if failed to upload images then send error message
-        if (!uploadSuccessful) {
-            res.status(500).json({ message: 'Failed to update post, please try again later.' });
+        // upload new images and update post if provided
+        if (req.body.noFilesChanged != 'true') {
+            var newImageLinks = [];
+    
+            const uploadSuccessful = await uploadImages(req.files, newImageLinks, req.params.postId, 'post');
+    
+            // if failed to upload images then send error message
+            if (!uploadSuccessful) {
+                res.status(500).json({ message: 'Failed to update post, please try again later.' });
+            }
+    
+            // otherwise delete old images, update content_links and save the post
+            deleteFiles(res.post.content_links);
+    
+            res.post.content_links = newImageLinks;
+            res.post.original_names = req.files.map(image => image.originalname);
         }
-
-        // otherwise delete old images, update content_links and save the post
-        deleteFiles(res.post.content_links);
-
-        res.post.content_links = newImageLinks;
-        res.post.original_names = req.files.map(image => image.originalname);
         
         await res.post.save();
 

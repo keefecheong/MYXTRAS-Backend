@@ -15,9 +15,13 @@ const commentSchema = new mongoose.Schema({
     content: {
         type: String,
         immutable: true,
+        required: true
+    },
+    post_id: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'Post',
         required: true,
-        // minLength: 10,
-        // maxLength: 300
+        immutable: true
     }
 });
 

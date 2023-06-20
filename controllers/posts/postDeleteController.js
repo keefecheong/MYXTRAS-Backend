@@ -16,9 +16,7 @@ const deletePost = async (req, res) => {
         deleteFiles(res.post.content_links);
 
         // delete associated comments
-        for (let i = 0; i < res.post.comments.length; i++) {
-            Comment.findByIdAndDelete(res.post.comments[i]);
-        }
+        Comment.deleteMany({ post_id: res.post._id }).catch(error => console.log(error));
 
         // delete post
         await Post.findByIdAndDelete(req.params.postId);
