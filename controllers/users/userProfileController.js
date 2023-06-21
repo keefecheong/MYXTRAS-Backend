@@ -12,7 +12,28 @@ const { deleteImages } = require('../../utils/general/firebaseStorageDelete.js')
 const getUser = (req, res) => {
     res.status(200).json(req.user);
 }
+const verifyEmail = async (req, res) => {
+    const email = req.body.email
+    const existingEmail = await User.findOne({ email: email });
 
+    if (existingEmail) {
+        return res.status(400).json({ error: 'Email already exists' });
+    }
+    else {
+        return res.status(200).end()
+    }
+}
+const verifyPhoneNum = async (req, res) => {
+    const phoneNumber = req.body.phoneNumber
+    const existingPhone = await User.findOne({ phone_number: phoneNumber });
+
+    if (existingPhone) {
+        return res.status(400).json({ error: 'Phone Number already exists' });
+    }
+    else {
+        return res.status(200).end()
+    }
+}
 // register new user
 const registerUser = async (req, res) => {
     // return 400 error if no data is sent
@@ -185,7 +206,9 @@ module.exports = {
     registerUser,
     updateUser,
     setupUser,
-    getAllUsers
+    getAllUsers,
+    verifyEmail,
+    verifyPhoneNum
 }
 
 function passwordRequirements(password) {

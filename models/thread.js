@@ -34,12 +34,14 @@ const threadSchema = new mongoose.Schema({
         default: 0,
     },
     likes: {
-        type: Number,
-        default: 0
+        type: [{ type: mongoose.SchemaTypes.ObjectId, 
+            ref: 'User' }],
+        default: []
     },
     dislikes: {
-        type: Number,
-        default: 0
+        type: [{ type: mongoose.SchemaTypes.ObjectId, 
+            ref: 'User' }],
+        default: []
     },
     category: {
         type: [String],

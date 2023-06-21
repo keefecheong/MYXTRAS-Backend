@@ -9,7 +9,6 @@ const getForum = async (req, res, next) => {
         // populate post data to get creator's username and profile pic link
         target = await Forum.findOne({forumID: req.params.forumID}).populate({ path: 'creator_id', select: 'username profile_pic_link'});
         if (!target) {
-            console.log('1')
             return res.status(404).json({ message: 'Unable to find the specified Forum.' });
         }
     }
