@@ -115,19 +115,49 @@ router.get('/get-subbed-forums/', async (req, res) => {
     .select('subscribed_forums')
     .populate({
         path: 'subscribed_forums',
-        select: 'forumName forumID forum_pic_link'
+        select: 'forumName forumID forum_pic_link threads',
+        populate: {
+            path: 'threads',
+            select: 'thread_title thread_desc numOfComments content_links creation_time',
+            populate: {
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            },
+            options: { sort: { creation_time: -1 } }
+        }
     })
     .lean()
+
+    // // Step 1: Retrieve the threads from the filtered forums
+    // const threads = subbed_forums.subscribed_forums.reduce((result, forum) => {
+    //     return result.concat(forum.threads);
+    // }, []);
+    
+    // // Step 2: Flatten the threads array
+    // const mergedThreads = [].concat(...threads);
+    
+    // // Step 3: Sort the merged threads array in chronological order
+    // const sortedThreads = mergedThreads.sort((a, b) => {
+    //     return new Date(b.creation_time) - new Date(a.creation_time);
+    // });
+  
+    // console.log(sortedThreads);
+
+    // const response = {
+    //     subbed_forums,
+    //     sortedThreads
+    // }
     return res.status(200).json(subbed_forums);
 });
 // Retrieve 6 popular forums 
 router.get('/get-recommended-forums/', async (req, res) => {
 
     const topSixForums = await Forum.find()
-    .select('forumName forumID forum_pic_link')
-    .sort({ numOfSubs: 1 })
+    .select('forumName forumID forum_pic_link numOfSubs')
+    .sort({ numOfSubs: -1 })
     .limit(6)
     .lean()
+
     return res.status(200).json(topSixForums);
 });
 
