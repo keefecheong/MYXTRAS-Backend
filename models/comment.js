@@ -17,9 +17,8 @@ const commentSchema = new mongoose.Schema({
         immutable: true,
         required: true
     },
-    post_id: {
+    parent_id: {
         type: mongoose.SchemaTypes.ObjectId,
-        ref: 'Post',
         required: true,
         immutable: true
     }
