@@ -7,6 +7,17 @@ const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
+router.post('/verify-forumID', express.json(), async (req, res) => {
+    const forumID = req.body.forumID
+    const existingForum = await Forum.findOne({ forumID: forumID });
+
+    if (existingForum) {
+        return res.status(400).json({ error: 'ForumID already exists' });
+    }
+    else {
+        return res.status(200).end()
+    }
+});
 router.post('/create', multerConfig.array('selectedImages'), async (req, res) => {
 
     // check if images are provided in the body
