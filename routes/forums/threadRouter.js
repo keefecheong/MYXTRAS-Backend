@@ -102,7 +102,7 @@ router.get('/get-thread/:threadID', async (req, res) => {
             }
         })
         .lean();
-        // Find forumID to display
+        // Find forumID to display banner forumpic and forumid
         const forum = await Forum.findOne({ threads: threadID }).select('forumID forum_pic_link banner_link');
         console.log(forum.forumID)
         const response = {
@@ -121,7 +121,7 @@ router.get('/get-popular-threads/', async (req, res) => {
 
     const topSixThreads = await Thread.find({})
     .select('thread_title thread_desc content_links')
-    .sort({ likes: 1 })
+    .sort({ likes: -1 })
     .limit(6)
     .lean()
     return res.status(200).json(topSixThreads);

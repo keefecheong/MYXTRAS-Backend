@@ -18,8 +18,7 @@ const threadSchema = new mongoose.Schema({
         required: true,
     },
     thread_desc: {
-        type: String,
-        required: true,
+        type: String
     },
     content_links: {
         type: [String],
