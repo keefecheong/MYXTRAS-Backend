@@ -32,6 +32,10 @@ const createPost = async (req, res) => {
         if (req.body.commentsEnabled) {
             post.comments_enabled = req.body.commentsEnabled == 'true';
         }
+
+        if (req.body.tags) {
+            post.tags = req.body.tags;
+        }
     }
 
     try {
@@ -52,7 +56,7 @@ const createPost = async (req, res) => {
         res.status(200).json({ message: 'Post created.' });
     }
     catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 }
 
@@ -91,6 +95,14 @@ const updatePost = async (req, res) => {
         res.post.comments_enabled = req.body.commentsEnabled == 'true';
     }
 
+    if (req.body.tags) {
+        res.post.tags = req.body.tags;
+    }
+    else {
+        // if no tags means the user cleared out tags
+        res.post.tags = [];
+    }
+
     try {
         // upload new images and update post if provided
         if (req.body.noFilesChanged != 'true') {
@@ -115,7 +127,7 @@ const updatePost = async (req, res) => {
         res.status(200).json({ message: 'Post updated.' });
     }
     catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 }
 

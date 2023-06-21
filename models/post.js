@@ -46,6 +46,9 @@ const postSchema = new mongoose.Schema({
     comments_enabled: {
         type: Boolean,
         default: true
+    },
+    tags: {
+        type: [String]
     }
 });
 

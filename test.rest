@@ -21,7 +21,8 @@ credentials: "include"
 
 ###
 
-GET http://localhost:3000/api/posts/645f4636e5b42a263b5df79c
+GET http://localhost:8081/api/posts/
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NzE4OTk4N30.rcOvFrnyHpylJ_yYQ_XJiS_jccYEFFnfacXiQ_89F4M
 
 
 ###
