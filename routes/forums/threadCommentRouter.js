@@ -10,7 +10,7 @@ commentRouter.post('/', express.json(), async (req, res) => {
     const comment = new Comment({
         creator_id: req.user._id,
         content: req.body.content,
-        object_id: res.thread._id
+        parent_id: res.thread._id
     });
     // update post's comments list
     res.thread.comments.push(comment._id);
