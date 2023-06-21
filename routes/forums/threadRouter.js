@@ -104,7 +104,6 @@ router.get('/get-thread/:threadID', async (req, res) => {
         .lean();
         // Find forumID to display banner forumpic and forumid
         const forum = await Forum.findOne({ threads: threadID }).select('forumID forum_pic_link banner_link');
-        console.log(forum.forumID)
         const response = {
             thread,
             forum

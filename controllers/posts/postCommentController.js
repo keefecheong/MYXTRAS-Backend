@@ -8,7 +8,7 @@ const getComments = async (req, res) => {
     try {
         // populate comment data to get creator's username and profile pic link
         const postComments = await Comment
-            .find({ post_id: res.post._id })
+            .find({ object_id: res.post._id })
             .populate({
                 path: 'creator_id',
                 select: 'username profile_pic_link'
@@ -43,7 +43,7 @@ const postComment = async (req, res) => {
     const comment = new Comment({
         creator_id: req.user._id,
         content: req.body.content,
-        post_id: res.post._id
+        object_id: res.post._id
     });
 
     try {

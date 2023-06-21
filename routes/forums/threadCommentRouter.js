@@ -7,10 +7,10 @@ commentRouter.post('/', express.json(), async (req, res) => {
     if (!req.body.content) {
         res.status(400).json({ message: 'Comment content is required.' });
     }
-
     const comment = new Comment({
         creator_id: req.user._id,
-        content: req.body.content
+        content: req.body.content,
+        object_id: res.thread._id
     });
     // update post's comments list
     res.thread.comments.push(comment._id);
