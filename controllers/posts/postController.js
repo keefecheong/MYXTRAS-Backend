@@ -1,6 +1,7 @@
 // controller functions to handle GET requests for posts
 
 const Post = require('../../models/post.js');
+const User = require('../../models/user.js');
 const { checkPostAttributes, checkPostAttributesAll } = require('../../utils/posts/checkAttributes.js');
 
 // retrieve all posts
@@ -77,9 +78,84 @@ const getOwnPosts = async (req, res) => {
     }
 }
 
+// get popular posts for 'explore'
+// based on like/comment count and does not include requesting user's posts
+const getPopularPosts = async (req, res) => {
+    try {
+        // aggregation pipeline
+        // first filter to only posts not created by the current user
+        // calculate 'activity' based on sum of likes and comments
+        // sorts posts based on descending activity count
+        // populate and format creator's username and profile_pic_link fields
+        // removes unneeded fields before returning result
+        const agg = [
+            {
+              '$match': {
+                'creator_id': {
+                  '$ne': req.user._id
+                }
+              }
+            }, {
+              '$addFields': {
+                'activity': {
+                  '$add': [
+                    {
+                      '$size': '$likes'
+                    }, '$comment_count'
+                  ]
+                }
+              }
+            }, {
+              '$sort': {
+                'activity': -1
+              }
+            }, {
+              '$lookup': {
+                'from': 'users', 
+                'localField': 'creator_id', 
+                'foreignField': '_id', 
+                'as': 'user'
+              }
+            }, {
+              '$addFields': {
+                'creator_id._id': {
+                  '$arrayElemAt': [
+                    '$user._id', 0
+                  ]
+                }, 
+                'creator_id.username': {
+                  '$arrayElemAt': [
+                    '$user.username', 0
+                  ]
+                }, 
+                'creator_id.profile_pic_link': {
+                  '$arrayElemAt': [
+                    '$user.profile_pic_link', 0
+                  ]
+                }
+              }
+            }, {
+              '$unset': [
+                'activity', '__v', 'user'
+              ]
+            }
+          ];
+
+          var posts = await Post.aggregate(agg);
+          
+          posts = checkPostAttributesAll(posts, req.user._id);
+
+          res.status(200).json(posts);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 module.exports = {
     getAllPosts,
     getFollowingPosts,
     getOnePost,
-    getOwnPosts
+    getOwnPosts,
+    getPopularPosts
 }
