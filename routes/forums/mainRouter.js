@@ -8,6 +8,8 @@ const mainRouter = express.Router();
 const forumRouter = require('./forumRouter.js');
 const threadRouter = require('./threadRouter.js');
 const commentRouter = require('./threadCommentRouter.js')
+const likeRouter = require('./threadLikeRouter.js')
+const dislikeRouter = require('./threadDislikeRouter.js')
 const { getForum } = require('../../middleware/forums/getForumMiddleware.js');
 const { getThread } = require('../../middleware/forums/getThreadMiddleware.js');
 
@@ -21,6 +23,8 @@ mainRouter.use(validateUserHTTP);
 // handle forum creation requests
 mainRouter.use('/', forumRouter);
 mainRouter.use('/thread/', threadRouter);
+mainRouter.use('/thread/like/:threadID', getThread, likeRouter);
+mainRouter.use('/thread/dislike/:threadID', getThread, dislikeRouter);
 mainRouter.use('/comments/:threadID', getThread, commentRouter);
 
 module.exports = mainRouter;

@@ -3,7 +3,7 @@ GET http://localhost:8081/api/users
 
 ###
 GET http://127.0.0.1:8081/api/forums/comments/64907ea60a0a0382b7579a53
-Cookie: blocalauth=localapi7e89e863624312e4:; isNotIncognito=true; _ga=GA1.1.1226195377.1678153685; authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0ODlhYzkxMTU0ZWQ0ZTcyYjlhNmExYiIsImlhdCI6MTY4Njc1NDQ2M30.qxrqANc74iNMKL9Soj4O6VuML0_eatr8EfESAkHdoSQ
+Cookie: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0ODlhYzkxMTU0ZWQ0ZTcyYjlhNmExYiIsImlhdCI6MTY4NzM0MzM2MX0.Arm4gMK4Z9EE_Iln4X9g2UGfBH__IZT0Fe7NxaGp4yE
 
 ###
 OPTIONS http://localhost:8081/api/users/register

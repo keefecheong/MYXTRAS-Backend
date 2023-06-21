@@ -4,6 +4,7 @@ const Comment = require('../../models/comment.js');
 const Thread = require('../../models/thread.js');
 
 commentRouter.post('/', express.json(), async (req, res) => {
+    
     if (!req.body.content) {
         res.status(400).json({ message: 'Comment content is required.' });
     }
@@ -14,7 +15,6 @@ commentRouter.post('/', express.json(), async (req, res) => {
     });
     // update post's comments list
     res.thread.comments.push(comment._id);
-
     try {
         // update database
         await comment.save();

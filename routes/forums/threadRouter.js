@@ -102,6 +102,12 @@ router.get('/get-thread/:threadID', async (req, res) => {
             }
         })
         .lean();
+
+        // Stores thread attributes
+        const userId = req.user._id;
+        thread.isOwner = thread.creator_id._id.equals(userId);
+        thread.liked = thread.likes.some(creator_id => creator_id.equals(userId));
+        thread.disliked = thread.dislikes.some(creator_id => creator_id.equals(userId));
         // Find forumID to display banner forumpic and forumid
         const forum = await Forum.findOne({ threads: threadID }).select('forumID forum_pic_link banner_link');
         const response = {
