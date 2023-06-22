@@ -2,6 +2,12 @@ const { StringFormat } = require('firebase/storage');
 const mongoose = require('mongoose');
 
 const threadSchema = new mongoose.Schema({
+    parent_id: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'Forum',
+        required: true,
+        immutable: true
+    },
     creator_id: {
         type: mongoose.SchemaTypes.ObjectId,
         ref: 'User',

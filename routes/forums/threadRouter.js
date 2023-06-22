@@ -9,14 +9,14 @@ const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js')
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // creating a new thread
-router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req, res) => {
+router.post('/create/:forumObjId', multerConfig.array('selectedImages'), async (req, res) => {
 
     if (!req.body) {
         res.status(400).json({ error: 'Invalid request body' });
         return;
     }
     try {
-        
+        const forumObjId = req.params.forumObjId
         const formData = req.body;
         const threadObjectString = formData.threadObject;
         const threadObject = JSON.parse(threadObjectString);
@@ -24,6 +24,7 @@ router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req
         const { thread_title, thread_desc, tags } = threadObject;
 
         const newThread = new Thread({
+            parent_id: forumObjId,
             creator_id: req.user._id,
             thread_title: thread_title,
             thread_desc: thread_desc,
@@ -31,22 +32,6 @@ router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req
         });
 
         await newThread.save();
-
-        try {
-            const target = await Forum.findOne({forumID: req.params.forumID});
-
-            if (!target) {
-                return res.status(404).json({ message: 'Unable to find the specified forum.' });
-            }
-            else {  
-                target.threads.push(newThread._id);
-                await target.save();
-            }
-        }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
-        }
-        // update Forum thread list
 
         const threadPicUploadSuccessful = await uploadImages([req.files[0]], newThread.content_links, newThread.id, 'thread', req.params.forumID);
         
@@ -64,20 +49,17 @@ router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req
 });
 
 // get list of forum threads
-router.get('/get-threads/:forumID', async (req, res) => {
+router.get('/get-threads/:forumObjId', async (req, res) => {
     try {
-        const threads =  await Forum.findOne({forumID: req.params.forumID})
-        .select('threads')
+        const threads =  await Thread.find({parent_id: req.params.forumObjId})
+        .select('thread_title thread_desc content_links numOfComments creation_time tags')
         .populate({ 
-            path: 'threads', 
-            select: 'thread_title thread_desc content_links numOfComments creation_time tags', 
-            populate: {
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            },
-            options: { sort: { creation_time: -1 } }
+            path: 'creator_id',
+            select: 'username profile_pic_link'
         })
+        .sort({ creation_time: -1 })
         .lean()
+
         res.status(200).json(threads);
     } catch (error) {
         
@@ -85,7 +67,7 @@ router.get('/get-threads/:forumID', async (req, res) => {
     }
 });
 
-// get single thread
+// get single thread to display on threadView
 router.get('/get-thread/:threadID', async (req, res) => {
     try {
         const threadID = new ObjectId(req.params.threadID)
@@ -95,6 +77,10 @@ router.get('/get-thread/:threadID', async (req, res) => {
             select: 'username profile_pic_link'
         })
         .populate({
+            path: 'parent_id',
+            select: 'forumID forum_pic_link banner_link'
+        })
+        .populate({
             path: 'comments',
             populate: {
                 path: 'creator_id',
@@ -102,26 +88,19 @@ router.get('/get-thread/:threadID', async (req, res) => {
             }
         })
         .lean();
-
         // Stores thread attributes
         const userId = req.user._id;
         thread.isOwner = thread.creator_id._id.equals(userId);
         thread.liked = thread.likes.some(creator_id => creator_id.equals(userId));
         thread.disliked = thread.dislikes.some(creator_id => creator_id.equals(userId));
-        // Find forumID to display banner forumpic and forumid
-        const forum = await Forum.findOne({ threads: threadID }).select('forumID forum_pic_link banner_link');
-        const response = {
-            thread,
-            forum
-        }
 
-        res.status(200).json(response);
+        res.status(200).json(thread);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 
 });
-// get list threads 
+// get all threads for explore 
 router.get('/get-threads', async (req, res) => {
     try {
         const threads =  await Thread.find()
