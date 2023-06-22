@@ -171,7 +171,22 @@ router.get('/get-recommended-forums/', async (req, res) => {
 
     return res.status(200).json(topSixForums);
 });
+router.get('/get-popular-forums/', async (req, res) => {
 
+    const sortedForums = await Forum.aggregate([
+        {
+          $unwind: "$tags" // Unwind the tags array
+        },
+        {
+          $group: {
+            _id: "$tags", // Group by each unique tag
+            forums: { $push: "$$ROOT" } // Collect the forums with the same tag into an array
+          }
+        }
+      ]);
+      
+    return res.status(200).json(sortedForums);
+});
 router.post('/subscribe-forum/:forumID', async (req, res) => {
     let isSubscribed
 

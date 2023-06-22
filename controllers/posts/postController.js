@@ -144,7 +144,6 @@ const getPopularPosts = async (req, res) => {
           var posts = await Post.aggregate(agg);
           
           posts = checkPostAttributesAll(posts, req.user._id);
-
           res.status(200).json(posts);
     }
     catch (error) {
