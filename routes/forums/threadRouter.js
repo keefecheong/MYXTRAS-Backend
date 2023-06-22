@@ -52,7 +52,7 @@ router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req
         
         if (!threadPicUploadSuccessful) {
             await Forum.findByIdAndDelete(newThread.id);
-            res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+            return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
         }
         await newThread.save();
 

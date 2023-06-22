@@ -26,35 +26,31 @@ const forumSchema = new mongoose.Schema({
         type: String
     },
     forum_pic_link: {
-        type: [String],
-        default: []
+        type: String,
+        required: true
     },
     banner_link: {
-        type: [String],
-        default: []
+        type: String,
+        required: true
     },
     category: {
         type: String,
         required: true,
     },
     threads: {
-        type: [{ type: mongoose.SchemaTypes.ObjectId, 
-            ref: 'Thread' }],
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'Thread'
+        }],
         default: []
     },
     subscribers: {
-        type: [{ type: mongoose.SchemaTypes.ObjectId, 
-            ref: 'User' }],
-            default: []
-    },
-    numOfSubs: {
-        type: Number,
-        default: 0,
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'User'
+        }],
+        default: []
     }
 })
 
-forumSchema.pre('save', function (next) {
-    this.numOfSubs = this.subscribers.length;
-    next();
-  });
 module.exports = mongoose.model('Forum', forumSchema);

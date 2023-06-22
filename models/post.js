@@ -48,7 +48,8 @@ const postSchema = new mongoose.Schema({
         default: true
     },
     tags: {
-        type: [String]
+        type: [String],
+        default: []
     }
 });
 
