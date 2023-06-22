@@ -125,7 +125,7 @@ router.get('/get-thread/:threadID', async (req, res) => {
 router.get('/get-threads', async (req, res) => {
     try {
         const threads =  await Thread.find()
-        .select('category content_links creation_time creator_id numOfComments tags')
+        .select('thread_title thread_desc content_links creation_time creator_id numOfComments tags')
         .populate({ 
             path: 'creator_id',
             select: 'username profile_pic_link'
