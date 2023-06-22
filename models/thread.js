@@ -43,10 +43,6 @@ const threadSchema = new mongoose.Schema({
             ref: 'User' }],
         default: []
     },
-    category: {
-        type: [String],
-        default: []
-    },
     tags: {
         type: [String],
     },

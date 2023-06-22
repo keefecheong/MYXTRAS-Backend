@@ -21,13 +21,13 @@ router.post('/create/:forumID', multerConfig.array('selectedImages'), async (req
         const threadObjectString = formData.threadObject;
         const threadObject = JSON.parse(threadObjectString);
         
-        const { thread_title, thread_desc, category } = threadObject;
+        const { thread_title, thread_desc, tags } = threadObject;
 
         const newThread = new Thread({
             creator_id: req.user._id,
             thread_title: thread_title,
             thread_desc: thread_desc,
-            category: category
+            tags: tags
         });
 
         await newThread.save();
@@ -70,7 +70,7 @@ router.get('/get-threads/:forumID', async (req, res) => {
         .select('threads')
         .populate({ 
             path: 'threads', 
-            select: 'thread_title thread_desc content_links numOfComments creation_time category', 
+            select: 'thread_title thread_desc content_links numOfComments creation_time tags', 
             populate: {
                 path: 'creator_id',
                 select: 'username profile_pic_link'
@@ -120,6 +120,24 @@ router.get('/get-thread/:threadID', async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 
+});
+// get list threads 
+router.get('/get-threads', async (req, res) => {
+    try {
+        const threads =  await Thread.find()
+        .select('category content_links creation_time creator_id numOfComments tags')
+        .populate({ 
+            path: 'creator_id',
+            select: 'username profile_pic_link'
+        })
+        .sort({ creation_time: -1 })
+        .lean()
+
+        res.status(200).json(threads);
+    } catch (error) {
+        
+        return res.status(500).json({ message: error.message });
+    }
 });
 // Retrieve 6 popular threads 
 router.get('/get-popular-threads/', async (req, res) => {
