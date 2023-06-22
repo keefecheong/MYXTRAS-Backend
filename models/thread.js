@@ -46,7 +46,10 @@ const threadSchema = new mongoose.Schema({
     category: {
         type: [String],
         default: []
-    }
+    },
+    tags: {
+        type: [String],
+    },
 })
 
 threadSchema.pre('save', function (next) {

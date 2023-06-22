@@ -70,7 +70,7 @@ router.get('/get-threads/:forumID', async (req, res) => {
         .select('threads')
         .populate({ 
             path: 'threads', 
-            select: 'thread_title thread_desc content_links numOfComments creation_time', 
+            select: 'thread_title thread_desc content_links numOfComments creation_time category', 
             populate: {
                 path: 'creator_id',
                 select: 'username profile_pic_link'

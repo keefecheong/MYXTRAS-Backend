@@ -33,9 +33,8 @@ const forumSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
-    category: {
-        type: String,
-        required: true,
+    tags: {
+        type: [String],
     },
     threads: {
         type: [{ type: mongoose.SchemaTypes.ObjectId, 
