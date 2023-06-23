@@ -98,10 +98,6 @@ const updatePost = async (req, res) => {
     if (req.body.tags) {
         res.post.tags = req.body.tags;
     }
-    else {
-        // if no tags means the user cleared out tags
-        res.post.tags = [];
-    }
 
     try {
         // upload new images and update post if provided

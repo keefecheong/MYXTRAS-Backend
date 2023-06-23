@@ -26,7 +26,7 @@ dislikeRouter.delete('/', async (req, res) => {
      // if the user has liked the post, continue to remove the like
      // otherwise, return 400 error
      if (dislikeIndex == -1) {
-         return res.status(400).json({ message: 'You have not liked this thread.' });
+         return res.status(400).json({ message: 'You have not disliked this thread.' });
      }
  
      // remove user id from post's likes list

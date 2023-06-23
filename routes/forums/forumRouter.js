@@ -21,7 +21,7 @@ router.post('/verify-forumID', express.json(), async (req, res) => {
     }
 });
 
-router.post('/create', multerConfig.array('selectedImages'), async (req, res) => {
+router.post('/create', multerConfig.array('selectedImages'), multerErrorHandler, async (req, res) => {
     // check if images and text fields are provided in the body
     // if provided, continue to create post
     // otherwise return 400 error
@@ -72,48 +72,42 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
 
         await newForum.save();
 
-        return res.status(201).end();
+        return res.status(201).json({ forumID: newForum._id });
 
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
-// Retrieve one page
-router.get('/get-forum/:forumID', async (req, res) => {
-    let forum;
+// Retrieve one forum
+router.get('/get-forum/:forumID', getForum, async (req, res) => {
+    const workingForum = res.forum.toObject();
     var isSubscribed = false;
     var isCreator = false;
     
     try {
-        forum = await Forum.findOne({forumID : req.params.forumID});
-        if (!forum) {
-            return res.status(404).json({ message: 'Unable to find the specified forum.' });
-        }
         // Display Subscribe button in frontend logic
-        if (req.user._id.equals(forum.creator_id)){
-            isCreator = true
+        if (req.user._id.equals(res.forum.creator_id._id)){
+            isCreator = true;
         }
-        if (!(req.user.subscribed_forums.indexOf(forum._id) === -1)){
-            isSubscribed = true
+        if (res.forum.subscribers.includes(req.user._id)) {
+            isSubscribed = true;
         }
     } catch (error) {
-        
         return res.status(500).json({ message: error.message });
     }
-    const response = {
-        forum: forum,
-        isCreator: isCreator,
-        isSubscribed: isSubscribed
-      };
-    res.status(200).json(response);
+
+    workingForum.isCreator = isCreator;
+    workingForum.isSubscribed = isSubscribed;
+
+    res.status(200).json(workingForum);
 });
 // Retrieve user created forum list
 router.get('/get-created-forums/', async (req, res) => {
 
     try {
-        const forums =  await Forum.
-        find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 })
-        .select('forumID, forumName, forum_pic_link')
+        const forums =  await Forum
+        .find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 })
+        .select('forumID forumName forum_pic_link')
         .exec();
 
         // Extract the desired fields from the forums
@@ -128,14 +122,11 @@ router.get('/get-created-forums/', async (req, res) => {
 });
 // Retrieve user subscribed forum list
 router.get('/get-subbed-forums/', async (req, res) => {
+    const subbed_forums = await Forum
+        .find({ subscribers: { $in: [req.user._id] } })
+        .select('forumName forumID forum_pic_link')
+        .lean();
 
-    const subbed_forums = await User.findById(req.user.id)
-    .select('subscribed_forums')
-    .populate({
-        path: 'subscribed_forums',
-        select: 'forumName forumID forum_pic_link',
-    })
-    .lean()
     return res.status(200).json(subbed_forums);
 });
 // Categorize forums based on interest tags
@@ -182,49 +173,45 @@ router.get('/get-categorized-forums/', async (req, res) => {
       ]);
     return res.status(200).json(sortedForums);
 });
-router.post('/subscribe-forum/:forumID', async (req, res) => {
-    let isSubscribed
-
-    // Note: req.param.forumID is the _id instead of forumID field
+router.post('/subscribe/:forumID', getForum, async (req, res) => {
     try {
-        const forum = await Forum.findById(req.params.forumID)
+        // check if the requesting user has subscribed to the forum already
+        const subscribed = res.forum.subscribers.find(creator_id => creator_id.equals(req.user._id));
 
-        if (!(req.user.subscribed_forums.indexOf(req.params.forumID) != -1)) {
-            
-            // Add userid from forum subscribers array list
-            forum.subscribers.push(req.user.id);
-            await forum.save()
-
-            // Add forumid from forum subscribers array list
-            req.user.subscribed_forums.push(req.params.forumID);
-            await req.user.save()
-              
-            isSubscribed = true
-            
-            return res.status(200).json({"isSubscribed": isSubscribed, 'userId': req.user._id});
+        if (subscribed) {
+            return res.status(400).json({ message: 'You have already subscribed to this forum.' });
         }
-        else {
 
-            // Remove userid from forum subscribers array list
-            const userIndex = forum.subscribers.indexOf(req.user.id);
-            forum.subscribers.splice(userIndex, 1);
+        // update forum subscriber list
+        res.forum.subscribers.push(req.user._id);
 
-            await forum.save()
-
-            // Remove forumid from user subscribed_forums array list
-            const forumIndex = req.user.subscribed_forums.indexOf(req.params.forumID);
-            req.user.subscribed_forums.splice(forumIndex, 1);
-            await req.user.save()
-
-            isSubscribed = false
-            
-            return res.status(200).json({"isSubscribed": isSubscribed})
-        }
+        await res.forum.save();
+        res.status(201).end();
     } catch (error) {
-        
-        return res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
-})
+});
+
+router.delete('/subscribe/:forumID', getForum, async (req, res) => {
+    try {
+        // check if the requesting user has subscribed to the forum already
+        const subscribedIndex = res.forum.subscribers.findIndex(creator_id => creator_id.equals(req.user._id));
+
+        // if the user has not subscribed to the forum return 400 error
+        if (subscribedIndex == -1) {
+            return res.status(400).json({ message: 'You have not subscribed to this forum yet.' });
+        }
+
+        // remove user id from the forum subscriber list
+        res.forum.subscribers.splice(subscribedIndex, 1);
+
+        await res.forum.save();
+        res.status(204).end();
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 // Update forum
 router.patch('/:forumID', multerConfig.array('selectedImages'), getForum, async (req, res) => {
@@ -232,12 +219,11 @@ router.patch('/:forumID', multerConfig.array('selectedImages'), getForum, async 
     // if provided, continue to create post
     // otherwise return 400 error
     if (!req.body) {
-        res.status(400).json({ error: 'Invalid request body' });
-        return;
+        return res.status(400).json({ error: 'Invalid request body' });
     }
 
     // check if images are provided if 'pictureUnchanged' and 'bannerUnchanged' are not set to 'true'
-    // if provided, continue to create post
+    // if provided, continue to update forum
     // otherwise return 400 error
     if (req.files.length <= 0 && req.body.pictureUnchanged != 'true' && req.body.bannerUnchanged != 'true') {
         return res.status(400).json({ message: 'At least one image is required.' });   

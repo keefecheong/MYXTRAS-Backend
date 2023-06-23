@@ -21,6 +21,7 @@ const forumSchema = new mongoose.Schema({
     forumID: {
         type: String,
         required: true,
+        unique: true  // forum ID must be unique
     },
     forumDesc: {
         type: String
