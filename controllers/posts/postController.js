@@ -84,8 +84,9 @@ const getPopularPosts = async (req, res) => {
     try {
         // aggregation pipeline
         // first filter to only posts not created by the current user
+        // calculate 'relevance' based on the number of matches between the post's tags and the user's interests
         // calculate 'activity' based on sum of likes and comments
-        // sorts posts based on descending activity count
+        // sorts posts based on descending relevance and activity count
         // populate and format creator's username and profile_pic_link fields
         // removes unneeded fields before returning result
         const agg = [
@@ -96,19 +97,30 @@ const getPopularPosts = async (req, res) => {
                 }
               }
             }, {
-              '$addFields': {
-                'activity': {
-                  '$add': [
-                    {
-                      '$size': '$likes'
-                    }, '$comment_count'
-                  ]
+                '$addFields': {
+                    'relevance': {
+                        '$size': {
+                            '$setIntersection': [
+                                '$tags', req.user.interests
+                            ]
+                        }
+                    }
                 }
-              }
             }, {
-              '$sort': {
-                'activity': -1
-              }
+                '$addFields': {
+                    'activity': {
+                        '$add': [
+                            {
+                                '$size': '$likes'
+                            }, '$comment_count'
+                        ]
+                    }
+                }
+            }, {
+                '$sort': {
+                    'relevance': -1, 
+                    'activity': -1
+                }
             }, {
               '$lookup': {
                 'from': 'users', 

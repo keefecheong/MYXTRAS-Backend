@@ -2,14 +2,16 @@ const express = require('express');
 const Forum = require('../../models/forum.js');
 const User = require('../../models/user.js');
 
+const { getForum } = require('../../middleware/forums/getForumMiddleware.js');
+
 const router = express.Router();
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
+const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 router.post('/verify-forumID', express.json(), async (req, res) => {
-    const forumID = req.body.forumID
-    const existingForum = await Forum.findOne({ forumID: forumID });
+    const existingForum = await Forum.findOne({ forumID: req.body.forumID });
 
     if (existingForum) {
         return res.status(400).json({ error: 'ForumID already exists' });
@@ -18,11 +20,14 @@ router.post('/verify-forumID', express.json(), async (req, res) => {
         return res.status(200).end()
     }
 });
-router.post('/create', multerConfig.array('selectedImages'), async (req, res) => {
 
-    // check if images are provided in the body
+router.post('/create', multerConfig.array('selectedImages'), async (req, res) => {
+    // check if images and text fields are provided in the body
     // if provided, continue to create post
     // otherwise return 400 error
+    if (req.files.length <= 0) {
+        req.status(400).json({ error: 'Forum pictures are required' });
+    }
 
     if (!req.body) {
         res.status(400).json({ error: 'Invalid request body' });
@@ -30,12 +35,7 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
     }
 
     try {
-        
-        const formData = req.body;
-        const forumObjectString = formData.forumObject;
-        const forumObject = JSON.parse(forumObjectString);
-        
-        const { forumName, forumID, forumDesc, category } = forumObject;
+        const { forumName, forumID, forumDesc, category } = JSON.parse(req.body.forumObject);
         
         // Check for existing forum
         if (Forum.find({ forumID: forumID }) === null){
@@ -50,25 +50,26 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
         });
 
         await newForum.save();
-        const forumPicUploadSuccessful = await uploadImages([req.files[0]], newForum.forum_pic_link, newForum.id, 'forum');
-        
+
+        // upload images
+        const imageLinks = [];
+        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, newForum._id, 'forum');
+
         if (!forumPicUploadSuccessful) {
-            await Forum.findByIdAndDelete(newForum.id);
-            res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+            await Forum.findByIdAndDelete(newForum._id);
+            return res.status(500).json({ message: 'Internal server error' });
         }
 
-        const bannerUploadSuccessful = await uploadImages([req.files[1]], newForum.banner_link, newForum.id, 'forum');
-        
-        if (!bannerUploadSuccessful) {
-            await Forum.findByIdAndDelete(newForum.id);
-            res.status(500).json({ message: 'Failed to upload images, please try again later.' });
-        }
+        // update forum image links
+        newForum.forum_pic_link = imageLinks[0];
+        newForum.banner_link = imageLinks[1];
+
         await newForum.save();
 
-        return res.json();
+        return res.status(201).end();
 
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 });
 // Retrieve one page
@@ -206,7 +207,7 @@ router.post('/subscribe-forum/:forumID', async (req, res) => {
               
             isSubscribed = true
             
-            return res.status(200).json({"isSubscribed": isSubscribed})
+            return res.status(200).json({"isSubscribed": isSubscribed, 'userId': req.user._id});
         }
         else {
 
@@ -228,6 +229,84 @@ router.post('/subscribe-forum/:forumID', async (req, res) => {
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
+    }
+})
+
+router.patch('/:forumID', multerConfig.array('selectedImages'), getForum, async (req, res) => {
+    // check if text fields are provided in the body
+    // if provided, continue to create post
+    // otherwise return 400 error
+    if (!req.body) {
+        res.status(400).json({ error: 'Invalid request body' });
+        return;
+    }
+
+    // check if images are provided if 'pictureUnchanged' and 'bannerUnchanged' are not set to 'true'
+    // if provided, continue to create post
+    // otherwise return 400 error
+    if (req.files.length <= 0 && req.body.pictureUnchanged != 'true' && req.body.bannerUnchanged != 'true') {
+        return res.status(400).json({ message: 'At least one image is required.' });   
+    }
+
+    // check if the creator of the forum is the requesting user
+    // if creator is not the requesting user return 401 error
+    if (!req.user._id.equals(res.forum.creator_id._id)) {
+        return res.status(401).json({ message: 'Unauthorized.' });
+    }
+    
+    try {
+        // update fields
+        const { forumName, forumID, forumDesc, category } = JSON.parse(req.body.forumObject);
+
+        res.forum.forumName = forumName;
+        res.forum.forumID = forumID;
+        res.forum.forumDesc = forumDesc;
+        res.forum.category = category;
+
+        let index = 0;
+
+        // upload new forum picture if exists
+        if (req.body.pictureUnchanged != 'true') {
+            var newImageLinks = [];
+    
+            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, req.params.forumID, 'forum');
+    
+            // if failed to upload images then send error message
+            if (!uploadSuccessful) {
+                return res.status(500).json({ message: 'Failed to update forum, please try again later.' });
+            }
+    
+            // otherwise delete old picture and update forum_pic_link
+            deleteFiles([res.forum.forum_pic_link]);
+    
+            res.forum.forum_pic_link = newImageLinks[0];
+
+            index += 1;
+        }
+
+        // upload new forum banner if exists
+        if (req.body.bannerUnchanged != 'true') {
+            var newImageLinks = [];
+    
+            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, req.params.forumID, 'forum');
+    
+            // if failed to upload images then send error message
+            if (!uploadSuccessful) {
+                return res.status(500).json({ message: 'Failed to update forum, please try again later.' });
+            }
+    
+            // otherwise delete old picture and update banner_link
+            deleteFiles([res.forum.banner_link]);
+    
+            res.forum.banner_link = newImageLinks[0];
+        }
+
+        await res.forum.save();
+
+        res.status(201).end();
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 })
 

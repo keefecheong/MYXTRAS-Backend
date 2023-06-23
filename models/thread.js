@@ -27,8 +27,7 @@ const threadSchema = new mongoose.Schema({
         type: String
     },
     content_links: {
-        type: [String],
-        required: true,
+        type: String
     },
     comments: {
         type: [{ type: mongoose.SchemaTypes.ObjectId, 

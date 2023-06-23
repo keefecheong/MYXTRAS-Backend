@@ -48,7 +48,7 @@ const createPost = async (req, res) => {
         // if failed to upload images then delete the post from database and return error message
         if (!uploadSuccessful) {
             await Post.findByIdAndDelete(post.id);
-            res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+            return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
         }
 
         await post.save();
@@ -112,7 +112,7 @@ const updatePost = async (req, res) => {
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {
-                res.status(500).json({ message: 'Failed to update post, please try again later.' });
+                return res.status(500).json({ message: 'Failed to update post, please try again later.' });
             }
     
             // otherwise delete old images, update content_links and save the post
