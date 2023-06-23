@@ -32,14 +32,15 @@ router.post('/create/:forumObjId', multerConfig.array('selectedImages'), async (
         });
 
         await newThread.save();
-
-        const threadPicUploadSuccessful = await uploadImages([req.files[0]], newThread.content_links, newThread.id, 'thread', req.params.forumID);
+        if (req.files.length > 0) {
+            const threadPicUploadSuccessful = await uploadImages([req.files[0]], newThread.content_links, newThread.id, 'thread', req.params.forumID);
         
-        if (!threadPicUploadSuccessful) {
-            await Forum.findByIdAndDelete(newThread.id);
-            res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+            if (!threadPicUploadSuccessful) {
+                await Forum.findByIdAndDelete(newThread.id);
+                res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+            }
+            await newThread.save();
         }
-        await newThread.save();
 
         return res.json();
 
