@@ -35,18 +35,21 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
     }
 
     try {
-        const { forumName, forumID, forumDesc, category } = JSON.parse(req.body.forumObject);
-        
+        const { forumName, forumID, forumDesc, tags } = JSON.parse(req.body.forumObject);
+
         // Check for existing forum
-        if (Forum.find({ forumID: forumID }) === null){
+        const existingForum = await Forum.find({ forumID: forumID });
+        
+        if (!existingForum){
             return res.status(400).json({ error: 'ForumID already exists' });
         }
+
         const newForum = new Forum({
             creator_id: req.user._id,
             forumName: forumName,
             forumID: forumID,
             forumDesc: forumDesc,
-            category: category
+            tags: tags
         });
 
         await newForum.save();
@@ -127,16 +130,16 @@ router.get('/get-subbed-forums/', async (req, res) => {
     .select('subscribed_forums')
     .populate({
         path: 'subscribed_forums',
-        select: 'forumName forumID forum_pic_link threads',
-        populate: {
-            path: 'threads',
-            select: 'thread_title thread_desc numOfComments content_links creation_time',
-            populate: {
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            },
-            options: { sort: { creation_time: -1 } }
-        }
+        select: 'forumName forumID forum_pic_link',
+        // populate: {
+        //     path: 'threads',
+        //     select: 'thread_title thread_desc numOfComments content_links creation_time',
+        //     populate: {
+        //         path: 'creator_id',
+        //         select: 'username profile_pic_link'
+        //     },
+        //     options: { sort: { creation_time: -1 } }
+        // }
     })
     .lean()
 
@@ -256,12 +259,12 @@ router.patch('/:forumID', multerConfig.array('selectedImages'), getForum, async 
     
     try {
         // update fields
-        const { forumName, forumID, forumDesc, category } = JSON.parse(req.body.forumObject);
+        const { forumName, forumID, forumDesc, tags } = JSON.parse(req.body.forumObject);
 
         res.forum.forumName = forumName;
         res.forum.forumID = forumID;
         res.forum.forumDesc = forumDesc;
-        res.forum.category = category;
+        res.forum.tags = tags;
 
         let index = 0;
 
