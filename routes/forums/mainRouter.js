@@ -6,6 +6,7 @@ const mainRouter = express.Router();
 
 // nested routers
 const forumRouter = require('./forumRouter.js');
+const subscribeRouter = require('./forumSubscribeRouter.js');
 const threadRouter = require('./threadRouter.js');
 const commentRouter = require('./threadCommentRouter.js')
 const likeRouter = require('./threadLikeRouter.js')
@@ -20,11 +21,14 @@ const { getThread } = require('../../middleware/forums/getThreadMiddleware.js');
 mainRouter.use(validateUserHTTP);
 
 // mount various routes
-// handle forum creation requests
+// forum related routes
 mainRouter.use('/', forumRouter);
-mainRouter.use('/thread/', threadRouter);
+mainRouter.use('/subscribe/:forumID', getForum, subscribeRouter);
+
+// thread related routes
 mainRouter.use('/thread/like/:threadID', getThread, likeRouter);
 mainRouter.use('/thread/dislike/:threadID', getThread, dislikeRouter);
+mainRouter.use('/thread/', threadRouter);
 mainRouter.use('/comments/:threadID', getThread, commentRouter);
 
 module.exports = mainRouter;

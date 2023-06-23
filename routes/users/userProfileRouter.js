@@ -24,7 +24,7 @@ profileRouter.post('/verify-phone', express.json(), verifyPhoneNum);
 profileRouter.post('/', express.json(), registerUser);
 
 // update user info
-profileRouter.patch('/', validateUserHTTP, multerConfig.array('selectedImages'), updateUser);
+profileRouter.patch('/', validateUserHTTP, multerConfig.array('selectedImages'), multerErrorHandler, updateUser);
 
 // initial user info setup
 profileRouter.patch('/setup', validateUserHTTP, express.json(), setupUser);

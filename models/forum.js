@@ -13,17 +13,17 @@ const forumSchema = new mongoose.Schema({
         default: Date.now()
     },
     // Ex. NP InfoComm
-    forumName: {
+    forum_name: {
         type: String,
         required: true,
     },
     // Ex. NPICT
-    forumID: {
+    forum_id: {
         type: String,
         required: true,
         unique: true  // forum ID must be unique
     },
-    forumDesc: {
+    forum_desc: {
         type: String
     },
     forum_pic_link: {

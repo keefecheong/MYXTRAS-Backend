@@ -14,11 +14,11 @@ const regexTerm = new RegExp(searchTerm, 'i');
 
 const topSixResults = await Forum.find({
   $or: [
-    { forumID: { $regex: regexTerm } },
-    { forumName: { $regex: regexTerm } },
-    { forumDesc: { $regex: regexTerm } }
+    { forum_id: { $regex: regexTerm } },
+    { forum_name: { $regex: regexTerm } },
+    { forum_desc: { $regex: regexTerm } }
   ]
-}).limit(6).select('forumID forumName');
+}).limit(6).select('forum_id forum_name');
 
 res.status(200).json({ topSixResults })
 });
@@ -64,13 +64,13 @@ router.get('/users-forums', async (req, res) => {
   // Fetch top 3 forums
   const forumsPromise = Forum.find({
     $or: [
-      { forumID: { $regex: regexTerm } },
-      { forumName: { $regex: regexTerm } },
-      { forumDesc: { $regex: regexTerm } }
+      { forum_id: { $regex: regexTerm } },
+      { forum_name: { $regex: regexTerm } },
+      { forum_desc: { $regex: regexTerm } }
     ]
   })
     .limit(3)
-    .select('forumID forumName')
+    .select('forum_id forum_name')
     .lean();
     
   try {

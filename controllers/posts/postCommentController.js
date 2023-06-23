@@ -43,15 +43,13 @@ const postComment = async (req, res) => {
     const comment = new Comment({
         creator_id: req.user._id,
         content: req.body.content,
-        parent_id: res.post._id
+        parent_id: res.post._id,
+        parent_model: 'Post'
     });
 
     try {
         // update database
         await comment.save();
-        
-        res.post.comment_count += 1;
-        await res.post.save();
 
         // return the new comment data to update dom
         var newComment = await Comment
@@ -91,9 +89,6 @@ const deleteComment = async (req, res) => {
     try {
         // update database
         await Comment.findByIdAndDelete(req.params.commentId);
-        
-        res.post.comment_count -= 1;
-        await res.post.save();
 
         res.status(200).json({ message: 'Comment deleted.' });
     }

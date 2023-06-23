@@ -5,7 +5,7 @@ const { setJWT } = require('../../utils/users/setJWT.js');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
-const { deleteImages } = require('../../utils/general/firebaseStorageDelete.js');
+const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 // return current user profile
 // user retrieved with authMiddleware

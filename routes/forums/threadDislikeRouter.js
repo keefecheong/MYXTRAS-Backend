@@ -1,44 +1,14 @@
+// handle routes related to dislike status of threads
+
 const express = require('express');
 const dislikeRouter = express.Router();
 
-dislikeRouter.post('/', async (req, res) => {
-    const dislikeExists = res.thread.dislikes.includes(req.user._id);
-    // if the user has not liked the post, continue to add the like
-    // otherwise, return 400 error
-    if (dislikeExists) {
-        return res.status(400).json({ message: 'You have already disliked this thread.' });
-    }
-    // update post's likes list
-    res.thread.dislikes.push(req.user._id);
+const { addDislikeThread, removeDislikeThread } = require('../../controllers/forums/threadDislikeController.js');
 
-    try {
-        await res.thread.save();
-        res.status(201).end();
-    }
-    catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-dislikeRouter.delete('/', async (req, res) => {
+// add dislike to thread
+dislikeRouter.post('/', addDislikeThread);
 
-     // check if the specified post is liked by the user
-     const dislikeIndex = res.thread.dislikes.indexOf(req.user._id);
-     // if the user has liked the post, continue to remove the like
-     // otherwise, return 400 error
-     if (dislikeIndex == -1) {
-         return res.status(400).json({ message: 'You have not disliked this thread.' });
-     }
- 
-     // remove user id from post's likes list
-     res.thread.dislikes.splice(dislikeIndex, 1);
- 
-     try {
-         await res.thread.save();
-         res.status(204).end();
-     }
-     catch (error) {
-         res.status(500).json({ message: error.message });
-     }
-});
+// remove dislike from thread
+dislikeRouter.delete('/', removeDislikeThread);
 
 module.exports = dislikeRouter;

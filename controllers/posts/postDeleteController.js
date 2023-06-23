@@ -1,8 +1,6 @@
 // controller functions to handle DELETE requests for posts
 
 const Post = require('../../models/post.js');
-const Comment = require('../../models/comment.js');
-const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 const deletePost = async (req, res) => {
     // check if the creator of the post is the requesting user
@@ -12,13 +10,6 @@ const deletePost = async (req, res) => {
     }
 
     try {
-        // delete associated images
-        deleteFiles(res.post.content_links);
-
-        // delete associated comments
-        Comment.deleteMany({ post_id: res.post._id }).catch(error => console.log(error));
-
-        // delete post
         await Post.findByIdAndDelete(req.params.postId);
         res.status(200).json({ message: 'Post removed.' });
     }

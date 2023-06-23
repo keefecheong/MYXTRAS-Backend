@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { deleteFiles } = require('../utils/general/firebaseStorageDelete.js');
 
 const postSchema = new mongoose.Schema({
     creator_id: {
@@ -60,6 +61,23 @@ postSchema.pre('save', function(next) {
     }
 
     next()
+});
+
+// automatically clean up files and comments associated with the post on delete
+postSchema.post('findOneAndDelete', function(doc, next) {
+    try {
+        // delete associated images
+        deleteFiles(doc.content_links);
+
+        // delete associated comments
+        const commentModel = mongoose.model('Comment');
+        commentModel.deleteMany({ parent_id: doc._id }).catch(error => console.log(error));
+
+        next();
+    }
+    catch (error) {
+        console.log(error);
+    }
 });
 
 module.exports = mongoose.model('Post', postSchema);

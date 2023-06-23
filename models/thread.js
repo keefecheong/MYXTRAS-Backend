@@ -1,5 +1,5 @@
-const { StringFormat } = require('firebase/storage');
 const mongoose = require('mongoose');
+const { deleteFiles } = require('../utils/general/firebaseStorageDelete.js');
 
 const threadSchema = new mongoose.Schema({
     parent_id: {
@@ -19,22 +19,18 @@ const threadSchema = new mongoose.Schema({
         immutable: true,
         default: Date.now()
     },
-    thread_title: {
+    title: {
         type: String,
         required: true,
     },
-    thread_desc: {
+    content: {
+        type: String,
+        required: true
+    },
+    content_link: {
         type: String
     },
-    content_links: {
-        type: String
-    },
-    comments: {
-        type: [{ type: mongoose.SchemaTypes.ObjectId, 
-            ref: 'Comment' }],
-        default: []
-    },
-    numOfComments: {
+    comment_count: {
         type: Number,
         default: 0,
     },
@@ -51,12 +47,27 @@ const threadSchema = new mongoose.Schema({
     tags: {
         type: [String],
         default: []
-    },
-})
+    }
+});
 
-threadSchema.pre('save', function (next) {
-    this.numOfComments = this.comments.length;
-    next();
-  });
+// automatically clean comments associated with the thread on delete
+threadSchema.post('findOneAndDelete', function(doc, next) {
+    try {
+        // delete associated file if any
+        if (doc.content_link) {
+            deleteFiles([doc.content_link]);
+        }
+
+        // delete associated comments
+        const commentModel = mongoose.model('Comment');
+        commentModel.deleteMany({ parent_id: doc._id }).catch(error => console.log(error));
+
+        next();
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+
 
 module.exports = mongoose.model('Thread', threadSchema);
