@@ -126,7 +126,7 @@ router.get('/get-subbed-forums/', async (req, res) => {
         .find({ subscribers: { $in: [req.user._id] } })
         .select('forumName forumID forum_pic_link')
         .lean();
-
+        
     return res.status(200).json(subbed_forums);
 });
 // Categorize forums based on interest tags

@@ -192,7 +192,7 @@ router.patch('/:threadID', multerConfig.array('picture'), getThread, async (req,
 });
 router.get('/get-created-subscribed-threads/', async (req, res) => {
 
-    const subbed_forums = await User.findById(req.user.id)
+    const forums = await User.findById(req.user.id)
     .select('subscribed_forums created_forums')
     .populate({
         path: 'subscribed_forums',
@@ -221,6 +221,7 @@ router.get('/get-created-subscribed-threads/', async (req, res) => {
         }
     })
     .lean()
-    return res.status(200).json(subbed_forums);
+    
+    return res.status(200).json(forums);
 });
 module.exports = router;
