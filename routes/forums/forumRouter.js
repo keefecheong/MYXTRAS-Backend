@@ -167,11 +167,29 @@ router.get('/get-subbed-forums/', async (req, res) => {
 // Retrieve 6 popular forums 
 router.get('/get-recommended-forums/', async (req, res) => {
 
-    const topSixForums = await Forum.find()
-    .select('forumName forumID forum_pic_link numOfSubs')
-    .sort({ numOfSubs: -1 })
-    .limit(6)
-    .lean()
+    const topSixForums = await Forum.aggregate([
+        {
+          $addFields: {
+            numOfSubs: { $size: "$subscribers" }
+          }
+        },
+        {
+          $sort: {
+            numOfSubs: -1
+          }
+        },
+        {
+          $limit: 6
+        },
+        {
+          $project: {
+            forumName: 1,
+            forumID: 1,
+            forum_pic_link: 1,
+            numOfSubs: 1
+          }
+        }
+      ]);
 
     return res.status(200).json(topSixForums);
 });
@@ -179,16 +197,16 @@ router.get('/get-popular-forums/', async (req, res) => {
 
     const sortedForums = await Forum.aggregate([
         {
-          $unwind: "$tags" // Unwind the tags array
+            $unwind: "$tags" // Unwind the tags array
         },
         {
-          $group: {
-            _id: "$tags", // Group by each unique tag
-            forums: { $push: "$$ROOT" } // Collect the forums with the same tag into an array
-          }
-        }
+            $group: {
+                _id: "$tags", // Group by each unique tag
+                forums: { $push: "$$ROOT" }, // Collect the forums with the same tag into an array
+            },
+        },
       ]);
-      
+    console.log(sortedForums)
     return res.status(200).json(sortedForums);
 });
 router.post('/subscribe-forum/:forumID', async (req, res) => {
