@@ -128,9 +128,11 @@ Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTd
 
 ###
 
-GET http://127.0.0.1:8081/api/forums/get-forum/new myxtras
+GET http://127.0.0.1:8081/api/forums/get-forum/6493f0364d66e2e81cdb0d9d
 Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4NzE4OTk4N30.rcOvFrnyHpylJ_yYQ_XJiS_jccYEFFnfacXiQ_89F4M
+
+
 ###
 
-GET http://127.0.0.1:8081/api/forums/get-subbed-forums/
+GET http://127.0.0.1:8081/api/forums/thread/get-threads
 Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0ODU5Y2Y3OThlNjMzZjUwN2QzZDIyMiIsImlhdCI6MTY4NzE3NDY3Mn0.o0YS2upLJlMwf5IBnbZvJ4eeFVl31ZchKUMB2WDf_aQ

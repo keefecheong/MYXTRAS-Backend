@@ -21,7 +21,7 @@ router.post('/verify-forumID', express.json(), async (req, res) => {
     }
 });
 
-router.post('/create', multerConfig.array('selectedImages'), async (req, res) => {
+router.post('/create', multerConfig.array('selectedImages'), multerErrorHandler, async (req, res) => {
     // check if images and text fields are provided in the body
     // if provided, continue to create post
     // otherwise return 400 error
@@ -69,36 +69,31 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
 
         await newForum.save();
 
-        return res.status(201).end();
+        return res.status(201).json({ forumID: newForum._id });
 
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 // Retrieve one page
-router.get('/get-forum/:forumID', async (req, res) => {
-    let forum;
+router.get('/get-forum/:forumID', getForum, async (req, res) => {
     var isSubscribed = false;
     var isCreator = false;
     
     try {
-        forum = await Forum.findOne({forumID : req.params.forumID});
-        if (!forum) {
-            return res.status(404).json({ message: 'Unable to find the specified forum.' });
-        }
         // Display Subscribe button in frontend logic
-        if (req.user._id.equals(forum.creator_id)){
-            isCreator = true
+        if (req.user._id.equals(res.forum.creator_id._id)){
+            isCreator = true;
         }
-        if (!(req.user.subscribed_forums.indexOf(forum._id) === -1)){
-            isSubscribed = true
+        if (req.user.subscribed_forums.includes(res.forum._id)){
+            isSubscribed = true;
         }
     } catch (error) {
         
         return res.status(500).json({ message: error.message });
     }
     const response = {
-        forum: forum,
+        forum: res.forum,
         isCreator: isCreator,
         isSubscribed: isSubscribed
       };
@@ -108,9 +103,9 @@ router.get('/get-forum/:forumID', async (req, res) => {
 router.get('/get-created-forums/', async (req, res) => {
 
     try {
-        const forums =  await Forum.
-        find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 })
-        .select('forumID, forumName, forum_pic_link')
+        const forums =  await Forum
+        .find({ creator_id: req.user.id }, { forumID: 1, forumName: 1, forum_pic_link: 1 })
+        .select('forumID forumName forum_pic_link')
         .exec();
 
         // Extract the desired fields from the forums
@@ -209,34 +204,32 @@ router.get('/get-popular-forums/', async (req, res) => {
     console.log(sortedForums)
     return res.status(200).json(sortedForums);
 });
-router.post('/subscribe-forum/:forumID', async (req, res) => {
-    let isSubscribed
+router.post('/subscribe-forum/:forumID', getForum, async (req, res) => {
+    let isSubscribed;
 
     // Note: req.param.forumID is the _id instead of forumID field
     try {
-        const forum = await Forum.findById(req.params.forumID)
-
-        if (!(req.user.subscribed_forums.indexOf(req.params.forumID) != -1)) {
+        if (!req.user.subscribed_forums.includes(req.params.forumID)) {
             
             // Add userid from forum subscribers array list
-            forum.subscribers.push(req.user.id);
-            await forum.save()
+            res.forum.subscribers.push(req.user.id);
+            await res.forum.save()
 
             // Add forumid from forum subscribers array list
             req.user.subscribed_forums.push(req.params.forumID);
             await req.user.save()
               
-            isSubscribed = true
+            isSubscribed = true;
             
             return res.status(200).json({"isSubscribed": isSubscribed, 'userId': req.user._id});
         }
         else {
 
             // Remove userid from forum subscribers array list
-            const userIndex = forum.subscribers.indexOf(req.user.id);
-            forum.subscribers.splice(userIndex, 1);
+            const userIndex = res.forum.subscribers.indexOf(req.user.id);
+            res.forum.subscribers.splice(userIndex, 1);
 
-            await forum.save()
+            await res.forum.save()
 
             // Remove forumid from user subscribed_forums array list
             const forumIndex = req.user.subscribed_forums.indexOf(req.params.forumID);
@@ -258,12 +251,11 @@ router.patch('/:forumID', multerConfig.array('selectedImages'), getForum, async 
     // if provided, continue to create post
     // otherwise return 400 error
     if (!req.body) {
-        res.status(400).json({ error: 'Invalid request body' });
-        return;
+        return res.status(400).json({ error: 'Invalid request body' });
     }
 
     // check if images are provided if 'pictureUnchanged' and 'bannerUnchanged' are not set to 'true'
-    // if provided, continue to create post
+    // if provided, continue to update forum
     // otherwise return 400 error
     if (req.files.length <= 0 && req.body.pictureUnchanged != 'true' && req.body.bannerUnchanged != 'true') {
         return res.status(400).json({ message: 'At least one image is required.' });   
