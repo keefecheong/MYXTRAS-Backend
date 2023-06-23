@@ -26,13 +26,14 @@ const forumSchema = new mongoose.Schema({
         type: String
     },
     forum_pic_link: {
-        type: String,
+        type: String
     },
     banner_link: {
-        type: String,
+        type: String
     },
     tags: {
         type: [String],
+        default: []
     },
     subscribers: {
         type: [{

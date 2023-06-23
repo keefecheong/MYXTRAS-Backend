@@ -50,6 +50,7 @@ const threadSchema = new mongoose.Schema({
     },
     tags: {
         type: [String],
+        default: []
     },
 })
 
