@@ -46,7 +46,7 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
             forumName: forumName,
             forumID: forumID,
             forumDesc: forumDesc,
-            category: category
+            tags: category
         });
 
         await newForum.save();
@@ -59,7 +59,7 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
             await Forum.findByIdAndDelete(newForum._id);
             return res.status(500).json({ message: 'Internal server error' });
         }
-
+        
         // update forum image links
         newForum.forum_pic_link = imageLinks[0];
         newForum.banner_link = imageLinks[1];

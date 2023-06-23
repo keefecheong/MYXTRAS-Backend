@@ -27,11 +27,9 @@ const forumSchema = new mongoose.Schema({
     },
     forum_pic_link: {
         type: String,
-        required: true
     },
     banner_link: {
         type: String,
-        required: true
     },
     tags: {
         type: [String],
