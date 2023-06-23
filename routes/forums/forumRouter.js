@@ -75,8 +75,9 @@ router.post('/create', multerConfig.array('selectedImages'), multerErrorHandler,
         res.status(500).json({ message: error.message });
     }
 });
-// Retrieve one page
+// Retrieve one forum
 router.get('/get-forum/:forumID', getForum, async (req, res) => {
+    const workingForum = res.forum.toObject();
     var isSubscribed = false;
     var isCreator = false;
     
@@ -85,19 +86,17 @@ router.get('/get-forum/:forumID', getForum, async (req, res) => {
         if (req.user._id.equals(res.forum.creator_id._id)){
             isCreator = true;
         }
-        if (req.user.subscribed_forums.includes(res.forum._id)){
+        if (res.forum.subscribers.includes(req.user._id)) {
             isSubscribed = true;
         }
     } catch (error) {
-        
         return res.status(500).json({ message: error.message });
     }
-    const response = {
-        forum: res.forum,
-        isCreator: isCreator,
-        isSubscribed: isSubscribed
-      };
-    res.status(200).json(response);
+
+    workingForum.isCreator = isCreator;
+    workingForum.isSubscribed = isSubscribed;
+
+    res.status(200).json(workingForum);
 });
 // Retrieve user created forum list
 router.get('/get-created-forums/', async (req, res) => {
@@ -120,43 +119,11 @@ router.get('/get-created-forums/', async (req, res) => {
 });
 // Retrieve user subscribed forum list
 router.get('/get-subbed-forums/', async (req, res) => {
+    const subbed_forums = await Forum
+        .find({ subscribers: { $in: [req.user._id] } })
+        .select('forumName forumID forum_pic_link')
+        .lean();
 
-    const subbed_forums = await User.findById(req.user.id)
-    .select('subscribed_forums')
-    .populate({
-        path: 'subscribed_forums',
-        select: 'forumName forumID forum_pic_link',
-        // populate: {
-        //     path: 'threads',
-        //     select: 'thread_title thread_desc numOfComments content_links creation_time',
-        //     populate: {
-        //         path: 'creator_id',
-        //         select: 'username profile_pic_link'
-        //     },
-        //     options: { sort: { creation_time: -1 } }
-        // }
-    })
-    .lean()
-
-    // // Step 1: Retrieve the threads from the filtered forums
-    // const threads = subbed_forums.subscribed_forums.reduce((result, forum) => {
-    //     return result.concat(forum.threads);
-    // }, []);
-    
-    // // Step 2: Flatten the threads array
-    // const mergedThreads = [].concat(...threads);
-    
-    // // Step 3: Sort the merged threads array in chronological order
-    // const sortedThreads = mergedThreads.sort((a, b) => {
-    //     return new Date(b.creation_time) - new Date(a.creation_time);
-    // });
-  
-    // console.log(sortedThreads);
-
-    // const response = {
-    //     subbed_forums,
-    //     sortedThreads
-    // }
     return res.status(200).json(subbed_forums);
 });
 // Retrieve 6 popular forums 
@@ -204,47 +171,45 @@ router.get('/get-popular-forums/', async (req, res) => {
     console.log(sortedForums)
     return res.status(200).json(sortedForums);
 });
-router.post('/subscribe-forum/:forumID', getForum, async (req, res) => {
-    let isSubscribed;
-
-    // Note: req.param.forumID is the _id instead of forumID field
+router.post('/subscribe/:forumID', getForum, async (req, res) => {
     try {
-        if (!req.user.subscribed_forums.includes(req.params.forumID)) {
-            
-            // Add userid from forum subscribers array list
-            res.forum.subscribers.push(req.user.id);
-            await res.forum.save()
+        // check if the requesting user has subscribed to the forum already
+        const subscribed = res.forum.subscribers.find(creator_id => creator_id.equals(req.user._id));
 
-            // Add forumid from forum subscribers array list
-            req.user.subscribed_forums.push(req.params.forumID);
-            await req.user.save()
-              
-            isSubscribed = true;
-            
-            return res.status(200).json({"isSubscribed": isSubscribed, 'userId': req.user._id});
+        if (subscribed) {
+            return res.status(400).json({ message: 'You have already subscribed to this forum.' });
         }
-        else {
 
-            // Remove userid from forum subscribers array list
-            const userIndex = res.forum.subscribers.indexOf(req.user.id);
-            res.forum.subscribers.splice(userIndex, 1);
+        // update forum subscriber list
+        res.forum.subscribers.push(req.user._id);
 
-            await res.forum.save()
-
-            // Remove forumid from user subscribed_forums array list
-            const forumIndex = req.user.subscribed_forums.indexOf(req.params.forumID);
-            req.user.subscribed_forums.splice(forumIndex, 1);
-            await req.user.save()
-
-            isSubscribed = false
-            
-            return res.status(200).json({"isSubscribed": isSubscribed})
-        }
+        await res.forum.save();
+        res.status(201).end();
     } catch (error) {
-        
-        return res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
-})
+});
+
+router.delete('/subscribe/:forumID', getForum, async (req, res) => {
+    try {
+        // check if the requesting user has subscribed to the forum already
+        const subscribedIndex = res.forum.subscribers.findIndex(creator_id => creator_id.equals(req.user._id));
+
+        // if the user has not subscribed to the forum return 400 error
+        if (subscribedIndex == -1) {
+            return res.status(400).json({ message: 'You have not subscribed to this forum yet.' });
+        }
+
+        // remove user id from the forum subscriber list
+        res.forum.subscribers.splice(subscribedIndex, 1);
+
+        await res.forum.save();
+        res.status(204).end();
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 router.patch('/:forumID', multerConfig.array('selectedImages'), getForum, async (req, res) => {
     // check if text fields are provided in the body
