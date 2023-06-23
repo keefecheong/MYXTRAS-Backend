@@ -89,8 +89,8 @@ const getRecommended = async (req, res) => {
     res.status(200).json(recommendedForums);
 }
 
-// get popular forums
-const getPopular = async (req, res) => {
+// get categorized forums
+const getCategorized = async (req, res) => {
     const sortedForums = await Forum.aggregate([
         {
             $unwind: "$tags" // Unwind the tags array
@@ -112,5 +112,5 @@ module.exports = {
     getCreated,
     getSubscribed,
     getRecommended,
-    getPopular
+    getCategorized
 }

@@ -6,7 +6,7 @@ const forumRouter = express.Router();
 const { getForum } = require('../../middleware/forums/getForumMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
-const { verifyForumID, getOneForum, getCreated, getSubscribed, getRecommended, getPopular } = require('../../controllers/forums/forumController.js');
+const { verifyForumID, getOneForum, getCreated, getSubscribed, getRecommended, getCategorized } = require('../../controllers/forums/forumController.js');
 const { createForum, updateForum } = require('../../controllers/forums/forumSaveController.js');
 
 // get forums created by the user
@@ -15,8 +15,8 @@ forumRouter.get('/created', getCreated);
 // get forums subscribed by the user
 forumRouter.get('/subscribed', getSubscribed);
 
-// get recommended forums
-forumRouter.get('/recommended', getRecommended);
+// get categorized forums
+forumRouter.get('/categorized', getCategorized);
 
 // get popular forums
 forumRouter.get('/popular', getPopular);

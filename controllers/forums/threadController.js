@@ -1,5 +1,6 @@
 // controller functions to handle GET requests for threads
 
+const Forum = require('../../models/forum.js');
 const Thread = require('../../models/thread.js');
 const { checkThreadAttributes, checkThreadAttributesAll } = require('../../utils/forums/checkAttributes.js');
 
@@ -66,6 +67,26 @@ const getPopularThreads = async (req, res) => {
     threads = checkThreadAttributesAll(threads, req.user._id);
 
     res.status(200).json(threads);
+}
+
+// get recent threads
+const getRecentThreads = async (req, res) => {
+    const forums = await Forum.find({
+        $or: [
+          { creator_id: req.user.id },
+          { subscribers: { $in: [req.user._id] } }
+        ]
+      }).lean();
+
+    const forumIds = forums.map(forum => forum._id);
+
+    const threads = await Thread.find({ parent_id: { $in: forumIds } })
+    .populate('parent_id', 'forumName forumID forum_pic_link')
+    .populate('creator_id', 'username')
+    .sort({creation_time: -1})
+    .lean();
+    
+    return res.status(200).json(threads);
 }
 
 module.exports = {

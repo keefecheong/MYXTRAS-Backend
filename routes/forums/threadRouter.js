@@ -6,7 +6,7 @@ const threadRouter = express.Router();
 const { getThread } = require('../../middleware/forums/getThreadMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
-const { getAll, getForumThreads, getOneThread, getPopularThreads } = require('../../controllers/forums/threadController.js');
+const { getAll, getForumThreads, getOneThread, getPopularThreads, getRecentThreads } = require('../../controllers/forums/threadController.js');
 const { createThread, updateThread } = require('../../controllers/forums/threadSaveController.js');
 
 // get all threads for explore 
@@ -14,6 +14,9 @@ threadRouter.get('/', getAll);
 
 // Retrieve 6 popular threads 
 threadRouter.get('/popular', getPopularThreads);
+
+// get recent threads
+threadRouter.get('/recent', getRecentThreads);
 
 // get list of threads for a forum
 threadRouter.get('/forum/:forumID', getForumThreads);
