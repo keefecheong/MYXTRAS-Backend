@@ -54,6 +54,9 @@ router.post('/create', multerConfig.array('selectedImages'), async (req, res) =>
 
         await newForum.save();
 
+        req.user.created_forums.push(newForum.id)
+        await req.user.save()
+
         // upload images
         const imageLinks = [];
         const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, newForum._id, 'forum');
@@ -131,40 +134,11 @@ router.get('/get-subbed-forums/', async (req, res) => {
     .populate({
         path: 'subscribed_forums',
         select: 'forumName forumID forum_pic_link',
-        // populate: {
-        //     path: 'threads',
-        //     select: 'thread_title thread_desc numOfComments content_links creation_time',
-        //     populate: {
-        //         path: 'creator_id',
-        //         select: 'username profile_pic_link'
-        //     },
-        //     options: { sort: { creation_time: -1 } }
-        // }
     })
     .lean()
-
-    // // Step 1: Retrieve the threads from the filtered forums
-    // const threads = subbed_forums.subscribed_forums.reduce((result, forum) => {
-    //     return result.concat(forum.threads);
-    // }, []);
-    
-    // // Step 2: Flatten the threads array
-    // const mergedThreads = [].concat(...threads);
-    
-    // // Step 3: Sort the merged threads array in chronological order
-    // const sortedThreads = mergedThreads.sort((a, b) => {
-    //     return new Date(b.creation_time) - new Date(a.creation_time);
-    // });
-  
-    // console.log(sortedThreads);
-
-    // const response = {
-    //     subbed_forums,
-    //     sortedThreads
-    // }
     return res.status(200).json(subbed_forums);
 });
-// Retrieve 6 popular forums 
+// Categorize forums based on interest tags
 router.get('/get-recommended-forums/', async (req, res) => {
 
     const topSixForums = await Forum.aggregate([
@@ -193,7 +167,7 @@ router.get('/get-recommended-forums/', async (req, res) => {
 
     return res.status(200).json(topSixForums);
 });
-router.get('/get-popular-forums/', async (req, res) => {
+router.get('/get-categorized-forums/', async (req, res) => {
 
     const sortedForums = await Forum.aggregate([
         {
@@ -206,7 +180,6 @@ router.get('/get-popular-forums/', async (req, res) => {
             },
         },
       ]);
-    console.log(sortedForums)
     return res.status(200).json(sortedForums);
 });
 router.post('/subscribe-forum/:forumID', async (req, res) => {
@@ -253,6 +226,7 @@ router.post('/subscribe-forum/:forumID', async (req, res) => {
     }
 })
 
+// Update forum
 router.patch('/:forumID', multerConfig.array('selectedImages'), getForum, async (req, res) => {
     // check if text fields are provided in the body
     // if provided, continue to create post

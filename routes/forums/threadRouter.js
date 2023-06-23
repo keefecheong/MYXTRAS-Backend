@@ -1,6 +1,8 @@
 const express = require('express');
 const Forum = require('../../models/forum.js');
 const Thread = require('../../models/thread.js');
+const User = require('../../models/user.js');
+
 const { ObjectId } = require('mongodb');
 
 const router = express.Router();
@@ -32,11 +34,27 @@ router.post('/create/:forumObjId', multerConfig.array('selectedImages'), async (
         });
 
         await newThread.save();
+
+        try {
+            const target = await Forum.findById(forumObjId);
+            if (!target) {
+                return res.status(404).json({ message: 'Unable to find the specified forum.' });
+            }
+            else {  
+                target.threads.push(newThread._id);
+                await target.save();
+            }
+        }
+        catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+
         if (req.files.length > 0) {
-            const threadPicUploadSuccessful = await uploadImages([req.files[0]], newThread.content_links, newThread.id, 'thread', req.params.forumID);
-        
+            let content_link = []
+            const threadPicUploadSuccessful = await uploadImages([req.files[0]], content_link, newThread.id, 'thread', req.params.forumID);
+            newThread.content_links = content_link[0]
             if (!threadPicUploadSuccessful) {
-                await Forum.findByIdAndDelete(newThread.id);
+                await Thread.findByIdAndDelete(newThread.id);
                 res.status(500).json({ message: 'Failed to upload images, please try again later.' });
             }
             await newThread.save();
@@ -128,5 +146,38 @@ router.get('/get-popular-threads/', async (req, res) => {
     .limit(6)
     .lean()
     return res.status(200).json(topSixThreads);
+});
+router.get('/get-created-subscribed-threads/', async (req, res) => {
+
+    const subbed_forums = await User.findById(req.user.id)
+    .select('subscribed_forums created_forums')
+    .populate({
+        path: 'subscribed_forums',
+        select: 'forumName forumID forum_pic_link',
+        populate: {
+            path: 'threads',
+            select: 'thread_title thread_desc numOfComments content_links creation_time',
+            populate: {
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            },
+            options: { sort: { creation_time: -1 } }
+        }
+    })
+    .populate({
+        path: 'created_forums',
+        select: 'forumName forumID forum_pic_link',
+        populate: {
+            path: 'threads',
+            select: 'thread_title thread_desc numOfComments content_links creation_time',
+            populate: {
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            },
+            options: { sort: { creation_time: -1 } }
+        }
+    })
+    .lean()
+    return res.status(200).json(subbed_forums);
 });
 module.exports = router;

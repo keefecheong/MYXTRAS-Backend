@@ -35,6 +35,13 @@ const forumSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    threads: {
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'Thread'
+        }],
+        default: []
+    },
     subscribers: {
         type: [{
             type: mongoose.SchemaTypes.ObjectId,
