@@ -54,9 +54,6 @@ router.post('/create', multerConfig.array('selectedImages'), multerErrorHandler,
 
         await newForum.save();
 
-        req.user.created_forums.push(newForum.id)
-        await req.user.save()
-
         // upload images
         const imageLinks = [];
         const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, newForum._id, 'forum');
@@ -126,7 +123,7 @@ router.get('/get-subbed-forums/', async (req, res) => {
         .find({ subscribers: { $in: [req.user._id] } })
         .select('forumName forumID forum_pic_link')
         .lean();
-        
+
     return res.status(200).json(subbed_forums);
 });
 // Categorize forums based on interest tags

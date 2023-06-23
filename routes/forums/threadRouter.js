@@ -13,7 +13,7 @@ const { multerConfig, multerErrorHandler } = require('../../middleware/posts/mul
 const { checkThreadAttributesAll, checkThreadAttributes } = require('../../utils/forums/checkAttributes.js');
 
 // creating a new thread
-router.post('/create/:forumID', multerConfig.array('picture'), async (req, res) => {
+router.post('/create/:forumObjId', multerConfig.array('picture'), async (req, res) => {
     // check if request body is empty
     // if request body is empty return 400 error, otherwise continue to create thread
     if (!req.body) {
@@ -22,12 +22,15 @@ router.post('/create/:forumID', multerConfig.array('picture'), async (req, res) 
     }
 
     try {
+        const forumObjId = req.params.forumObjId
+        const formData = req.body;
+        const threadObjectString = formData.threadObject;
         const threadObject = JSON.parse(req.body.threadObject);
         
         const { thread_title, thread_desc, tags } = threadObject;
 
         const newThread = new Thread({
-            parent_id: req.params.forumID,
+            parent_id: forumObjId,
             creator_id: req.user._id,
             thread_title: thread_title,
             thread_desc: thread_desc,
@@ -36,19 +39,6 @@ router.post('/create/:forumID', multerConfig.array('picture'), async (req, res) 
 
         await newThread.save();
 
-        try {
-            const target = await Forum.findById(forumObjId);
-            if (!target) {
-                return res.status(404).json({ message: 'Unable to find the specified forum.' });
-            }
-            else {  
-                target.threads.push(newThread._id);
-                await target.save();
-            }
-        }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
-        }
 
         if (req.files.length > 0) {
             const newImageLinks = [];
@@ -192,36 +182,19 @@ router.patch('/:threadID', multerConfig.array('picture'), getThread, async (req,
 });
 router.get('/get-created-subscribed-threads/', async (req, res) => {
 
-    const forums = await User.findById(req.user.id)
-    .select('subscribed_forums created_forums')
-    .populate({
-        path: 'subscribed_forums',
-        select: 'forumName forumID forum_pic_link',
-        populate: {
-            path: 'threads',
-            select: 'thread_title thread_desc numOfComments content_links creation_time',
-            populate: {
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            },
-            options: { sort: { creation_time: -1 } }
-        }
-    })
-    .populate({
-        path: 'created_forums',
-        select: 'forumName forumID forum_pic_link',
-        populate: {
-            path: 'threads',
-            select: 'thread_title thread_desc numOfComments content_links creation_time',
-            populate: {
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            },
-            options: { sort: { creation_time: -1 } }
-        }
-    })
-    .lean()
-    
-    return res.status(200).json(forums);
+    const forums = await Forum.find({
+        $or: [
+          { creator_id: req.user.id },
+          { subscribers: { $in: [req.user._id] } }
+        ]
+      }).lean();
+
+    const forumIds = forums.map(forum => forum._id);
+
+    const threads = await Thread.find({ parent_id: { $in: forumIds } })
+    .populate('parent_id', 'forumName forumID forum_pic_link')
+    .lean();
+
+    return res.status(200).json(threads);
 });
 module.exports = router;
