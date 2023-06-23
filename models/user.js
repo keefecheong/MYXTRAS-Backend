@@ -57,6 +57,13 @@ const userSchema = new mongoose.Schema({
         }],
         default: []
     },
+    created_forums: {
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'Forum'
+        }],
+        default: []
+    },
     interests: {
         type: [String],
         default: []
