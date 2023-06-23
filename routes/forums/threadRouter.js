@@ -180,7 +180,7 @@ router.patch('/:threadID', multerConfig.array('picture'), getThread, async (req,
         res.status(500).json({ message: error.message });
     }
 });
-router.get('/get-created-subscribed-threads/', async (req, res) => {
+router.get('/get-recent-threads/', async (req, res) => {
 
     const forums = await Forum.find({
         $or: [
@@ -193,8 +193,10 @@ router.get('/get-created-subscribed-threads/', async (req, res) => {
 
     const threads = await Thread.find({ parent_id: { $in: forumIds } })
     .populate('parent_id', 'forumName forumID forum_pic_link')
+    .populate('creator_id', 'username')
+    .sort({creation_time: -1})
     .lean();
-
+    
     return res.status(200).json(threads);
 });
 module.exports = router;
