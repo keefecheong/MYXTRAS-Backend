@@ -4,7 +4,7 @@ const Forum = require('../../models/forum.js');
 
 // verify if forum_id is already in use
 const verifyForumID = async (req, res) => {
-    const existingForum = await Forum.findOne({ forum_id: req.body.forumID });
+    const existingForum = await Forum.findOne({ forum_id: req.body.forum_id });
 
     if (existingForum) {
         return res.status(400).json({ error: 'ForumID already exists' });
