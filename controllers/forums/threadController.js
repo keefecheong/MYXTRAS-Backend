@@ -8,6 +8,10 @@ const { checkThreadAttributes, checkThreadAttributesAll } = require('../../utils
 const getAll = async (req, res) => {
     try {
         var threads = await Thread.find()
+        .populate({
+            path: 'parent_id',
+            select: 'forum_name forum_id forum_pic_link'
+        })
         .populate({ 
             path: 'creator_id',
             select: 'username profile_pic_link'
@@ -81,8 +85,14 @@ const getRecentThreads = async (req, res) => {
     const forumIds = forums.map(forum => forum._id);
 
     const threads = await Thread.find({ parent_id: { $in: forumIds } })
-    .populate('parent_id', 'forum_name forum_id forum_pic_link')
-    .populate('creator_id', 'username real_name profile_pic_link')
+    .populate({
+        path: 'parent_id',
+        select: 'forum_name forum_id forum_pic_link'
+    })
+    .populate({ 
+        path: 'creator_id',
+        select: 'username profile_pic_link'
+    })
     .sort({creation_time: -1})
     .lean();
     
