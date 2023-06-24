@@ -93,5 +93,6 @@ module.exports = {
     getAll,
     getForumThreads,
     getOneThread,
-    getPopularThreads
+    getPopularThreads,
+    getRecentThreads
 }

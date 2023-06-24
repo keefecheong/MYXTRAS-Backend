@@ -18,8 +18,8 @@ forumRouter.get('/subscribed', getSubscribed);
 // get categorized forums
 forumRouter.get('/categorized', getCategorized);
 
-// get popular forums
-forumRouter.get('/popular', getPopular);
+// get recommended forums
+forumRouter.get('/recommended', getRecommended);
 
 // get one forum
 forumRouter.get('/:forumID', getForum, getOneForum);
