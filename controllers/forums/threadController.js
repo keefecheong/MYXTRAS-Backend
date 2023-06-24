@@ -81,7 +81,7 @@ const getRecentThreads = async (req, res) => {
     const forumIds = forums.map(forum => forum._id);
 
     const threads = await Thread.find({ parent_id: { $in: forumIds } })
-    .populate('parent_id', 'forumName forumID forum_pic_link')
+    .populate('parent_id', 'forum_name forum_id forum_pic_link')
     .populate('creator_id', 'username')
     .sort({creation_time: -1})
     .lean();
