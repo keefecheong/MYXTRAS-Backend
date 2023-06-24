@@ -21,14 +21,14 @@ const { getThread } = require('../../middleware/forums/getThreadMiddleware.js');
 mainRouter.use(validateUserHTTP);
 
 // mount various routes
-// forum related routes
-mainRouter.use('/', forumRouter);
-mainRouter.use('/subscribe/:forumID', getForum, subscribeRouter);
-
 // thread related routes
 mainRouter.use('/thread/like/:threadID', getThread, likeRouter);
 mainRouter.use('/thread/dislike/:threadID', getThread, dislikeRouter);
-mainRouter.use('/thread/', threadRouter);
+mainRouter.use('/thread', threadRouter);
 mainRouter.use('/comments/:threadID', getThread, commentRouter);
+
+// forum related routes
+mainRouter.use('/subscribe/:forumID', getForum, subscribeRouter);
+mainRouter.use('/', forumRouter);
 
 module.exports = mainRouter;
