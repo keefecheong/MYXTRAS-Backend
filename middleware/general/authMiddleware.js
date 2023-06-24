@@ -49,6 +49,7 @@ async function validateUserSocket(socket, next) {
         if (!cookies) {
             socket.disconnect(true);
             socket.emit('unauthorized', { message: 'Unauthorized' });
+            return;
         }
 
         // disconnect socket if there is no authapi cookie
@@ -56,6 +57,7 @@ async function validateUserSocket(socket, next) {
         if (!token) {
             socket.disconnect(true);
             socket.emit('unauthorized', { message: 'Unauthorized' });
+            return;
         }
 
         // Verify and decode the JWT token
@@ -70,6 +72,7 @@ async function validateUserSocket(socket, next) {
         if (!user) {
             socket.disconnect(true);
             socket.emit('unauthorized', { message: 'Unauthorized' });
+            return;
         }
 
         // attach the user information to the socket for use
@@ -82,6 +85,7 @@ async function validateUserSocket(socket, next) {
         console.log(error)
         socket.disconnect(true);
         socket.emit('server-error', { message: 'Internal Server Error' });
+        return;
     }
 }
 

@@ -45,37 +45,16 @@ const usersRouter = require('./routes/users/mainRouter.js');
 app.use('/api/users', usersRouter);
 
 const schoolRouter = require('./routes/schools.js');
-app.use('/api/school', schoolRouter);
+app.use('/api/schools', schoolRouter);
 
 const forumRouter = require('./routes/forums/mainRouter.js');
 app.use('/api/forums', forumRouter);
 
 const searchRouter = require('./routes/searchRouter.js');
 app.use('/api/search', searchRouter);
-// initialize data
 
-const School = require('./models/schools.js');
-School.countDocuments({})
-  .then(count => {
-    if (count > 0) {
-      console.log('The School has documents.');
-    } else {
-      const schoolInstance = new School()
-        schoolInstance.save()
-            .then(() => {
-                console.log('School instance saved successfully');
-              })
-              .catch((err) => {
-                console.error('Failed to save school instance:', err);
-              });
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
-
-  const chatRouter = require('./routes/chats/mainRouter.js');
-  app.use('/api/chats', chatRouter);
+const chatRouter = require('./routes/chats/mainRouter.js');
+app.use('/api/chats', chatRouter);
 
 // start server
 const server = app.listen(process.env.PORT, () => console.log(`Listening on Port ${process.env.PORT}...`));

@@ -1,46 +1,11 @@
 const express = require('express');
-const School = require('../models/schools.js');
 const router = express.Router();
-// Retrieve schools
 
-router.get('/get-schools/:id', async (req, res) => {
-    const id = req.params.id;
-    try {
-        const school = await School.findOne({});
-    
-        if (!school) {
-          return res.status(404).json({ error: 'School not found' });
-        }
-    
-        const identifier = school.identifier[0][id];
-        return res.json({ identifier });
-      } catch (error) {
-        console.error('Error retrieving school:', error);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
-});
+// get school and course details
+router.get('/', (req, res) => {
+    const schools = require('../schools.json');
 
-// Retrieve courses
-router.get('/get-courses/:id', async (req, res) => {
-    const id = req.params.id;
-    try {
-        const school = await School.findOne({});
-        if (!school) {
-          return res.status(404).json({ error: 'School not found' });
-        }
-    
-        const courseList = school.courses[0][id];
-        return res.json({ courseList });
-      } catch (error) {
-        console.error('Error retrieving courses:', error);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
-});
-
-// Retrieve courses
-router.patch('/update-courses', (req, res) => {
-
-    
+    res.status(200).json(schools);
 });
 
 module.exports = router;

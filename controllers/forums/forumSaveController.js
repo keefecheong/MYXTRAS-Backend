@@ -22,7 +22,7 @@ const createForum = async (req, res) => {
         const { forum_name, forum_id, forum_desc, tags } = JSON.parse(req.body.forumObject);
 
         // Check for existing forum
-        const existingForum = await Forum.find({ forumID: forum_id });
+        const existingForum = await Forum.find({ forum_id: forum_id });
         
         if (!existingForum){
             return res.status(400).json({ error: 'ForumID already exists' });
