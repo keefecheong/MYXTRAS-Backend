@@ -108,7 +108,12 @@ const updateUser = async (req, res) => {
         var profile_pic_link = [];
 
         await user.save();
-        
+        if (username.length > 25){
+            return res.status(400).json({error: 'Username is too long'})
+        }
+        if (biography.length > 100){
+            return res.status(400).json({error: 'Biography is too long'})
+        }
         const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, 'user');
         user.profile_pic_link = profile_pic_link[0];
         if (!uploadSuccessful) {
@@ -144,6 +149,15 @@ const setupUser = async (req, res) => {
         //|| !(selectedSchool in this.selectedCourse)
 
         // validate details
+        if (realName.length > 32){
+            return res.status(400).json({error: 'Real name is too long'})
+        }
+        if (userName.length > 25){
+            return res.status(400).json({error: 'Username is too long'})
+        }
+        if (biography.length > 100){
+            return res.status(400).json({error: 'Biography is too long'})
+        }
         if (
             detailsList.some(item => item === "") ||
             /^[0-9]+$/.test(realName) ||
@@ -163,12 +177,6 @@ const setupUser = async (req, res) => {
                     return res.status(400).json({error: "Username must not be more than 16 characters long"});
 
                 } 
-                // else if (!(school in this.courses)) {
-                //     return res.status(400).json({error: "School does not exist"});
-
-                // } else if (!Object.values(this.courses).flat().includes(course)) {
-                //     return res.status(400).json({error: "Course does not exist"});
-                // }
             }
 
         // update user info
