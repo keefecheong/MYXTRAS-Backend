@@ -27,7 +27,16 @@ const createForum = async (req, res) => {
         if (!existingForum){
             return res.status(400).json({ error: 'ForumID already exists' });
         }
-
+        // length validation
+        if (forum_id.length > 25){
+            return res.status(400).json({error: 'Forum ID is too long'})
+        }
+        if (forum_name.length > 50){
+            return res.status(400).json({error: 'Forum Name is too long'})
+        }
+        if (forum_desc.length > 250){
+            return res.status(400).json({error: 'Forum Name is too long'})
+        }
         const newForum = new Forum({
             creator_id: req.user._id,
             forum_name: forum_name,

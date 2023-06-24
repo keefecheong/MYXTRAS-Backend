@@ -44,23 +44,9 @@ const registerUser = async (req, res) => {
 
     const { emailAddress, phoneNumber, password } = req.body;
 
-    // check if user already exists in database
-    // check for similar email
-    const existingEmail = await User.findOne({ email: emailAddress });
-
-    if (existingEmail) {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
-
-    // check for similar phone number
-    const existingPhone = await User.findOne({ phone_number: phoneNumber });
-
-    if (existingPhone) {
-      return res.status(400).json({ error: 'Phone Number already exists' });
-    }
-
     // validate phone number
     if (phoneNumber.length != 8){
+        // TO DO: ADD FIREBASE AUTH 
         return res.status(400).json({ error: 'Inavlid phone number' });
     }
 
@@ -86,8 +72,18 @@ const registerUser = async (req, res) => {
         return res.status(200).end();
 
     } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.phone_number) {
+          // Duplicate phone number error
+          res.status(400).json({ error: 'Phone number already exists' });
+        } else if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+            // Duplicate email error
+            res.status(400).json({ error: 'Email already exists' });
+        } 
+        else {
+          // Other error
+          res.status(400).json({ error: error.message });
+        }
+      }
 }
 
 // update user info
@@ -112,7 +108,12 @@ const updateUser = async (req, res) => {
         var profile_pic_link = [];
 
         await user.save();
-        
+        if (username.length > 25){
+            return res.status(400).json({error: 'Username is too long'})
+        }
+        if (biography.length > 100){
+            return res.status(400).json({error: 'Biography is too long'})
+        }
         const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, 'user');
         user.profile_pic_link = profile_pic_link[0];
         if (!uploadSuccessful) {
@@ -148,6 +149,15 @@ const setupUser = async (req, res) => {
         //|| !(selectedSchool in this.selectedCourse)
 
         // validate details
+        if (realName.length > 32){
+            return res.status(400).json({error: 'Real name is too long'})
+        }
+        if (userName.length > 25){
+            return res.status(400).json({error: 'Username is too long'})
+        }
+        if (biography.length > 100){
+            return res.status(400).json({error: 'Biography is too long'})
+        }
         if (
             detailsList.some(item => item === "") ||
             /^[0-9]+$/.test(realName) ||
@@ -167,12 +177,6 @@ const setupUser = async (req, res) => {
                     return res.status(400).json({error: "Username must not be more than 16 characters long"});
 
                 } 
-                // else if (!(school in this.courses)) {
-                //     return res.status(400).json({error: "School does not exist"});
-
-                // } else if (!Object.values(this.courses).flat().includes(course)) {
-                //     return res.status(400).json({error: "Course does not exist"});
-                // }
             }
 
         // update user info
