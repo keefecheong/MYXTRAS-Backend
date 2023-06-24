@@ -5,7 +5,6 @@ const Message = require('../../models/message.js');
 
 const { emitSocketEvent } = require('../../utils/chats/emitSocketEvent.js');
 const { getUserOnline } = require('../../utils/chats/getUserStatus.js');
-const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 const { uploadFile } = require('../../utils/general/firebaseStorageUpload.js');
 
 // handle 'send-message' event
@@ -93,10 +92,6 @@ async function handleSendMessage(data, socket, connections) {
         }
 
         newMessage.save();
-
-        // update last_message_timestamp for the chat
-        chat.last_message_timestamp = newMessage.creation_time;
-        chat.save();
     });
 }
 
@@ -174,10 +169,6 @@ function handleDeleteMessage(data, socket, connections) {
     }
 
     // update database
-    if (data.message.fileLink) {
-        deleteFiles([data.message.fileLink]);
-    }
-
     Message.findByIdAndDelete(data.message._id).catch((error) => console.log(error));
 }
 

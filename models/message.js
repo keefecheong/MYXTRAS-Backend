@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { deleteFiles } = require('../utils/general/firebaseStorageDelete.js');
 
 const messageSchema = new mongoose.Schema({
     creator_id: {
@@ -51,6 +52,44 @@ const messageSchema = new mongoose.Schema({
         required: function() {
             return this.file_link;
         }
+    }
+});
+
+// automatically update parent chat's last_message_timestamp for new messages
+messageSchema.post('save', async function(doc, next) {
+    if (!doc.isNew) {
+        next();
+    }
+
+    try {
+        const chatModel = mongoose.model('Chat');
+
+        chatModel.findByIdAndUpdate(
+            doc.chat_id,
+            { last_message_timestamp: doc.creation_time }
+        ).catch(error => console.log(error));
+
+        next();
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+
+// on delete automatically clean up files associated with the message if any
+messageSchema.post('findOneAndDelete', function(doc, next) {
+    if (!doc.file_link) {
+        next();
+    }
+
+    try {
+        // delete associated files
+        deleteFiles([doc.file_link]);
+
+        next();
+    }
+    catch (error) {
+        console.log(error);
     }
 });
 
