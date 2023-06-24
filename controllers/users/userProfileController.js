@@ -44,23 +44,9 @@ const registerUser = async (req, res) => {
 
     const { emailAddress, phoneNumber, password } = req.body;
 
-    // check if user already exists in database
-    // check for similar email
-    const existingEmail = await User.findOne({ email: emailAddress });
-
-    if (existingEmail) {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
-
-    // check for similar phone number
-    const existingPhone = await User.findOne({ phone_number: phoneNumber });
-
-    if (existingPhone) {
-      return res.status(400).json({ error: 'Phone Number already exists' });
-    }
-
     // validate phone number
     if (phoneNumber.length != 8){
+        // TO DO: ADD FIREBASE AUTH 
         return res.status(400).json({ error: 'Inavlid phone number' });
     }
 
@@ -86,8 +72,18 @@ const registerUser = async (req, res) => {
         return res.status(200).end();
 
     } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.phone_number) {
+          // Duplicate phone number error
+          res.status(400).json({ error: 'Phone number already exists' });
+        } else if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+            // Duplicate email error
+            res.status(400).json({ error: 'Email already exists' });
+        } 
+        else {
+          // Other error
+          res.status(400).json({ error: error.message });
+        }
+      }
 }
 
 // update user info
