@@ -99,7 +99,7 @@ async function handleSendMessage(data, socket, connections) {
 function processFileChunks(data, socket) {
     return new Promise((resolve) => {
         const fileChunks = [];
-        let file;
+        let file = null;
 
         // values for max file size and chunk size (tally with frontend)
         const maxFileSize = 2 * 1024 * 1024;

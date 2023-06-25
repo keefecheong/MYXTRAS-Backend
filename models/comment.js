@@ -32,7 +32,7 @@ const commentSchema = new mongoose.Schema({
 // automatically increment parent object's comment_count by 1 on save
 commentSchema.pre('save', async function(next) {
     if (!this.isNew) {
-        next();
+        return next();
     }
 
     try {

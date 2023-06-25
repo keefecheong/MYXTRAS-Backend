@@ -58,7 +58,7 @@ const messageSchema = new mongoose.Schema({
 // automatically update parent chat's last_message_timestamp for new messages
 messageSchema.post('save', async function(doc, next) {
     if (!doc.isNew) {
-        next();
+        return next();
     }
 
     try {
@@ -79,7 +79,7 @@ messageSchema.post('save', async function(doc, next) {
 // on delete automatically clean up files associated with the message if any
 messageSchema.post('findOneAndDelete', function(doc, next) {
     if (!doc.file_link) {
-        next();
+        return next();
     }
 
     try {
