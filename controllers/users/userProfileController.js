@@ -108,7 +108,7 @@ const updateUser = async (req, res) => {
         var profile_pic_link = [];
 
         await user.save();
-        if (username.length > 25){
+        if (userName.length > 25){
             return res.status(400).json({error: 'Username is too long'})
         }
         if (biography.length > 100){
