@@ -95,6 +95,9 @@ const updateForum = async (req, res) => {
         // update fields
         const { forum_name, forum_id, forum_desc, tags } = JSON.parse(req.body.forumObject);
 
+        if (forum_name.length > 25 || forum_id.length > 25 || forum_desc.length > 100) {
+            return res.status(400).json({ error: 'Input for a field is too long' });
+        }
         res.forum.forum_name = forum_name;
         res.forum.forum_id = forum_id;
         res.forum.forum_desc = forum_desc;
