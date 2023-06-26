@@ -147,7 +147,7 @@ const getPopularPosts = async (req, res) => {
               }
             }, {
               '$unset': [
-                'activity', '__v', 'user'
+                'activity', 'relevance', '__v', 'user'
               ]
             }
           ];
