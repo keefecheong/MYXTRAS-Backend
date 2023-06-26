@@ -140,7 +140,6 @@ const getCategorized = async (req, res) => {
           }
     ]
     const sortedForums = await Forum.aggregate(agg);
-    console.log(sortedForums[0])
     res.status(200).json(sortedForums);
 }
 
