@@ -253,6 +253,11 @@ const getFollowers = async (req, res) => {
     res.status(200).json(user.followers);
 }
 
+const getOtherFollowers = async (req, res) => {
+    const user = await User.findById(req.params.userId).populate('followers');
+    res.status(200).json(user.followers);
+}
+
 module.exports = {
     getUser,
     registerUser,
@@ -262,6 +267,7 @@ module.exports = {
     getRequestedUser,
     followUser,
     getFollowers,
+    getOtherFollowers,
     verifyEmail,
     verifyPhoneNum
 }
