@@ -106,6 +106,7 @@ const getCategorized = async (req, res) => {
                   input: "$forums",
                   as: "forum",
                   in: {
+                    _id: "$$forum._id",
                     forum_id: "$$forum.forum_id",
                     forum_name: "$$forum.forum_name",
                     forum_pic_link: "$$forum.forum_pic_link",
