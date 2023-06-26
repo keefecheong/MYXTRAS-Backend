@@ -77,6 +77,27 @@ const getOwnPosts = async (req, res) => {
     }
 }
 
+// retrieve another user's own posts based on userid
+const getUserPost = async (req, res) => {
+    try {
+        console.log(req.params.user);
+        // populate post data to get creator's username and profile pic link
+        var posts = await Post
+            .find({ creator_id: req.params.user })
+            .populate({ 
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            })
+            .lean();
+        posts = checkPostAttributesAll(posts, req.params.user);
+        
+        res.status(200).json(posts);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 // get popular posts for 'explore'
 // based on like/comment count and does not include requesting user's posts
 const getPopularPosts = async (req, res) => {
@@ -167,5 +188,6 @@ module.exports = {
     getFollowingPosts,
     getOnePost,
     getOwnPosts,
+    getUserPost,
     getPopularPosts
 }

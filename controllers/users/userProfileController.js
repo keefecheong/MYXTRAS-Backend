@@ -205,20 +205,54 @@ const getAllUsers = async (req, res) => {
     res.status(200).json(users);
 }
 
+// get Requested user
 const getRequestedUser = async (req, res) => {
-    const username = req.params.username;
+    // only getting username and id
+    // console.log(req.params.user);
+    const user = await User.findById(req.params.user);
+    res.status(200).json(user);
+}
 
-    User.findOne({username}, (error, user) => {
-        if (error){
-            console.error(error);
-            res.status(500).json({error: 'An error occurred'});
-        } else if (!user){
-            res.status(404).json({ error: 'User not found' });
-        } else{
-            res.status(200).json(user);
+// follow user
+const followUser = async (req, res) => {
+    if (!req.body) {
+        res.status(400).json({ error: 'Invalid request body' });
+        return;
+    }
+
+    const { following } = req.body;
+
+    try {
+        const user = req.user;
+        user.following = following;
+
+        await user.save();
+
+        const otherUser = await User.findById(req.params.user);
+        if (otherUser.followers.includes(req.user._id)){
+            const index = otherUser.followers.indexOf(req.user._id);
+            if (index > -1) { 
+                otherUser.followers.splice(index, 1); 
+            }
         }
-    })
-    
+        else{
+            otherUser.followers.push(req.user);
+        }      
+
+        await otherUser.save();
+
+        res.status(204).end();
+    }
+    catch (error) {
+        console.log(error);
+        res.status(400).json({ error: 'Failed to update user' });
+    }
+}
+
+const getFollowers = async (req, res) => {
+    console.log(1);
+    // const user = await User.findById(req.user.id).populate('followers');
+    // res.status(200).json(user);
 }
 
 module.exports = {
@@ -226,8 +260,10 @@ module.exports = {
     registerUser,
     updateUser,
     setupUser,
-    getRequestedUser,
     getAllUsers,
+    getRequestedUser,
+    followUser,
+    getFollowers,
     verifyEmail,
     verifyPhoneNum
 }

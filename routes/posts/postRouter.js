@@ -9,7 +9,7 @@ const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // get controller functions
-const { getAllPosts, getFollowingPosts, getOnePost, getOwnPosts, getPopularPosts } = require('../../controllers/posts/postController.js');
+const { getAllPosts, getFollowingPosts, getOnePost, getOwnPosts, getUserPost, getPopularPosts } = require('../../controllers/posts/postController.js');
 const { createPost, updatePost } = require('../../controllers/posts/postSaveController.js');
 const { deletePost } = require('../../controllers/posts/postDeleteController.js');
 
@@ -27,6 +27,9 @@ postRouter.get('/explore', getPopularPosts);
 
 // retrieve a post by id
 postRouter.get('/:postId', getPost, getOnePost);
+
+// retrieve a post by userid
+postRouter.get('/:user', getPost, getUserPost);
 
 // create a post
 postRouter.post('/', multerConfig.array('selectedImages'), multerErrorHandler, createPost);

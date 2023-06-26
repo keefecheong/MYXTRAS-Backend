@@ -10,7 +10,7 @@ const { multerConfig, multerErrorHandler } = require('../../middleware/posts/mul
 
 
 // get controller functions
-const { getUser, registerUser, updateUser, setupUser, getAllUsers, getRequestedUser, verifyEmail, verifyPhoneNum} = require('../../controllers/users/userProfileController.js');
+const { getUser, registerUser, updateUser, setupUser, getRequestedUser, getAllUsers, followUser, getFollowers, verifyEmail, verifyPhoneNum} = require('../../controllers/users/userProfileController.js');
 
 // get current user from cookie
 profileRouter.get('/', validateUserHTTP, getUser);
@@ -33,7 +33,15 @@ profileRouter.patch('/setup', validateUserHTTP, express.json(), setupUser);
 profileRouter.get('/all', validateUserHTTP, getAllUsers);
 
 // get requested user
-profileRouter.get('/:username', validateUserHTTP, express.json(), getRequestedUser);
+profileRouter.get('/:user', validateUserHTTP, express.json(), getRequestedUser);
+
+// follow user
+profileRouter.patch('/follow/:user', validateUserHTTP, express.json(), followUser);
+
+// populate followers
+profileRouter.get('/followers', validateUserHTTP, getFollowers);
+
+
 
 
 module.exports = profileRouter;
