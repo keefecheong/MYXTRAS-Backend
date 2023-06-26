@@ -64,6 +64,10 @@ const getPopularThreads = async (req, res) => {
         path: 'creator_id',
         select: 'username profile_pic_link'
     })
+    .populate({ 
+        path: 'parent_id',
+        select: 'forum_pic_link forum_id'
+    })
     .sort({ likes: -1 })
     .limit(6)
     .lean();
@@ -100,10 +104,10 @@ const getRecentThreads = async (req, res) => {
                 }
             }
         }, {
-            '$sort': {
-                'relevance': -1,
-                'creation_date': -1
-            }
+          '$sort': {
+            'relevance': -1,
+            'creation_time': -1
+          }
         }, {
             // Populates the parent_id field with the respective forum model fields packed into an object
             '$lookup': {

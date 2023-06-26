@@ -32,7 +32,6 @@ const getOneForum = async (req, res) => {
 
     workingForum.isCreator = isCreator;
     workingForum.isSubscribed = isSubscribed;
-
     res.status(200).json(workingForum);
 }
 
@@ -91,18 +90,57 @@ const getRecommended = async (req, res) => {
 
 // get categorized forums
 const getCategorized = async (req, res) => {
-    const sortedForums = await Forum.aggregate([
+    const agg = [
         {
             $unwind: "$tags" // Unwind the tags array
-        },
-        {
+        }, {
             $group: {
                 _id: "$tags", // Group by each unique tag
                 forums: { $push: "$$ROOT" }, // Collect the forums with the same tag into an array
             },
-        },
-    ]);
-      
+        }, {
+            $project: {
+              _id: 1,
+              forums: {
+                $map: {
+                  input: "$forums",
+                  as: "forum",
+                  in: {
+                    _id: "$$forum._id",
+                    forum_id: "$$forum.forum_id",
+                    forum_name: "$$forum.forum_name",
+                    forum_pic_link: "$$forum.forum_pic_link",
+                    subscribers: "$$forum.subscribers",
+                    subscribers_count: { $size: "$$forum.subscribers" }
+                  },
+                },
+              },
+            },
+          },
+          {
+            $unwind: "$forums" // unwind again to sort by subscribers_count
+          },
+          {
+            $sort: { "forums.subscribers_count": -1 } // sort by subscribers_count in descending order
+          },
+          {
+            $group: {
+              _id: "$_id",
+              forums: { $push: "$forums" }
+            }
+          },
+          {
+            $project: {
+              _id: 1,
+              forums: { $slice: ["$forums", 6] }, // Limit the forums array to 6 elements
+            },
+          }, {
+            '$unset': [
+              'subscribers'
+            ]
+          }
+    ]
+    const sortedForums = await Forum.aggregate(agg);
     res.status(200).json(sortedForums);
 }
 

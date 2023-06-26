@@ -144,4 +144,5 @@ Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTd
 
 ###
 
-GET http://127.0.0.1:8081/api/schools
+GET http://127.0.0.1:8081/api/chats/64859cf798e633f507d3d222
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4Nzc2MzU5MH0.cyis_HxhtsFwQBgU4IILDw8jv1SlxXfYWo7VZjHC-eI
