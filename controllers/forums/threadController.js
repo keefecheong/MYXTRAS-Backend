@@ -64,6 +64,10 @@ const getPopularThreads = async (req, res) => {
         path: 'creator_id',
         select: 'username profile_pic_link'
     })
+    .populate({ 
+        path: 'parent_id',
+        select: 'forum_pic_link forum_id'
+    })
     .sort({ likes: -1 })
     .limit(6)
     .lean();
