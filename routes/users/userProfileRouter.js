@@ -32,15 +32,14 @@ profileRouter.patch('/setup', validateUserHTTP, express.json(), setupUser);
 // get all users except for self
 profileRouter.get('/all', validateUserHTTP, getAllUsers);
 
-// get requested user
-profileRouter.get('/:user', validateUserHTTP, express.json(), getRequestedUser);
-
 // follow user
-profileRouter.patch('/follow/:user', validateUserHTTP, express.json(), followUser);
+profileRouter.patch('/follow/:userId', validateUserHTTP, express.json(), followUser);
 
 // populate followers
 profileRouter.get('/followers', validateUserHTTP, getFollowers);
 
+// get requested user
+profileRouter.get('/:userId', validateUserHTTP, express.json(), getRequestedUser);
 
 
 

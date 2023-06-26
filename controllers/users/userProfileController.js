@@ -208,8 +208,7 @@ const getAllUsers = async (req, res) => {
 // get Requested user
 const getRequestedUser = async (req, res) => {
     // only getting username and id
-    // console.log(req.params.user);
-    const user = await User.findById(req.params.user);
+    const user = await User.findById(req.params.userId);
     res.status(200).json(user);
 }
 
@@ -245,14 +244,13 @@ const followUser = async (req, res) => {
     }
     catch (error) {
         console.log(error);
-        res.status(400).json({ error: 'Failed to update user' });
+        res.status(500).json({ error: 'Failed to update user' });
     }
 }
 
 const getFollowers = async (req, res) => {
-    console.log(1);
-    // const user = await User.findById(req.user.id).populate('followers');
-    // res.status(200).json(user);
+    const user = await User.findById(req.user._id).populate('followers');
+    res.status(200).json(user);
 }
 
 module.exports = {
