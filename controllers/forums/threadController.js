@@ -85,6 +85,7 @@ const getRecentThreads = async (req, res) => {
     const forumIds = forums.map(forum => forum._id);
     const agg = [
         {
+            // Finds threads in user subbed/created forums
             '$match': {
               'parent_id': { '$in': forumIds }
             }
@@ -104,6 +105,7 @@ const getRecentThreads = async (req, res) => {
                 'creation_date': -1
             }
         }, {
+            // Populates the parent_id field with the respective forum model fields packed into an object
             '$lookup': {
               'from': 'forums', 
               'localField': 'parent_id', 
@@ -111,6 +113,7 @@ const getRecentThreads = async (req, res) => {
               'as': 'forum'
             }
         }, {
+            // Populates the creator_id field with the respective user model fields packed into an object
             '$lookup': {
               'from': 'users', 
               'localField': 'creator_id', 
@@ -118,6 +121,7 @@ const getRecentThreads = async (req, res) => {
               'as': 'user'
             }
         }, {
+            // Store only selected fields from the user Object to the thread array
             '$addFields': {
               'creator_id._id': {
                 '$arrayElemAt': [
@@ -136,6 +140,7 @@ const getRecentThreads = async (req, res) => {
               }
             }
         }, {
+            // Store only selected fields from the forum Object to the thread array
             '$addFields': {
               'parent_id._id': {
                 '$arrayElemAt': [
