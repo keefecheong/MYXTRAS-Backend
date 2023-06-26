@@ -3,6 +3,12 @@ const Forum = require('../models/forum.js');
 const User = require('../models/user.js');
 const router = express.Router();
 
+// get middleware
+const { validateUserHTTP } = require('../middleware/general/authMiddleware.js');
+
+router.use(validateUserHTTP);
+
+
 // Define a route for search endpoint
 router.get('/forums', async (req, res) => {
 const searchTerm = req.query.term;
@@ -18,7 +24,9 @@ const topSixResults = await Forum.find({
     { forum_name: { $regex: regexTerm } },
     { forum_desc: { $regex: regexTerm } }
   ]
-}).limit(6).select('forum_id forum_name');
+}).limit(6)
+.select('forum_id forum_name')
+.lean();
 
 res.status(200).json({ topSixResults })
 });
@@ -30,13 +38,19 @@ router.get('/users', async (req, res) => {
     return res.status(404).json().end
   }
   const regexTerm = new RegExp(searchTerm, 'i');
-  
   const topSixResults = await User.find({
-    $or: [
-      { username: { $regex: regexTerm } },
-      { real_name: { $regex: regexTerm } }
+    $and: [
+      { _id: { $ne: req.user._id } }, // 
+      {
+        $or: [
+          { username: { $regex: regexTerm } },
+          { real_name: { $regex: regexTerm } }
+        ]
+      }
     ]
-  }).limit(6).select('real_name username');
+  }).limit(6)
+  .select('real_name username')
+  .lean();
 
   res.status(200).json({ topSixResults })
   });
@@ -44,7 +58,6 @@ router.get('/users', async (req, res) => {
  // Define a route for search endpoint
 router.get('/users-forums', async (req, res) => {
   const searchTerm = req.query.term;
-  console.log('test')
   if (searchTerm === '') {
     return res.status(404).json().end();
   }
@@ -52,14 +65,18 @@ router.get('/users-forums', async (req, res) => {
 
   // Fetch top 3 users
   const usersPromise = User.find({
-    $or: [
-      { username: { $regex: regexTerm } },
-      { real_name: { $regex: regexTerm } }
+    $and: [
+      { _id: { $ne: req.user._id } }, // 
+      {
+        $or: [
+          { username: { $regex: regexTerm } },
+          { real_name: { $regex: regexTerm } }
+        ]
+      }
     ]
-  })
-    .limit(3)
-    .select('real_name username')
-    .lean();
+  }).limit(6)
+  .select('real_name username')
+  .lean();
 
   // Fetch top 3 forums
   const forumsPromise = Forum.find({
