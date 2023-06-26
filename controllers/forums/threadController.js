@@ -81,21 +81,86 @@ const getRecentThreads = async (req, res) => {
           { subscribers: { $in: [req.user._id] } }
         ]
       }).lean();
-
-    const forumIds = forums.map(forum => forum._id);
-
-    const threads = await Thread.find({ parent_id: { $in: forumIds } })
-    .populate({
-        path: 'parent_id',
-        select: 'forum_name forum_id forum_pic_link'
-    })
-    .populate({ 
-        path: 'creator_id',
-        select: 'username profile_pic_link'
-    })
-    .sort({creation_time: -1})
-    .lean();
     
+    const forumIds = forums.map(forum => forum._id);
+    const agg = [
+        {
+            '$match': {
+              'parent_id': { '$in': forumIds }
+            }
+        }, {
+            '$addFields': {
+                'relevance': {
+                    '$size': {
+                        '$setIntersection': [
+                            '$tags', req.user.interests
+                        ]
+                    }
+                }
+            }
+        }, {
+            '$sort': {
+                'relevance': -1,
+                'creation_date': -1
+            }
+        }, {
+            '$lookup': {
+              'from': 'forums', 
+              'localField': 'parent_id', 
+              'foreignField': '_id', 
+              'as': 'forum'
+            }
+        }, {
+            '$lookup': {
+              'from': 'users', 
+              'localField': 'creator_id', 
+              'foreignField': '_id', 
+              'as': 'user'
+            }
+        }, {
+            '$addFields': {
+              'creator_id._id': {
+                '$arrayElemAt': [
+                  '$user._id', 0
+                ]
+              }, 
+              'creator_id.username': {
+                '$arrayElemAt': [
+                  '$user.username', 0
+                ]
+              }, 
+              'creator_id.profile_pic_link': {
+                '$arrayElemAt': [
+                  '$user.profile_pic_link', 0
+                ]
+              }
+            }
+        }, {
+            '$addFields': {
+              'parent_id._id': {
+                '$arrayElemAt': [
+                  '$forum._id', 0
+                ]
+              }, 
+              'parent_id.forum_id': {
+                '$arrayElemAt': [
+                  '$forum.forum_id', 0
+                ]
+              }, 
+              'parent_id.forum_pic_link': {
+                '$arrayElemAt': [
+                  '$forum.forum_pic_link', 0
+                ]
+              }
+            }
+        }, {
+            '$unset': [
+               'relevance', '__v'
+            ]
+          }
+      ];
+    
+    const threads = await Thread.aggregate(agg);
     return res.status(200).json(threads);
 }
 
