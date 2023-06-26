@@ -227,7 +227,7 @@ const followUser = async (req, res) => {
 
         await user.save();
 
-        const otherUser = await User.findById(req.params.user);
+        const otherUser = await User.findById(req.params.userId);
         if (otherUser.followers.includes(req.user._id)){
             const index = otherUser.followers.indexOf(req.user._id);
             if (index > -1) { 
@@ -250,7 +250,7 @@ const followUser = async (req, res) => {
 
 const getFollowers = async (req, res) => {
     const user = await User.findById(req.user._id).populate('followers');
-    res.status(200).json(user);
+    res.status(200).json(user.followers);
 }
 
 module.exports = {
