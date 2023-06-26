@@ -205,11 +205,28 @@ const getAllUsers = async (req, res) => {
     res.status(200).json(users);
 }
 
+const getRequestedUser = async (req, res) => {
+    const username = req.params.username;
+
+    User.findOne({username}, (error, user) => {
+        if (error){
+            console.error(error);
+            res.status(500).json({error: 'An error occurred'});
+        } else if (!user){
+            res.status(404).json({ error: 'User not found' });
+        } else{
+            res.status(200).json(user);
+        }
+    })
+    
+}
+
 module.exports = {
     getUser,
     registerUser,
     updateUser,
     setupUser,
+    getRequestedUser,
     getAllUsers,
     verifyEmail,
     verifyPhoneNum

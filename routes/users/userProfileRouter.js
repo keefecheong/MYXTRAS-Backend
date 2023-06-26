@@ -10,7 +10,7 @@ const { multerConfig, multerErrorHandler } = require('../../middleware/posts/mul
 
 
 // get controller functions
-const { getUser, registerUser, updateUser, setupUser, getAllUsers, verifyEmail, verifyPhoneNum} = require('../../controllers/users/userProfileController.js');
+const { getUser, registerUser, updateUser, setupUser, getAllUsers, getRequestedUser, verifyEmail, verifyPhoneNum} = require('../../controllers/users/userProfileController.js');
 
 // get current user from cookie
 profileRouter.get('/', validateUserHTTP, getUser);
@@ -31,6 +31,9 @@ profileRouter.patch('/setup', validateUserHTTP, express.json(), setupUser);
 
 // get all users except for self
 profileRouter.get('/all', validateUserHTTP, getAllUsers);
+
+// get requested user
+profileRouter.get('/:username', validateUserHTTP, express.json(), getRequestedUser);
 
 
 module.exports = profileRouter;
