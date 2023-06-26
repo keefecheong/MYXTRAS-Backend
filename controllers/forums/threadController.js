@@ -104,10 +104,10 @@ const getRecentThreads = async (req, res) => {
                 }
             }
         }, {
-            '$sort': {
-                'relevance': -1,
-                'creation_date': -1
-            }
+          '$sort': {
+            'relevance': -1,
+            'creation_time': -1
+          }
         }, {
             // Populates the parent_id field with the respective forum model fields packed into an object
             '$lookup': {
