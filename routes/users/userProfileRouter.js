@@ -1,49 +1,29 @@
-// handle routes related to cookies
+// handle routes related to user profile
 
 // initialize router
 const express = require('express');
 const profileRouter = express.Router();
 
 // get middleware
-const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 
 // get controller functions
-const { getUser, registerUser, updateUser, setupUser, getRequestedUser, getAllUsers, followUser, getFollowers, getOtherFollowers, verifyEmail, verifyPhoneNum} = require('../../controllers/users/userProfileController.js');
+const { getUser, updateUser, setupUser, getRequestedUser, getAllUsers } = require('../../controllers/users/userProfileController.js');
 
 // get current user from cookie
-profileRouter.get('/', validateUserHTTP, getUser);
-
-// Verify fields during registration process
-profileRouter.post('/verify-email', express.json(), verifyEmail);
-
-profileRouter.post('/verify-phone', express.json(), verifyPhoneNum);
-
-// register new user
-profileRouter.post('/', express.json(), registerUser);
+profileRouter.get('/', getUser);
 
 // update user info
-profileRouter.patch('/', validateUserHTTP, multerConfig.array('selectedImages'), multerErrorHandler, updateUser);
+profileRouter.patch('/', multerConfig.array('selectedImages'), multerErrorHandler, updateUser);
 
 // initial user info setup
-profileRouter.patch('/setup', validateUserHTTP, express.json(), setupUser);
+profileRouter.patch('/setup', express.json(), setupUser);
 
 // get all users except for self
-profileRouter.get('/all', validateUserHTTP, getAllUsers);
-
-// follow user
-profileRouter.patch('/follow/:userId', validateUserHTTP, express.json(), followUser);
-
-// populate followers
-profileRouter.get('/followers', validateUserHTTP, getFollowers);
-
-// populate other users followers
-profileRouter.get('/followers/:userId', validateUserHTTP, getOtherFollowers);
+profileRouter.get('/all', getAllUsers);
 
 // get requested user
-profileRouter.get('/:userId', validateUserHTTP, express.json(), getRequestedUser);
-
-
+profileRouter.get('/:userId', getRequestedUser);
 
 module.exports = profileRouter;

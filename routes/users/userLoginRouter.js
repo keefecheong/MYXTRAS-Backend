@@ -8,6 +8,6 @@ const loginRouter = express.Router();
 const { loginUser } = require('../../controllers/users/userLoginController.js');
 
 // handle user login
-loginRouter.post('/', express.json(), loginUser);
+loginRouter.post('/', loginUser);
 
 module.exports = loginRouter;

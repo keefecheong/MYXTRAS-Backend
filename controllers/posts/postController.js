@@ -1,6 +1,7 @@
 // controller functions to handle GET requests for posts
 
 const Post = require('../../models/post.js');
+const User = require('../../models/user.js');
 const { checkPostAttributes, checkPostAttributesAll } = require('../../utils/posts/checkAttributes.js');
 
 // retrieve all posts
@@ -27,17 +28,21 @@ const getAllPosts = async (req, res) => {
 // retrieve user's own posts and posts by users followed
 const getFollowingPosts = async (req, res) => {
     try {
-        // list of user ids to get posts from
-        let targetUsers = Array.from(req.user.following).push(req.user._id);
+        // get users that the requesting user follows
+        const followingUsers = await User.find({ followers: { $in: req.user._id } }).select('_id').lean();
+
+        // add user ids into an array
+        var userIds = followingUsers.map(user => user._id);
+        userIds.push(req.user._id);
 
         // populate post data to get creator's username and profile pic link
         var posts = await Post
-            .where('creator_id')
-            .in(targetUsers)
+            .find({ creator_id: { $in: userIds } })
             .populate({ 
                 path: 'creator_id',
                 select: 'username profile_pic_link'
             })
+            .sort({ creation_time: -1 })
             .lean();
 
         posts = checkPostAttributesAll(posts, req.user._id);
@@ -88,6 +93,7 @@ const getUserPost = async (req, res) => {
                 select: 'username profile_pic_link'
             })
             .lean();
+
         posts = checkPostAttributesAll(posts, req.params.userId);
         
         res.status(200).json(posts);

@@ -5,7 +5,7 @@ const express = require('express');
 const postRouter = express.Router();
 
 // get middleware
-const { getPost, getOtherUserPost } = require('../../middleware/posts/getPostMiddleware.js');
+const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // get controller functions
@@ -16,20 +16,20 @@ const { deletePost } = require('../../controllers/posts/postDeleteController.js'
 // retrieve all posts
 postRouter.get('/', getAllPosts);
 
-// retireve user's own posts
-postRouter.get('/self', getOwnPosts);
-
 // retrieve user's own posts and posts by users followed
 postRouter.get('/following', getFollowingPosts);
 
 // retrieve popular posts for 'explore'
 postRouter.get('/explore', getPopularPosts);
 
-// retrieve a post by id
-postRouter.get('/:postId', getPost, getOnePost);
+// retireve user's own posts
+postRouter.get('/by/self', getOwnPosts);
 
 // retrieve a post by userid
-postRouter.get('/otherUser/:userId', getUserPost);
+postRouter.get('/by/:userId', getUserPost);
+
+// retrieve a post by id
+postRouter.get('/:postId', getPost, getOnePost);
 
 // create a post
 postRouter.post('/', multerConfig.array('selectedImages'), multerErrorHandler, createPost);

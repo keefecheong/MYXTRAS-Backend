@@ -4,7 +4,8 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        select: false
     },
     username: {
         type: String,
@@ -16,7 +17,8 @@ const userSchema = new mongoose.Schema({
     phone_number: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        select: false
     },
     school: {
         type: String
@@ -37,13 +39,6 @@ const userSchema = new mongoose.Schema({
             return `Hi! I am ${this.username}.`;
         }
     },
-    following: {
-        type: [{
-            type: mongoose.SchemaTypes.ObjectId,
-            ref: 'User'
-        }],
-        default: []
-    },
     followers: {
         type: [{
             type: mongoose.SchemaTypes.ObjectId,
@@ -58,20 +53,14 @@ const userSchema = new mongoose.Schema({
         }],
         default: []
     },
-    created_forums: {
-        type: [{
-            type: mongoose.SchemaTypes.ObjectId,
-            ref: 'Forum'
-        }],
-        default: []
-    },
     interests: {
         type: [String],
         default: []
     },
     is_admin: {
         type: Boolean,
-        default: false
+        default: false,
+        select: false
     },
     blocked: {
         type: [{
@@ -82,7 +71,8 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        select: false
     },
     is_profile_setup: {
         type: Boolean,

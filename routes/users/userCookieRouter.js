@@ -4,14 +4,11 @@
 const express = require('express');
 const cookieRouter = express.Router();
 
-// get middleware
-const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
-
 // get controller functions
 const { verifyCookie, clearCookie } = require('../../controllers/users/userCookieController.js');
 
 // to verify jwt cookie
-cookieRouter.get('/verify', validateUserHTTP, verifyCookie);
+cookieRouter.get('/verify', verifyCookie);
 
 // to clear jwt cookie
 cookieRouter.get('/remove', clearCookie);

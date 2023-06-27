@@ -5,7 +5,7 @@ const Post = require('../../models/post.js');
 // find post by id
 const getPost = async (req, res, next) => {
     let target;
-    console.log()
+    
     try {
         // populate post data to get creator's username and profile pic link
         target = await Post.findById(req.params.postId).populate({ path: 'creator_id', select: 'username profile_pic_link'});
