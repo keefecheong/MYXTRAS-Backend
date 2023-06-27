@@ -88,7 +88,7 @@ const getUserPost = async (req, res) => {
                 select: 'username profile_pic_link'
             })
             .lean();
-        posts = checkPostAttributesAll(posts, req.params.userId);
+        posts = checkPostAttributesAll(posts, req.user._id);
         
         res.status(200).json(posts);
     }
