@@ -5,7 +5,7 @@ const express = require('express');
 const postRouter = express.Router();
 
 // get middleware
-const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
+const { getPost, getOtherUserPost } = require('../../middleware/posts/getPostMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // get controller functions
@@ -29,7 +29,7 @@ postRouter.get('/explore', getPopularPosts);
 postRouter.get('/:postId', getPost, getOnePost);
 
 // retrieve a post by userid
-postRouter.get('otherUser/:userId', getPost, getUserPost);
+postRouter.get('/otherUser/:userId', getUserPost);
 
 // create a post
 postRouter.post('/', multerConfig.array('selectedImages'), multerErrorHandler, createPost);
