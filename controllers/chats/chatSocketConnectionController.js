@@ -1,6 +1,6 @@
 // controller functions for chat socket connection
 
-const { getUserConnectionIndex } = require("../../utils/chats/getUserStatus");
+const { getUserConnectionIndex, getUserOnline } = require("../../utils/chats/getUserStatus");
 
 // handle 'connection' event
 function handleNewConnection(socket, connections) {
@@ -27,7 +27,7 @@ function handleNewConnection(socket, connections) {
     // otherwise add the new socket id to the existing connection object
     else {
         connections[userConnectionIndex].socketId.push(socket.id);
-    }
+    }    
 
     // add socket to a room based on user id
     socket.join(userId);
@@ -39,17 +39,27 @@ function handleDisconnection(socket, connections) {
     const userConnectionIndex = getUserConnectionIndex(connections, socket.user._id.toString());
 
     const socketIdIndex = connections[userConnectionIndex].socketId.indexOf(socket.id);
+    
     connections[userConnectionIndex].socketId.splice(socketIdIndex, 1);
 
     // if there are no other associated sockets with the user then delete the whole object from the connections array
     if (connections[userConnectionIndex].socketId.length <= 0) {
         connections.splice(userConnectionIndex, 1);
 
-        // tell all other sockets that this user is offline
-        socket.broadcast.emit('update-user-presence', {
-            userId: socket.user._id.toString(),
-            online: false
-        });
+        // set timeout to only tell other users that the user is offline after 2 seconds of disconnection
+        // makes the user appear to be online even if the socket is reconnected during page changes
+        setTimeout((userId = socket.user._id.toString()) => {
+
+            // only send broadcast if the user is offline after 2 seconds
+            if (!getUserOnline(connections, userId)) {
+                // tell all other sockets that this user is offline
+                socket.broadcast.emit('update-user-presence', {
+                    userId: userId,
+                    online: false
+                });
+            }
+
+        }, 2000);
     }
 }
 
