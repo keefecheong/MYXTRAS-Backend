@@ -80,16 +80,16 @@ const getOwnPosts = async (req, res) => {
 // retrieve another user's own posts based on userid
 const getUserPost = async (req, res) => {
     try {
-        console.log(req.params.user);
+        console.log(req.params.userId);
         // populate post data to get creator's username and profile pic link
         var posts = await Post
-            .find({ creator_id: req.params.user })
+            .find({ creator_id: req.params.userId })
             .populate({ 
                 path: 'creator_id',
                 select: 'username profile_pic_link'
             })
             .lean();
-        posts = checkPostAttributesAll(posts, req.params.user);
+        posts = checkPostAttributesAll(posts, req.params.userId);
         
         res.status(200).json(posts);
     }

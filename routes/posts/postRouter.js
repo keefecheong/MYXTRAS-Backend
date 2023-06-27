@@ -29,7 +29,7 @@ postRouter.get('/explore', getPopularPosts);
 postRouter.get('/:postId', getPost, getOnePost);
 
 // retrieve a post by userid
-postRouter.get('/:user', getPost, getUserPost);
+postRouter.get('otherUser/:userId', getPost, getUserPost);
 
 // create a post
 postRouter.post('/', multerConfig.array('selectedImages'), multerErrorHandler, createPost);

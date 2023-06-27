@@ -224,7 +224,7 @@ const followUser = async (req, res) => {
     try {
         const user = req.user;
         user.following = following;
-
+;
         await user.save();
 
         const otherUser = await User.findById(req.params.userId);
