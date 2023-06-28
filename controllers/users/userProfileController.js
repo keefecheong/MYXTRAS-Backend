@@ -40,6 +40,7 @@ const updateUser = async (req, res) => {
         }
         const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, 'user');
         user.profile_pic_link = profile_pic_link[0];
+        
         if (!uploadSuccessful) {
             await User.findByIdAndDelete(user._id);
             return res.status(500).json({ message: 'Failed to upload images, please try again later.' });

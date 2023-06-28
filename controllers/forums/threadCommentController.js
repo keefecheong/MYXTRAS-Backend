@@ -62,7 +62,23 @@ const createComment = async (req, res) => {
 
 }
 
+// delete comment
+const deleteComment = async (req, res) => {
+    if (!req.user._id.equals(res.thread.creator_id.id)){
+        return res.status(401).json({message: 'Unauthorized.'});
+    }
+
+    try{
+        await Comment.findByIdAndDelete(req.params.commentId);
+        res.status(200).json({ message: 'Comment removed.' });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 module.exports = {
     getThreadComments,
-    createComment
+    createComment,
+    deleteComment
 }
