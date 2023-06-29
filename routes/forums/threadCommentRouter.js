@@ -13,7 +13,7 @@ commentRouter.get('/', getThreadComments);
 // create new comment
 commentRouter.post('/', express.json(), createComment);
 
-delete comment
+//delete comment
 commentRouter.delete('/:commentId', deleteComment)
 
 module.exports = commentRouter;

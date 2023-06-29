@@ -6,7 +6,7 @@ const threadRouter = express.Router();
 const { getThread } = require('../../middleware/forums/getThreadMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
-const { getAll, getForumThreads, getOneThread, getPopularThreads, getRecentThreads } = require('../../controllers/forums/threadController.js');
+const { getAll, getForumThreads, getOneThread, getPopularThreads, getRecentThreads, deleteThread } = require('../../controllers/forums/threadController.js');
 const { createThread, updateThread } = require('../../controllers/forums/threadSaveController.js');
 
 // get all threads for explore 
@@ -29,5 +29,8 @@ threadRouter.post('/:forumID', multerConfig.array('picture'), multerErrorHandler
 
 // update thread
 threadRouter.patch('/:threadID', multerConfig.array('picture'), multerErrorHandler, getThread, updateThread);
+
+// delete thread
+threadRouter.delete('/:threadID', getThread, deleteThread)
 
 module.exports = threadRouter;
