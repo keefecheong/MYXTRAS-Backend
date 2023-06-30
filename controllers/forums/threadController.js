@@ -173,26 +173,10 @@ const getRecentThreads = async (req, res) => {
     return res.status(200).json(threads);
 }
 
-const deleteThread = async (req, res) => {
-  if (!req.user._id.equals(res.thread.creator_id.id)){
-    return res.status(401).json({message: 'Unauthorized.'});
-  }
-
-  try{
-      await Thread.findByIdAndDelete(req.params.threadID);
-      res.status(200).json({ message: 'Thread removed.' });
-  }
-  catch (error) {
-      res.status(500).json({ message: error.message });
-  }
-}
-
-
 module.exports = {
     getAll,
     getForumThreads,
     getOneThread,
     getPopularThreads,
-    getRecentThreads,
-    deleteThread
-}
+    getRecentThreads
+  }

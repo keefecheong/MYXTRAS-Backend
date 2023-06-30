@@ -6,8 +6,10 @@ const forumRouter = express.Router();
 const { getForum } = require('../../middleware/forums/getForumMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
-const { verifyForumID, getOneForum, getCreated, getSubscribed, getRecommended, getCategorized, deleteForum } = require('../../controllers/forums/forumController.js');
+const { verifyForumID, getOneForum, getCreated, getSubscribed, getRecommended, getCategorized } = require('../../controllers/forums/forumController.js');
 const { createForum, updateForum } = require('../../controllers/forums/forumSaveController.js');
+const { deleteForum } = require('../../controllers/forums/forumDeleteController.js');
+
 
 // get forums created by the user
 forumRouter.get('/created', getCreated);

@@ -6,8 +6,10 @@ const threadRouter = express.Router();
 const { getThread } = require('../../middleware/forums/getThreadMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
-const { getAll, getForumThreads, getOneThread, getPopularThreads, getRecentThreads, deleteThread } = require('../../controllers/forums/threadController.js');
+const { getAll, getForumThreads, getOneThread, getPopularThreads, getRecentThreads } = require('../../controllers/forums/threadController.js');
 const { createThread, updateThread } = require('../../controllers/forums/threadSaveController.js');
+const { deleteThread } = require('../../controllers/forums/threadDeleteController.js');
+
 
 // get all threads for explore 
 threadRouter.get('/', getAll);
