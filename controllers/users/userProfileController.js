@@ -38,15 +38,17 @@ const updateUser = async (req, res) => {
         if (biography.length > 100){
             return res.status(400).json({error: 'Biography is too long'})
         }
-        const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, 'user');
-        user.profile_pic_link = profile_pic_link[0];
-        
-        if (!uploadSuccessful) {
-            await User.findByIdAndDelete(user._id);
-            return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+        if (req.files[0] != undefined){
+            const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, 'user');
+            user.profile_pic_link = profile_pic_link[0];
+            
+            if (!uploadSuccessful) {
+                await User.findByIdAndDelete(user._id);
+                return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+            }
+            await user.save();
         }
-        await user.save();
-
+        
         res.status(204).end();
     } catch (error) {
         console.log(error);
