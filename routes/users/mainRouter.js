@@ -30,7 +30,7 @@ mainRouter.use('/login', express.json(), userLoginRouter);
 mainRouter.use('/cookie', validateUserHTTP, userCookieRouter);
 
 // handle verification requests
-mainRouter.use('/verify', validateUserHTTP, express.json(), userVerifyRouter);
+mainRouter.use('/verify', express.json(), userVerifyRouter);
 
 // handle follow requests
 mainRouter.use('/follow/:userId', validateUserHTTP, getUser, userFollowRouter);

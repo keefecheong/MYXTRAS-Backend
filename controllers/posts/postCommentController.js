@@ -1,7 +1,7 @@
 // controller functions to handle actions for comments under posts
 
 const Comment = require('../../models/comment.js');
-const { checkCommentAttributes, checkCommentAttributesAll } = require('../../utils/posts/checkAttributes.js');
+const { checkCommentAttributes, checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 
 // retrieve all comments for a post
 const getComments = async (req, res) => {

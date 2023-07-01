@@ -164,9 +164,27 @@ const getRecentThreads = async (req, res) => {
             }
         }, {
             '$unset': [
-               'relevance', '__v'
+               'relevance', '__v', 'forum', 'user'
             ]
-          }
+        }, {
+            '$addFields': {
+                'isOwner': {
+                    '$eq': [
+                        '$creator_id._id', req.user._id
+                    ]
+                },
+                'liked': {
+                    '$in': [
+                        req.user._id, '$likes'
+                    ]
+                },
+                'disLiked': {
+                    '$in': [
+                        req.user._id, '$dislikes'
+                    ]
+                }
+            }
+        }
       ];
     
     const threads = await Thread.aggregate(agg);

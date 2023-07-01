@@ -1,11 +1,12 @@
 // controller functions related to thread comments
 
 const Comment = require('../../models/comment.js');
+const { checkCommentAttributes, checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 
 // get all comments for a thread
 const getThreadComments = async (req, res) => {
     try {
-        const threadComments = await Comment
+        var threadComments = await Comment
             .find({ parent_id: res.thread._id })
             .populate({
                 path: 'creator_id',
@@ -13,7 +14,8 @@ const getThreadComments = async (req, res) => {
             })
             .select('creator_id creation_time content')
             .lean();
-        //const comments = checkCommentAttributesAll(threadComments.comments, req.user._id);
+
+        threadComments = checkCommentAttributesAll(threadComments, req.user._id);
 
         res.status(200).json(threadComments);
     }
@@ -52,7 +54,7 @@ const createComment = async (req, res) => {
             .select('creator_id creation_time content')
             .lean();
 
-        //newComment = checkCommentAttributes(newComment, req.user._id);
+        newComment = checkCommentAttributes(newComment, req.user._id);
 
         res.status(200).json({ message: 'Comment created.', comment: newComment });
     }

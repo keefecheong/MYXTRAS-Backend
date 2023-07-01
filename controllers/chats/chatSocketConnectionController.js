@@ -27,7 +27,7 @@ function handleNewConnection(socket, connections) {
     // otherwise add the new socket id to the existing connection object
     else {
         connections[userConnectionIndex].socketId.push(socket.id);
-    }    
+    }
 
     // add socket to a room based on user id
     socket.join(userId);

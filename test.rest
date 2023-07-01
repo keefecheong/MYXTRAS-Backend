@@ -153,5 +153,9 @@ GET http://127.0.0.1:8081/api/users/profile/647593ab7e5cbd1fba80f0e6
 Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4Nzc2MzU5MH0.cyis_HxhtsFwQBgU4IILDw8jv1SlxXfYWo7VZjHC-eI
 
 ###
-647593ab7e5cbd1fba80f0e6
-6475929dd0b97c5c353602af
+POST http://127.0.0.1:8081/api/users/verify/phone
+Content-type:application/json
+
+{
+    "phoneNumber": "22222222"
+}
