@@ -16,7 +16,7 @@ const loginUser = async (req, res) => {
     
     try {
         // Find the user by email
-        const user = await User.findOne({ email: emailAddress }).select('email password');
+        const user = await User.findOne({ email: emailAddress }).select('email password is_profile_setup');
         
         // User not found
         if (!user) {
@@ -32,7 +32,7 @@ const loginUser = async (req, res) => {
         setJWT(user._id, res);
 
         // Authentication successful
-        res.status(200).json({ message: 'Login successful' });
+        res.status(200).json({ message: 'Login successful', is_profile_setup: user.is_profile_setup });
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ message: 'Internal server error' });

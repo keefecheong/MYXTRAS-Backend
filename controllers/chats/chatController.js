@@ -31,6 +31,11 @@ async function getEnrolledChats(req, res) {
 
 // to check if the current user has an existing chat with another user
 async function checkExistingChat(req, res) {
+    // if user is requesting to have chat with the same user id then return 400 error
+    if (req.user._id.equals(req.params.userId)) {
+        return res.status(400).json({ message: 'Cannot chat with self.' });
+    }
+
     try {
         var existingChat = await Chat
             .findOne({ 

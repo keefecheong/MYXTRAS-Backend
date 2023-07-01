@@ -52,6 +52,10 @@ const messageSchema = new mongoose.Schema({
         required: function() {
             return this.file_link;
         }
+    },
+    reply_message: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'Message'
     }
 });
 
