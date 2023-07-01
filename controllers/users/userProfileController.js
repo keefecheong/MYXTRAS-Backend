@@ -106,18 +106,31 @@ const setupUser = async (req, res) => {
                 } 
             }
 
-        // update user info
-        user.real_name = realName;
-        user.username = userName;
-        user.biography = biography;
-        user.school = selectedSchool;
-        user.course = selectedCourse;
-        user.interests = selectedInterests.sort();
-        user.is_profile_setup = true;
+        try {
+            // update user info
+            user.real_name = realName;
+            user.username = userName;
+            user.biography = biography;
+            user.school = selectedSchool;
+            user.course = selectedCourse;
+            user.interests = selectedInterests.sort();
+            user.is_profile_setup = true;
 
-        await user.save();
+            await user.save();
+        }
+        catch (error) {
+            if (error.code === 11000) {
+                // Duplicate username error
+                res.status(400).json({ error: 'Username already exists' })
+            }
+            else {
+                // Other error
+                res.status(500).json({ error: error.message });
+            }
+        }
 
         res.status(204).end();
+
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Failed to update user' });

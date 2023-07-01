@@ -9,10 +9,11 @@ const userSchema = new mongoose.Schema({
     },
     username: {
         type: String,
+        unique: true,
         required: true
     },
     real_name: {
-        type: String
+        type: String,
     },
     phone_number: {
         type: String,

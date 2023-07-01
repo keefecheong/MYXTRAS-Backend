@@ -3,12 +3,14 @@
 const express = require('express');
 const verifyRouter = express.Router();
 
-const { verifyEmail, verifyPhoneNum } = require('../../controllers/users/userVerifyController.js');
+const { verifyEmail, verifyPhoneNum, verifyUsername } = require('../../controllers/users/userVerifyController.js');
 
 // verify email
 verifyRouter.post('/email', verifyEmail);
 
 // verify phone number
 verifyRouter.post('/phone', verifyPhoneNum);
+
+verifyRouter.post('/username', verifyUsername);
 
 module.exports = verifyRouter;
