@@ -38,7 +38,26 @@ const verifyPhoneNum = async (req, res) => {
     }
 }
 
+// check if phone number exists
+const verifyUsername = async (req, res) => {
+    const username = req.body.username;
+
+    if (!username) {
+        return res.status(400).json({ error: 'Invalid request body.' });
+    }
+
+    const existingUsername = await User.findOne({ username: username });
+
+    if (existingUsername) {
+        res.status(400).json({ error: 'Username already exists' });
+    }
+    else {
+        res.status(200).end();
+    }
+}
+
 module.exports = {
     verifyEmail,
-    verifyPhoneNum
+    verifyPhoneNum,
+    verifyUsername
 }
