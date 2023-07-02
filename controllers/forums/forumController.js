@@ -97,18 +97,14 @@ const getCategorized = async (req, res) => {
           $addFields: {
             subscribers_count: { $size: "$subscribers" }
           }
-        },
-        {
+        }, {
           $sort: { "subscribers_count": -1 } // sort by subscribers_count in descending order
-        },
-        
-        {
+        }, {
           $group: {
               _id: "$tags", // Group by each unique tag
               forums: { $push: "$$ROOT" }, // Collect the forums with the same tag into an array
           },
-        }, 
-        {
+        }, {
           $project: {
             _id: 1,
             forums: { $slice: ["$forums", 6] }, // Limit the forums array to 6 elements
@@ -116,11 +112,10 @@ const getCategorized = async (req, res) => {
         }, {
           '$unset': [
             'forums.subscribers', 'forums.subscribers_count', 'forums.forum_desc', 'forums.forum_id', 'forums.creation_time', 'forums.creator_id'
-          ]
+          ] 
         }
     ]
     const sortedForums = await Forum.aggregate(agg);
-    console.log(sortedForums[0])
     res.status(200).json(sortedForums);
 }
 
