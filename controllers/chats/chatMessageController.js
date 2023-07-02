@@ -9,6 +9,10 @@ async function getChatMessages(req, res) {
             .find({ chat_id: res.chat._id })
             .sort({ creation_time: -1 })
             .limit(req.params.count)
+            .populate({
+                path: 'reply_message',
+                select: '-creation_time -last_modified_time -reply_message -chat_id'
+            })
             .lean();
     
         const result = formatMessages(messages, req.user._id).reverse();
@@ -38,6 +42,10 @@ async function getLatestMessages(req, res) {
                 .find({ chat_id: latestChats[i]._id })
                 .sort({ creation_time: -1 })
                 .limit(50)
+                .populate({
+                    path: 'reply_message',
+                    select: '-creation_time -last_modified_time -reply_message -chat_id'
+                })
                 .lean();
             
             // format the messages and add to result in ascending creation_time
@@ -62,6 +70,10 @@ async function getPreviousMessages(req, res) {
             .find({ chat_id: res.chat._id, creation_time: { $lt: new Date(decodedTimestamp) }})
             .sort({ creation_time: -1 })
             .limit(req.params.count)
+            .populate({
+                path: 'reply_message',
+                select: '-creation_time -last_modified_time -reply_message -chat_id'
+            })
             .lean();
 
         const result = formatMessages(messages, req.user._id).reverse();
@@ -80,6 +92,12 @@ function formatMessages(messages, userId) {
     messages.forEach(message => {
         // set is_sender based on creator_id and requesting user id
         message.is_sender = message.creator_id.equals(userId);
+        
+        if (message.reply_message) {
+            message.reply_message.is_sender = message.reply_message.creator_id.equals(userId);
+
+            delete message.reply_message.creator_id;
+        }
 
         // remove unneeded fields
         delete message.creator_id;
