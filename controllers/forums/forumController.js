@@ -110,6 +110,8 @@ const getCategorized = async (req, res) => {
             forums: { $slice: ["$forums", 6] }, // Limit the forums array to 6 elements
           },
         }, {
+          $sort: { "_id": 1 } // sort interests by alphabet
+        }, {
           '$unset': [
             'forums.subscribers', 'forums.subscribers_count', 'forums.forum_desc', 'forums.forum_id', 'forums.creation_time', 'forums.creator_id'
           ] 
