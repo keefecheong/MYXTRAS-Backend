@@ -43,6 +43,10 @@ async function handleSendMessage(data, socket, connections) {
         const recipientMessage = data.message;
         recipientMessage.is_sender = false;
 
+        if (recipientMessage.reply_message) {
+            recipientMessage.reply_message.is_sender = !recipientMessage.reply_message.is_sender;
+        }
+
         // edit chat for recipient
         const recipientChat = {
             _id: data.chat._id,
@@ -81,8 +85,13 @@ async function handleSendMessage(data, socket, connections) {
             creator_id: socket.user._id,
             content: data.message.content,
             creation_time: data.message.creation_time,
-            chat_id: data.chat._id
+            chat_id: data.chat._id,
         });
+
+        // set reply_message
+        if (data.message.reply_message) {
+            newMessage.reply_message = data.message.reply_message._id;
+        }
 
         // set file attributes
         if (data.file) {
