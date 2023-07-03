@@ -46,11 +46,11 @@ const createForum = async (req, res) => {
             tags: tags
         });
 
-        const id = new mongoose.Types.ObjectID();
+        const id = new mongoose.Types.ObjectId();
 
         // upload images
         const imageLinks = [];
-        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, _id, 'forum');
+        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, id, 'forum');
 
         if (!forumPicUploadSuccessful) {
             return res.status(500).json({ message: 'Internal server error' });

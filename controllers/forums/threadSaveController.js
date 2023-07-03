@@ -27,7 +27,7 @@ const createThread = async (req, res) => {
             tags: tags
         });
 
-        const id = new mongoose.Types.ObjectID();
+        const id = new mongoose.Types.ObjectId();
 
         // save images if provided
         if (req.files.length > 0) {
