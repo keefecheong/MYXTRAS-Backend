@@ -14,7 +14,11 @@ const createPost = async (req, res) => {
         return res.status(400).json({ message: 'At least one image is required.' });
     }
 
+    // create new ObjectID
+    const id = new mongoose.Types.ObjectId();
+
     const post = new Post({
+        _id: id,
         creator_id: req.user._id,
         content_links: [],
         original_names: req.files.map(image => image.originalname)
@@ -40,9 +44,6 @@ const createPost = async (req, res) => {
     }
 
     try {
-        // create new ObjectID
-        const id = new mongoose.Types.ObjectId();
-        
         // upload images and store the links in content_links of the new post
         const uploadSuccessful = await uploadImages(req.files, post.content_links, id, 'post');
 

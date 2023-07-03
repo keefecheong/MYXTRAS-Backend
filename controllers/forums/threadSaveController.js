@@ -19,15 +19,16 @@ const createThread = async (req, res) => {
         
         const { title, content, tags } = threadObject;
 
+        const id = new mongoose.Types.ObjectId();
+
         const newThread = new Thread({
+            _id: id,
             parent_id: req.params.forumID,
             creator_id: req.user._id,
             title: title,
             content: content,
             tags: tags
         });
-
-        const id = new mongoose.Types.ObjectId();
 
         // save images if provided
         if (req.files.length > 0) {
@@ -41,8 +42,9 @@ const createThread = async (req, res) => {
             }
 
             newThread.content_link = newImageLinks[0];
-            await newThread.save();
         }
+        
+        await newThread.save();
 
         res.status(201).end();
 

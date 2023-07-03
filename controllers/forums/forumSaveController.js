@@ -38,15 +38,17 @@ const createForum = async (req, res) => {
         if (forum_desc.length > 250){
             return res.status(400).json({error: 'Forum Name is too long'})
         }
+
+        const id = new mongoose.Types.ObjectId();
+
         const newForum = new Forum({
+            _id: id,
             creator_id: req.user._id,
             forum_name: forum_name,
             forum_id: forum_id,
             forum_desc: forum_desc,
             tags: tags
         });
-
-        const id = new mongoose.Types.ObjectId();
 
         // upload images
         const imageLinks = [];
