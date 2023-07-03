@@ -35,6 +35,10 @@ const getForumThreads = async (req, res) => {
             path: 'creator_id',
             select: 'username profile_pic_link'
         })
+        .populate({ 
+            path: 'parent_id',
+            select: 'forum_pic_link forum_id'
+        })
         .sort({ creation_time: -1 })
         .lean();
 
