@@ -66,7 +66,8 @@ const createComment = async (req, res) => {
 
 // delete comment
 const deleteComment = async (req, res) => {
-    if (!req.user._id.equals(res.thread.creator_id.id)){
+
+    if (!req.user._id.equals(res.comment.creator_id.id)){
         return res.status(401).json({message: 'Unauthorized.'});
     }
 
