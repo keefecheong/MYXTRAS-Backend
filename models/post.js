@@ -54,17 +54,8 @@ const postSchema = new mongoose.Schema({
     }
 });
 
-// automatically update last_modified_time with the current time when an existing document is saved (updated)
-postSchema.pre('save', function(next) {
-    if (!this.isNew && this.content_links.length > 0) {
-        this.last_modified_time = Date.now();
-    }
-
-    next()
-});
-
 // automatically clean up files and comments associated with the post on delete
-postSchema.post('findOneAndDelete', function(doc, next) {
+postSchema.post('findOneAndDelete', async function(doc, next) {
     try {
         // delete associated images
         deleteFiles(doc.content_links);
@@ -72,6 +63,18 @@ postSchema.post('findOneAndDelete', function(doc, next) {
         // delete associated comments
         const commentModel = mongoose.model('Comment');
         commentModel.deleteMany({ parent_id: doc._id }).catch(error => console.log(error));
+
+        // remove from saved_posts
+        const userModel = mongoose.model('User');
+        const users = await userModel.find({ saved_posts: { $in: doc._id } });
+
+        for (let i = 0; i < users.length; i++) {
+            const user = users[i];
+            const saveIndex = user.saved_posts.indexOf(doc._id);
+            user.saved_posts.splice(saveIndex, 1);
+        }
+
+        userModel.bulkSave(users).catch(error => console.log(error));
 
         next();
     }

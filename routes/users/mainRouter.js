@@ -15,6 +15,7 @@ const userCookieRouter = require('./userCookieRouter.js');
 const userFollowRouter = require('./userFollowRouter.js');
 const userVerifyRouter = require('./userVerifyRouter.js');
 const userRegisterRouter = require('./userRegisterRouter.js');
+const userSavePostRouter = require('./userSavePostRouter.js');
 
 // mount various routes
 // handle user profile related requests
@@ -34,5 +35,8 @@ mainRouter.use('/verify', express.json(), userVerifyRouter);
 
 // handle follow requests
 mainRouter.use('/follow/:userId', validateUserHTTP, getUser, userFollowRouter);
+
+// handle save post requests
+mainRouter.use('/save/post', validateUserHTTP, userSavePostRouter);
 
 module.exports = mainRouter;

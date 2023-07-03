@@ -16,7 +16,7 @@ const getAllPosts = async (req, res) => {
             })
             .lean();
 
-        posts = checkPostAttributesAll(posts, req.user._id);
+        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
 
         res.status(200).json(posts);
     }
@@ -45,7 +45,7 @@ const getFollowingPosts = async (req, res) => {
             .sort({ creation_time: -1 })
             .lean();
 
-        posts = checkPostAttributesAll(posts, req.user._id);
+        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
         
         res.status(200).json(posts);
     }
@@ -56,7 +56,7 @@ const getFollowingPosts = async (req, res) => {
 
 // retrieve one post by requested id
 const getOnePost = async (req, res) => {
-    res.post = checkPostAttributes(res.post, req.user._id);
+    res.post = checkPostAttributes(res.post, req.user._id, req.user.saved_posts);
 
     res.status(200).json(res.post);
 }
@@ -73,7 +73,7 @@ const getOwnPosts = async (req, res) => {
             })
             .lean();
 
-        posts = checkPostAttributesAll(posts, req.user._id);
+        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
         
         res.status(200).json(posts);
     }
@@ -93,7 +93,7 @@ const getUserPost = async (req, res) => {
                 select: 'username profile_pic_link'
             })
             .lean();
-        posts = checkPostAttributesAll(posts, req.user._id);
+        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
         
         res.status(200).json(posts);
     }
@@ -179,8 +179,28 @@ const getPopularPosts = async (req, res) => {
 
           var posts = await Post.aggregate(agg);
           
-          posts = checkPostAttributesAll(posts, req.user._id);
+          posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
           res.status(200).json(posts);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// get posts saved by the user
+const getSavedPosts = async (req, res) => {
+    try {
+        var posts = await Post
+            .find({ _id: { $in: req.user.saved_posts } })
+            .populate({ 
+                path: 'creator_id',
+                select: 'username profile_pic_link'
+            })
+            .lean();
+
+        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
+        
+        res.status(200).json(posts);
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -193,5 +213,6 @@ module.exports = {
     getOnePost,
     getOwnPosts,
     getUserPost,
-    getPopularPosts
+    getPopularPosts,
+    getSavedPosts
 }

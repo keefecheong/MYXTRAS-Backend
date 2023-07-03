@@ -4,6 +4,7 @@ const Forum = require('../../models/forum.js');
 
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
+const mongoose = require('mongoose');
 
 // create a new forum
 const createForum = async (req, res) => {
@@ -45,14 +46,13 @@ const createForum = async (req, res) => {
             tags: tags
         });
 
-        await newForum.save();
+        const id = new mongoose.Types.ObjectID();
 
         // upload images
         const imageLinks = [];
-        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, newForum._id, 'forum');
+        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, _id, 'forum');
 
         if (!forumPicUploadSuccessful) {
-            await Forum.findByIdAndDelete(newForum._id);
             return res.status(500).json({ message: 'Internal server error' });
         }
         

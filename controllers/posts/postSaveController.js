@@ -3,6 +3,7 @@
 const Post = require('../../models/post.js');
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
+const mongoose = require('mongoose');
 
 // create a post
 const createPost = async (req, res) => {
@@ -39,15 +40,14 @@ const createPost = async (req, res) => {
     }
 
     try {
-        // save post to make post_id available
-        await post.save();
+        // create new ObjectID
+        const id = new mongoose.Types.ObjectId();
         
         // upload images and store the links in content_links of the new post
-        const uploadSuccessful = await uploadImages(req.files, post.content_links, post.id, 'post');
+        const uploadSuccessful = await uploadImages(req.files, post.content_links, id, 'post');
 
-        // if failed to upload images then delete the post from database and return error message
+        // if failed to upload images then return error message
         if (!uploadSuccessful) {
-            await Post.findByIdAndDelete(post.id);
             return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
         }
 
@@ -117,6 +117,9 @@ const updatePost = async (req, res) => {
             res.post.content_links = newImageLinks;
             res.post.original_names = req.files.map(image => image.originalname);
         }
+
+        // update last modified time
+        res.post.last_modified_time = Date.now();
         
         await res.post.save();
 

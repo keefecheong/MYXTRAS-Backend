@@ -4,6 +4,7 @@ const Thread = require('../../models/thread.js');
 
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
+const mongoose = require('mongoose');
 
 // create new thread
 const createThread = async (req, res) => {
@@ -26,17 +27,16 @@ const createThread = async (req, res) => {
             tags: tags
         });
 
-        await newThread.save();
+        const id = new mongoose.Types.ObjectID();
 
         // save images if provided
         if (req.files.length > 0) {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, newThread._id, 'thread', req.params.forumID);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, id, 'thread', req.params.forumID);
         
             // if upload not successful then delete the new thread
             if (!threadPicUploadSuccessful) {
-                await Thread.findByIdAndDelete(newThread._id);
                 return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
             }
 
