@@ -3,7 +3,8 @@
 const express = require('express');
 const commentRouter = express.Router();
 
-const { getThread } = require('../../middleware/forums/getThreadMiddleware.js')
+const { getComment } = require('../../middleware/forums/getCommentMiddleware.js')
+
 
 const { getThreadComments, createComment, deleteComment } = require('../../controllers/forums/threadCommentController.js');
 
@@ -14,6 +15,6 @@ commentRouter.get('/', getThreadComments);
 commentRouter.post('/', express.json(), createComment);
 
 //delete comment
-commentRouter.delete('/:commentId', deleteComment)
+commentRouter.delete('/:commentId', getComment, deleteComment)
 
 module.exports = commentRouter;
