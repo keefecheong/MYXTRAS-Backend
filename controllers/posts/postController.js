@@ -4,107 +4,86 @@ const Post = require('../../models/post.js');
 const User = require('../../models/user.js');
 const { checkPostAttributes, checkPostAttributesAll } = require('../../utils/posts/checkAttributes.js');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // retrieve all posts
-const getAllPosts = async (req, res) => {
+async function getAllPosts(req, res) {
     try {
-        // populate post data to get creator's username and profile pic link
-        var posts = await Post
-            .find()
-            .populate({ 
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            })
-            .lean();
+        const posts = await retrievePosts(null, null, req.user._id, req.user.saved_posts);
 
-        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
-
-        res.status(200).json(posts);
+        returnGoodReq(res, posts);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
 // retrieve user's own posts and posts by users followed
-const getFollowingPosts = async (req, res) => {
+async function getFollowingPosts(req, res){
     try {
         // get users that the requesting user follows
-        const followingUsers = await User.find({ followers: { $in: req.user._id } }).select('_id').lean();
+        const followingUsers = await User.find({
+            followers: { $in: req.user._id }
+        }, {
+            '_id': 1
+        }).lean();
 
         // add user ids into an array
         var userIds = followingUsers.map(user => user._id);
         userIds.push(req.user._id);
 
-        // populate post data to get creator's username and profile pic link
-        var posts = await Post
-            .find({ creator_id: { $in: userIds } })
-            .populate({ 
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            })
-            .sort({ creation_time: -1 })
-            .lean();
+        const posts = await retrievePosts({
+            creator_id: { $in: userIds }
+        }, {
+            creation_time: -1
+        }, req.user._id, req.user.saved_posts);
 
-        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
-        
-        res.status(200).json(posts);
+        returnGoodReq(res, posts);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
 // retrieve one post by requested id
-const getOnePost = async (req, res) => {
-    res.post = checkPostAttributes(res.post, req.user._id, req.user.saved_posts);
+async function getOnePost(req, res) {
+    const post = checkPostAttributes(res.post.toObject(), req.user._id, req.user.saved_posts);
 
-    res.status(200).json(res.post);
+    returnGoodReq(res, post);
 }
 
 // retrieve user's own posts
-const getOwnPosts = async (req, res) => {
+async function getOwnPosts(req, res) {
     try {
-        // populate post data to get creator's username and profile pic link
-        var posts = await Post
-            .find({ creator_id: req.user._id })
-            .populate({ 
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            })
-            .lean();
+        const posts = await retrievePosts({
+            creator_id: req.user._id
+        }, null, req.user._id, req.user.saved_posts);
 
-        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
-        
-        res.status(200).json(posts);
+        returnGoodReq(res, posts);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
 // retrieve another user's own posts based on userid
-const getUserPost = async (req, res) => {
+async function getUserPost(req, res) {
     try {
-        // populate post data to get creator's username and profile pic link
-        var posts = await Post
-            .find({ creator_id: req.params.userId })
-            .populate({ 
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            })
-            .lean();
-        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
-        
-        res.status(200).json(posts);
+        const posts = await retrievePosts({
+            creator_id: req.params.userId
+        }, null, req.user._id, req.user.saved_posts);
+
+        returnGoodReq(res, posts);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
 // get popular posts for 'explore'
 // based on like/comment count and does not include requesting user's posts
-const getPopularPosts = async (req, res) => {
+async function getPopularPosts(req, res) {
     try {
         // aggregation pipeline
         // first filter to only posts not created by the current user
@@ -112,14 +91,15 @@ const getPopularPosts = async (req, res) => {
         // calculate 'activity' based on sum of likes and comments
         // sorts posts based on descending relevance and activity count
         // populate and format creator's username and profile_pic_link fields
+        // set isOwner, liked, and saved values
         // removes unneeded fields before returning result
         const agg = [
             {
-              '$match': {
-                'creator_id': {
-                  '$ne': req.user._id
+                '$match': {
+                    'creator_id': {
+                        '$ne': req.user._id
+                    }
                 }
-              }
             }, {
                 '$addFields': {
                     'relevance': {
@@ -128,10 +108,7 @@ const getPopularPosts = async (req, res) => {
                                 '$tags', req.user.interests
                             ]
                         }
-                    }
-                }
-            }, {
-                '$addFields': {
+                    },
                     'activity': {
                         '$add': [
                             {
@@ -142,68 +119,80 @@ const getPopularPosts = async (req, res) => {
                 }
             }, {
                 '$sort': {
-                    'relevance': -1, 
+                    'relevance': -1,
                     'activity': -1
                 }
             }, {
-              '$lookup': {
-                'from': 'users', 
-                'localField': 'creator_id', 
-                'foreignField': '_id', 
-                'as': 'user'
-              }
-            }, {
-              '$addFields': {
-                'creator_id._id': {
-                  '$arrayElemAt': [
-                    '$user._id', 0
-                  ]
-                }, 
-                'creator_id.username': {
-                  '$arrayElemAt': [
-                    '$user.username', 0
-                  ]
-                }, 
-                'creator_id.profile_pic_link': {
-                  '$arrayElemAt': [
-                    '$user.profile_pic_link', 0
-                  ]
+                '$lookup': {
+                    'from': 'users',
+                    'localField': 'creator_id',
+                    'foreignField': '_id',
+                    'as': 'user'
                 }
-              }
             }, {
-              '$unset': [
-                'activity', 'relevance', '__v', 'user'
-              ]
+                '$addFields': {
+                    'creator_id._id': {
+                        '$arrayElemAt': [
+                            '$user._id', 0
+                        ]
+                    },
+                    'creator_id.username': {
+                        '$arrayElemAt': [
+                            '$user.username', 0
+                        ]
+                    },
+                    'creator_id.profile_pic_link': {
+                        '$arrayElemAt': [
+                            '$user.profile_pic_link', 0
+                        ]
+                    }
+                }
+            }, {
+                '$unset': [
+                    'activity', 'relevance', '__v', 'user'
+                ]
+            }, {
+                '$addFields': {
+                    // set fields
+                    'isOwner': {
+                        '$eq': [
+                            '$creator_id._id', req.user._id
+                        ]
+                    },
+                    'liked': {
+                        '$in': [
+                            req.user._id, '$likes'
+                        ]
+                    },
+                    'saved': {
+                        '$in': [
+                            '$_id', req.user.saved_posts
+                        ]
+                    }
+                }
             }
-          ];
+        ];
 
-          var posts = await Post.aggregate(agg);
-          
-          posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
-          res.status(200).json(posts);
+        var posts = await Post.aggregate(agg);
+
+        returnGoodReq(res, posts);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
 // get posts saved by the user
-const getSavedPosts = async (req, res) => {
+async function getSavedPosts(req, res) {
     try {
-        var posts = await Post
-            .find({ _id: { $in: req.user.saved_posts } })
-            .populate({ 
-                path: 'creator_id',
-                select: 'username profile_pic_link'
-            })
-            .lean();
+        const posts = await retrievePosts({
+            _id: { $in: req.user.saved_posts }
+        }, null, req.user._id, req.user.saved_posts);
 
-        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
-        
-        res.status(200).json(posts);
+        returnGoodReq(res, posts);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
@@ -215,4 +204,15 @@ module.exports = {
     getUserPost,
     getPopularPosts,
     getSavedPosts
+}
+
+// common function to get posts by specified filter and sort criteria and return after setting various fields
+async function retrievePosts(filter, sort, userId, savedPosts) {
+    const posts = await Post
+        .find(filter)
+        .sort(sort)
+        .getCreator()
+        .lean();
+
+    return checkPostAttributesAll(posts, userId, savedPosts);
 }

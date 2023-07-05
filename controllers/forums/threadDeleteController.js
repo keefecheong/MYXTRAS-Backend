@@ -2,20 +2,26 @@
 
 const Thread = require('../../models/thread.js');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
-const deleteThread = async (req, res) => {
-    if (!req.user._id.equals(res.thread.creator_id.id)){
-      return res.status(401).json({message: 'Unauthorized.'});
+// to delete a thread
+async function deleteThread(req, res) {
+    // check if requesting user is the creator of the thread
+    // if the requesting user is not the creator then return 401 error
+    if (!req.user._id.equals(res.thread.creator_id._id)) {
+        returnUnauthorizedReq(res);
     }
-  
-    try{
+
+    try {
         await Thread.findByIdAndDelete(req.params.threadID);
-        res.status(200).json({ message: 'Thread removed.' });
+        returnGoodReq(res, { message: 'Thread removed.' });
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
-  }
+}
 
 module.exports = {
     deleteThread

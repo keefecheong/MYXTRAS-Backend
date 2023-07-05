@@ -59,6 +59,14 @@ const messageSchema = new mongoose.Schema({
     }
 });
 
+// custom query to get details of reply_message
+messageSchema.query.getReplyMessage = function() {
+    return this.populate({
+        path: 'reply_message',
+        select: '-creation_time -last_modified_time -reply_message -chat_id -__v'
+    });
+}
+
 // automatically update parent chat's last_message_timestamp for new messages
 messageSchema.post('save', async function(doc, next) {
     if (!doc.isNew) {

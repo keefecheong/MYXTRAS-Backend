@@ -4,12 +4,15 @@ const User = require('../../models/user.js');
 const { setJWT } = require('../../utils/users/setJWT.js');
 const bcrypt = require('bcryptjs');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // login user
-const loginUser = async (req, res) => {
+async function loginUser(req, res) {
     // return 400 error if no data is sent
     if (!req.body) {
-        res.status(400).json({ error: 'Invalid request body' });
-        return;
+        return returnBadReq(res, 'Invalid request body');
     }
     
     const { emailAddress, password } = req.body;
@@ -20,22 +23,22 @@ const loginUser = async (req, res) => {
         
         // User not found
         if (!user) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return returnBadReq(res, 'Invalid email or password');
         }
         
         // Check if the password is correct
         if (!bcrypt.compareSync(password, user.password)){
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return returnBadReq(res, 'Invalid email or password');
         }
     
         // sign jwt and return as cookie
         setJWT(user._id, res);
 
         // Authentication successful
-        res.status(200).json({ message: 'Login successful', is_profile_setup: user.is_profile_setup });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        returnGoodReq(res, { message: 'Login successful', is_profile_setup: user.is_profile_setup });
+    }
+    catch (error) {
+        returnServerErrorReq(res);
     }
 }
 

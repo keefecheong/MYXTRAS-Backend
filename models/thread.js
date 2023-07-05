@@ -50,6 +50,22 @@ const threadSchema = new mongoose.Schema({
     }
 });
 
+// custom query to get parent forum details
+threadSchema.query.getForum = function() {
+    return this.populate({
+        path: 'parent_id',
+        select: 'forum_name forum_id forum_pic_link'
+    });
+}
+
+// custom query to get creator details
+threadSchema.query.getCreator = function() {
+    return this.populate({ 
+        path: 'creator_id',
+        select: 'username profile_pic_link'
+    });
+}
+
 // automatically clean comments associated with the thread on delete
 threadSchema.post('findOneAndDelete', function(doc, next) {
     try {

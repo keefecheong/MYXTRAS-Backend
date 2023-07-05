@@ -44,13 +44,13 @@ app.use('/api/posts', postsRouter);
 const usersRouter = require('./routes/users/mainRouter.js');
 app.use('/api/users', usersRouter);
 
-const schoolRouter = require('./routes/schools.js');
+const schoolRouter = require('./routes/schools/mainRouter.js');
 app.use('/api/schools', schoolRouter);
 
 const forumRouter = require('./routes/forums/mainRouter.js');
 app.use('/api/forums', forumRouter);
 
-const searchRouter = require('./routes/searchRouter.js');
+const searchRouter = require('./routes/search/mainRouter.js');
 app.use('/api/search', searchRouter);
 
 const chatRouter = require('./routes/chats/mainRouter.js');

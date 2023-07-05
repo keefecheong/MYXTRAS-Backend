@@ -6,17 +6,22 @@ const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js')
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 const mongoose = require('mongoose');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // create a new forum
-const createForum = async (req, res) => {
+async function createForum(req, res) {
     // check if images and text fields are provided in the body
     // if provided, continue to create post
     // otherwise return 400 error
     if (req.files.length <= 0) {
-        return req.status(400).json({ error: 'Forum pictures are required' });
+        return returnBadReq(res, 'Forum pictures are required');
     }
 
     if (!req.body) {
-        return res.status(400).json({ error: 'Invalid request body' });
+        return returnBadReq(res, 'Invalid request body');
     }
 
     try {
@@ -26,21 +31,25 @@ const createForum = async (req, res) => {
         const existingForum = await Forum.find({ forum_id: forum_id });
         
         if (!existingForum){
-            return res.status(400).json({ error: 'ForumID already exists' });
+            return returnBadReq(res, 'ForumID already exists');
         }
-        // length validation
+
+        // field length validation
         if (forum_id.length > 25){
-            return res.status(400).json({error: 'Forum ID is too long'})
+            return returnBadReq(res, 'Forum ID is too long');
         }
+
         if (forum_name.length > 50){
-            return res.status(400).json({error: 'Forum Name is too long'})
+            return returnBadReq(res, 'Forum Name is too long');
         }
+
         if (forum_desc.length > 250){
-            return res.status(400).json({error: 'Forum Name is too long'})
+            return returnBadReq(res, 'Forum Name is too long');
         }
 
         const id = new mongoose.Types.ObjectId();
 
+        // create new forum
         const newForum = new Forum({
             _id: id,
             creator_id: req.user._id,
@@ -54,8 +63,9 @@ const createForum = async (req, res) => {
         const imageLinks = [];
         const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, id, 'forum');
 
+        // if unsuccessful return internal server error
         if (!forumPicUploadSuccessful) {
-            return res.status(500).json({ message: 'Internal server error' });
+            return returnServerErrorReq(res);
         }
         
         // update forum image links
@@ -64,33 +74,33 @@ const createForum = async (req, res) => {
 
         await newForum.save();
 
-        return res.status(201).json({ forum_id: newForum._id });
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+        returnGoodReq(res, { forum_id: id });
+    }
+    catch (error) {
+        returnServerErrorReq(res);
     }
 }
 
 // edit existing forum
-const updateForum = async (req, res) => {
+async function updateForum(req, res) {
     // check if text fields are provided in the body
     // if provided, continue to create post
     // otherwise return 400 error
     if (!req.body) {
-        return res.status(400).json({ error: 'Invalid request body' });
+        return returnBadReq(res, 'Invalid request body');
     }
 
     // check if images are provided if 'pictureUnchanged' and 'bannerUnchanged' are not set to 'true'
     // if provided, continue to update forum
     // otherwise return 400 error
     if (req.files.length <= 0 && req.body.pictureUnchanged != 'true' && req.body.bannerUnchanged != 'true') {
-        return res.status(400).json({ message: 'Forum picture and banner are required.' });   
+        return returnBadReq(res, 'Forum picture and banner are required.');
     }
 
     // check if the creator of the forum is the requesting user
     // if creator is not the requesting user return 401 error
     if (!req.user._id.equals(res.forum.creator_id._id)) {
-        return res.status(401).json({ message: 'Unauthorized.' });
+        return returnUnauthorizedReq(res);
     }
     
     try {
@@ -98,8 +108,9 @@ const updateForum = async (req, res) => {
         const { forum_name, forum_id, forum_desc, tags } = JSON.parse(req.body.forumObject);
 
         if (forum_name.length > 25 || forum_id.length > 25 || forum_desc.length > 100) {
-            return res.status(400).json({ error: 'Input for a field is too long' });
+            return returnBadReq(res, 'Input length too long');
         }
+
         res.forum.forum_name = forum_name;
         res.forum.forum_id = forum_id;
         res.forum.forum_desc = forum_desc;
@@ -115,7 +126,7 @@ const updateForum = async (req, res) => {
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {
-                return res.status(500).json({ message: 'Failed to update forum, please try again later.' });
+                return returnServerErrorReq(res);
             }
     
             // otherwise delete old picture and update forum_pic_link
@@ -134,7 +145,7 @@ const updateForum = async (req, res) => {
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {
-                return res.status(500).json({ message: 'Failed to update forum, please try again later.' });
+                return returnServerErrorReq(res);
             }
     
             // otherwise delete old picture and update banner_link
@@ -145,10 +156,9 @@ const updateForum = async (req, res) => {
 
         await res.forum.save();
 
-        res.status(201).end();
-
+        returnGoodReq(res);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 

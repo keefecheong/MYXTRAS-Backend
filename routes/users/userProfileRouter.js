@@ -9,7 +9,8 @@ const { multerConfig, multerErrorHandler } = require('../../middleware/posts/mul
 
 
 // get controller functions
-const { getUser, updateUser, setupUser, getRequestedUser, getAllUsers } = require('../../controllers/users/userProfileController.js');
+const { getUser, getRequestedUser } = require('../../controllers/users/userProfileController.js');
+const { updateUser, setupUser } = require('../../controllers/users/userSaveController.js');
 
 // get current user from cookie
 profileRouter.get('/', getUser);
@@ -19,9 +20,6 @@ profileRouter.patch('/', multerConfig.array('selectedImages'), multerErrorHandle
 
 // initial user info setup
 profileRouter.patch('/setup', express.json(), setupUser);
-
-// get all users except for self
-profileRouter.get('/all', getAllUsers);
 
 // get requested user
 profileRouter.get('/:userId', getRequestedUser);

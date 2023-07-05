@@ -2,19 +2,25 @@
 
 const Forum = require('../../models/forum.js');
 
+const returnNotFoundReq = require('../../utils/general/returnNotFoundReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // find post by _id
-const getForum = async (req, res, next) => {
+async function getForum(req, res, next) {
     let target;
+
     try {
         // populate forum data to get creator's username and profile pic link
-        target = await Forum.findById(req.params.forumID).populate({ path: 'creator_id', select: 'username profile_pic_link'});
+        target = await Forum.findById(req.params.forumID).getCreator();
+        
         if (!target) {
-            return res.status(404).json({ message: 'Unable to find the specified Forum.' });
+            return returnNotFoundReq(res);
         }
     }
     catch (error) {
-        return res.status(500).json({ message: error.message });
+        return returnServerErrorReq(res);
     }
+
     res.forum = target;
     next();
 }

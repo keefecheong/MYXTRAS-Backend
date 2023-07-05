@@ -2,57 +2,76 @@
 
 const User = require('../../models/user.js');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // check if email exists
-const verifyEmail = async (req, res) => {
+async function verifyEmail(req, res) {
     const email = req.body.email;
 
     if (!email) {
-        return res.status(400).json({ error: 'Invalid request body.' });
+        return returnBadReq(res, 'Invalid request body.');
     }
     
-    const existingEmail = await User.findOne({ email: email });
-
-    if (existingEmail) {
-        res.status(400).json({ error: 'Email already exists' });
+    try {
+        const existingEmail = await User.findOne({ email: email });
+    
+        if (existingEmail) {
+            returnBadReq(res, 'Email already exists');
+        }
+        else {
+            returnGoodReq(res);
+        }
     }
-    else {
-        res.status(200).end();
+    catch (error) {
+        returnServerErrorReq(res);
     }
 }
 
 // check if phone number exists
-const verifyPhoneNum = async (req, res) => {
+async function verifyPhoneNum(req, res) {
     const phoneNumber = req.body.phoneNumber;
 
     if (!phoneNumber) {
-        return res.status(400).json({ error: 'Invalid request body.' });
+        return returnBadReq(res, 'Invalid request body.');
     }
 
-    const existingPhone = await User.findOne({ phone_number: phoneNumber });
+    try {
+        const existingPhone = await User.findOne({ phone_number: phoneNumber });
 
-    if (existingPhone) {
-        res.status(400).json({ error: 'Phone Number already exists' });
+        if (existingPhone) {
+            returnBadReq(res, 'Phone number already exists');
+        }
+        else {
+            returnGoodReq(res);
+        }
     }
-    else {
-        res.status(200).end();
+    catch (error) {
+        returnServerErrorReq(res);
     }
 }
 
 // check if phone number exists
-const verifyUsername = async (req, res) => {
+async function verifyUsername(req, res) {
     const username = req.body.username;
 
     if (!username) {
-        return res.status(400).json({ error: 'Invalid request body.' });
+        return returnBadReq(res, 'Invalid request body.');
     }
-
-    const existingUsername = await User.findOne({ username: username });
-
-    if (existingUsername) {
-        res.status(400).json({ error: 'Username already exists' });
+    
+    try {
+        const existingUsername = await User.findOne({ username: username });
+    
+        if (existingUsername) {
+            returnBadReq(res, 'Username already exists');
+        }
+        else {
+            returnGoodReq(res);
+        }
     }
-    else {
-        res.status(200).end();
+    catch (error) {
+        returnServerErrorReq(res);
     }
 }
 

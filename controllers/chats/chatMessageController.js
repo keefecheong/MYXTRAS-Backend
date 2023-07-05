@@ -1,26 +1,23 @@
+// controller functions to get chat messages
+
 const Chat = require('../../models/chat.js');
 const Message = require('../../models/message.js');
+
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
 // get stored messages for the specifically requested chat
 async function getChatMessages(req, res) {
     try {
         // get <count> messages associated with the requested chat
-        const messages = await Message
-            .find({ chat_id: res.chat._id })
-            .sort({ creation_time: -1 })
-            .limit(req.params.count)
-            .populate({
-                path: 'reply_message',
-                select: '-creation_time -last_modified_time -reply_message -chat_id'
-            })
-            .lean();
-    
-        const result = formatMessages(messages, req.user._id).reverse();
-    
-        res.status(200).json({ messages: result });
+        const messages = await retrieveMessages({
+            chat_id: res.chat._id
+        }, req.params.count, req.user._id);
+
+        returnGoodReq(res, messages);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
@@ -29,33 +26,26 @@ async function getLatestMessages(req, res) {
     try {
         // get id of top 5 latest used chats (based on last_message_timestamp) that the requesting user is a member of
         const latestChats = await Chat
-            .find({ users: req.user._id })
+            .find({ users: req.user._id }, { '_id': 1 })
             .sort({ last_message_timestamp: -1 })
-            .limit(5)
-            .select('_id');
+            .limit(5);
 
         const result = {};
 
         // get latest 50 messages for each of the top 5 latest used chats
         for (let i = 0; i < latestChats.length; i++) {
-            const messages = await Message
-                .find({ chat_id: latestChats[i]._id })
-                .sort({ creation_time: -1 })
-                .limit(50)
-                .populate({
-                    path: 'reply_message',
-                    select: '-creation_time -last_modified_time -reply_message -chat_id'
-                })
-                .lean();
+            const messages = await retrieveMessages({
+                chat_id: latestChats[i]._id
+            }, 50, req.user._id);
             
             // format the messages and add to result in ascending creation_time
-            result[latestChats[i]._id] = formatMessages(messages, req.user._id).reverse();
+            result[latestChats[i]._id] = messages;
         }
 
-        res.status(200).json({ data: result });
+        returnGoodReq(res, { data: result });
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
@@ -66,23 +56,24 @@ async function getPreviousMessages(req, res) {
         const decodedTimestamp = decodeURIComponent(req.params.oldestMessageTime);
 
         // get <count> more messages before the message with the creation_time of <oldestMessageTime> from the specified chat
-        const messages = await Message
-            .find({ chat_id: res.chat._id, creation_time: { $lt: new Date(decodedTimestamp) }})
-            .sort({ creation_time: -1 })
-            .limit(req.params.count)
-            .populate({
-                path: 'reply_message',
-                select: '-creation_time -last_modified_time -reply_message -chat_id'
-            })
-            .lean();
+        const messages = await retrieveMessages({
+            chat_id: res.chat._id,
+            creation_time: {
+                $lt: new Date(decodedTimestamp)
+            }
+        }, req.params.count, req.user._id);
 
-        const result = formatMessages(messages, req.user._id).reverse();
-
-        res.status(200).json({ messages: result });
+        returnGoodReq(res, messages);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
+}
+
+module.exports = {
+    getChatMessages,
+    getLatestMessages,
+    getPreviousMessages
 }
 
 // format an array of messages to frontend usage format
@@ -115,8 +106,14 @@ function formatMessages(messages, userId) {
     return result;
 }
 
-module.exports = {
-    getChatMessages,
-    getLatestMessages,
-    getPreviousMessages
+// common function to get messages with given filter and limit, format messages and return in chronological order
+async function retrieveMessages(filter, limit, userId) {
+    const messages = await Message
+        .find(filter)
+        .sort({ creation_time: -1 })
+        .limit(limit)
+        .getReplyMessage()
+        .lean();
+
+    return formatMessages(messages, userId).reverse();
 }

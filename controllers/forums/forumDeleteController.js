@@ -2,20 +2,24 @@
 
 const Forum = require('../../models/forum.js');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
-const deleteForum = async (req, res) => {
-    if (!req.user._id.equals(res.forum.creator_id.id)){
-      return res.status(401).json({message: 'Unauthorized.'});
+// to delete a forum
+async function deleteForum(req, res) {
+    if (!req.user._id.equals(res.forum.creator_id._id)) {
+        return returnUnauthorizedReq(res);
     }
-  
-    try{
+
+    try {
         await Forum.findByIdAndDelete(req.params.forumID);
-        res.status(200).json({ message: 'Thread removed.' });
+        returnGoodReq(res, { message: 'Thread removed.' });
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
-  }
+}
 
 module.exports = {
     deleteForum

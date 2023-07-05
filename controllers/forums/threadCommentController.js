@@ -3,34 +3,36 @@
 const Comment = require('../../models/comment.js');
 const { checkCommentAttributes, checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // get all comments for a thread
-const getThreadComments = async (req, res) => {
+async function getThreadComments(req, res) {
     try {
         var threadComments = await Comment
             .find({ parent_id: res.thread._id })
-            .populate({
-                path: 'creator_id',
-                select: 'username profile_pic_link real_name'
-            })
+            .getCreator()
             .select('creator_id creation_time content')
             .lean();
 
         threadComments = checkCommentAttributesAll(threadComments, req.user._id);
 
-        res.status(200).json(threadComments);
+        returnGoodReq(threadComments);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
 // add comment to thread
-const createComment = async (req, res) => {
+async function createComment(req, res) {
     // check if comment content is provided
     // if provided, continue to create comment
     // otherwise return 400 error
     if (!req.body.content) {
-        return res.status(400).json({ message: 'Comment content is required.' });
+        return returnBadReq(res, 'Comment content is required.');
     }
 
     const comment = new Comment({
@@ -47,36 +49,33 @@ const createComment = async (req, res) => {
         // return the new comment data to update dom
         var newComment = await Comment
             .findById(comment._id)
-            .populate({
-                path: 'creator_id',
-                select: 'username profile_pic_link real_name'
-            })
+            .getCreator()
             .select('creator_id creation_time content')
             .lean();
 
         newComment = checkCommentAttributes(newComment, req.user._id);
 
-        res.status(200).json({ message: 'Comment created.', comment: newComment });
+        returnGoodReq(res, { message: 'Comment created.', comment: newComment });
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
-
 }
 
 // delete comment
-const deleteComment = async (req, res) => {
-
-    if (!req.user._id.equals(res.comment.creator_id.id)){
-        return res.status(401).json({message: 'Unauthorized.'});
+async function deleteComment(req, res) {
+    // check if requesting user is the creator of the comment
+    // if the requesting user is not the creator then return 401 error
+    if (!req.user._id.equals(res.comment.creator_id._id)){
+        return returnUnauthorizedReq(res);
     }
 
     try{
         await Comment.findByIdAndDelete(req.params.commentId);
-        res.status(200).json({ message: 'Comment removed.' });
+        returnGoodReq(res, { message: 'Comment removed.' });
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 

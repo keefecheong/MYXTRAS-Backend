@@ -149,7 +149,7 @@ Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTd
 
 ###
 
-GET http://127.0.0.1:8081/api/posts/saved
+GET http://127.0.0.1:8081/api/forums/thread/
 Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTdiYjU2Y2M3Y2JhZDcwZDI5NiIsImlhdCI6MTY4ODMwMzA4M30.rcyArXN-8vH28iiqDhu5UVce0Cf-JDrkyBg4TrfFle0
 
 ###

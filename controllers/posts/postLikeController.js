@@ -1,14 +1,19 @@
 // controller functions to handle actions for likes under posts
 
+const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
+const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // to add a like under the requested post
-const postLike = async (req, res) => {
+async function postLike(req, res) {
     // check if the specified post is liked by the user
     const likeExists = res.post.likes.find(creator_id => creator_id == req.user._id);
     
     // if the user has not liked the post, continue to add the like
     // otherwise, return 400 error
     if (likeExists) {
-        return res.status(400).json({ message: 'You have already liked this post.' });
+        return returnBadReq(res, 'You have already liked this post.');
     }
 
     // update post's likes list
@@ -16,22 +21,22 @@ const postLike = async (req, res) => {
 
     try {
         await res.post.save();
-        res.status(201).end();
+        returnCreatedReq(res);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
 // to remove a like under the requested post
-const deleteLike = async (req, res) => {
+async function deleteLike(req, res) {
     // check if the specified post is liked by the user
     const likeIndex = res.post.likes.indexOf(req.user._id);
     
     // if the user has liked the post, continue to remove the like
     // otherwise, return 400 error
     if (likeIndex == -1) {
-        return res.status(400).json({ message: 'You have not liked this post.' });
+        return returnBadReq(res, 'You have not liked this post.');
     }
 
     // remove user id from post's likes list
@@ -39,10 +44,10 @@ const deleteLike = async (req, res) => {
 
     try {
         await res.post.save();
-        res.status(204).end();
+        returnNoContentReq(res);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 

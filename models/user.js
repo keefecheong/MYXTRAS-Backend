@@ -81,4 +81,12 @@ const userSchema = new mongoose.Schema({
     }
 });
 
+// custom query to get follower details
+userSchema.query.getFollowers = function() {
+    return this.populate({
+        path: 'followers',
+        select: 'username profile_pic_link'
+    });
+}
+
 module.exports = mongoose.model('User', userSchema);

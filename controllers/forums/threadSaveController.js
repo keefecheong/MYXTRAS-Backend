@@ -6,12 +6,18 @@ const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js')
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 const mongoose = require('mongoose');
 
+const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
+const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // create new thread
-const createThread = async (req, res) => {
+async function createThread(req, res) {
     // check if request body is empty
     // if request body is empty return 400 error, otherwise continue to create thread
     if (!req.body) {
-        return res.status(400).json({ error: 'Invalid request body' });
+        return returnBadReq(res, 'Invalid request body');
     }
 
     try {
@@ -21,6 +27,7 @@ const createThread = async (req, res) => {
 
         const id = new mongoose.Types.ObjectId();
 
+        // create new thread
         const newThread = new Thread({
             _id: id,
             parent_id: req.params.forumID,
@@ -38,7 +45,7 @@ const createThread = async (req, res) => {
         
             // if upload not successful then delete the new thread
             if (!threadPicUploadSuccessful) {
-                return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+                return returnServerErrorReq(res);
             }
 
             newThread.content_link = newImageLinks[0];
@@ -46,32 +53,32 @@ const createThread = async (req, res) => {
         
         await newThread.save();
 
-        res.status(201).end();
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+        returnCreatedReq(res);
+    }
+    catch (error) {
+        returnServerErrorReq(res);
     }
 }
 
 // update thread
-const updateThread = async (req, res) => {
+async function updateThread(req, res) {
     // check if request body is empty
     // if request body is empty return 400 error, otherwise continue to update thread
     if (!req.body) {
-        return res.status(400).json({ error: 'Invalid request body' });
+        return returnBadReq(res, 'Invalid request body');
     }
 
     // check if images are provided if 'pictureUnchanged' is not set to 'true'
     // if provided, continue to update thread
     // otherwise return 400 error
     if (req.files.length <= 0 && req.body.pictureUnchanged != 'true') {
-        return res.status(400).json({ error: 'An image is required.' });
+        return returnBadReq(res, 'An image is required.');
     }
 
     // check if the creator of the thread is the requesting user
     // if creator is not the requesting user then return 401 error
     if (!req.user._id.equals(res.thread.creator_id._id)) {
-        return res.status(401).json({ message: 'Unauthorized.' });
+        return returnUnauthorizedReq(res);
     }
 
     try {
@@ -87,11 +94,11 @@ const updateThread = async (req, res) => {
         if (req.body.pictureUnchanged != 'true') {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, res.thread.id, 'thread', res.thread.parent_id);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, res.thread._id, 'thread', res.thread.parent_id);
         
             // if upload not successful then return 500 error
             if (!threadPicUploadSuccessful) {
-                return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+                return returnServerErrorReq(res);
             }
 
             // otherwise delete old image and set new image link
@@ -102,10 +109,10 @@ const updateThread = async (req, res) => {
 
         await res.thread.save();
 
-        res.status(204).end();
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+        returnNoContentReq(res);
+    }
+    catch (error) {
+        returnServerErrorReq(res);
     }
 }
 

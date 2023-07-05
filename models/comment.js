@@ -29,6 +29,14 @@ const commentSchema = new mongoose.Schema({
     }
 });
 
+// custom query to get creator details
+commentSchema.query.getCreator = function() {
+    return this.populate({
+        path: 'creator_id',
+        select: 'username profile_pic_link real_name'
+    })
+}
+
 // automatically increment parent object's comment_count by 1 on save
 commentSchema.pre('save', async function(next) {
     if (!this.isNew) {

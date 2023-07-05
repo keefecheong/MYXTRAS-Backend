@@ -2,128 +2,127 @@
 
 const Forum = require('../../models/forum.js');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // verify if forum_id is already in use
-const verifyForumID = async (req, res) => {
-    const existingForum = await Forum.findOne({ forum_id: req.body.forum_id });
+async function verifyForumID(req, res) {
+    const existingForum = await Forum.findOne({ forum_id: req.body.forum_id }, { _id: 1 });
 
     if (existingForum) {
-        return res.status(400).json({ error: 'ForumID already exists' });
+        returnBadReq(res, 'ForumID already exists');
     }
     else {
-        return res.status(200).end()
+        returnGoodReq(res);
     }
 }
 
 // get forum by _id
-const getOneForum = async (req, res) => {
+async function getOneForum(req, res) {
     // copy forum from middleware to object to modify
     const workingForum = res.forum.toObject();
 
-    var isSubscribed = false;
-    var isCreator = false;
-    
     // set fields
-    if (req.user._id.equals(res.forum.creator_id._id)){
-        isCreator = true;
-    }
-    if (res.forum.subscribers.includes(req.user._id)) {
-        isSubscribed = true;
-    }
+    workingForum.isCreator = res.forum.creator_id._id.equals(req.user._id);
+    workingForum.isSubscribed = res.forum.subscribers.includes(req.user._id);
 
-    workingForum.isCreator = isCreator;
-    workingForum.isSubscribed = isSubscribed;
-    res.status(200).json(workingForum);
+    returnGoodReq(res, workingForum);
 }
 
 // get created forums
-const getCreated = async (req, res) => {
+async function getCreated(req, res) {
     try {
-        const forums =  await Forum
-            .find({ creator_id: req.user.id }, { forum_id: 1, forum_name: 1, forum_pic_link: 1 })
-            .select('forum_id forum_name forum_pic_link')
-            .lean();
+        const forums = await retrieveForums({
+            creator_id: req.user._id
+        });
 
-        res.status(200).json(forums);
+        returnGoodReq(res, forums);
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
 // get subscribed forums
-const getSubscribed = async (req, res) => {
-    const subbed_forums = await Forum
-        .find({ subscribers: { $in: [req.user._id] } })
-        .select('forum_name forum_id forum_pic_link')
-        .lean();
-
-    res.status(200).json(subbed_forums);
+async function getSubscribed(req, res) {
+    try {
+        const subbed_forums = await retrieveForums({
+            subscribers: { $in: [req.user._id] }
+        });
+    
+        returnGoodReq(res, subbed_forums);
+    }
+    catch (error) {
+        returnServerErrorReq(res);
+    }
 }
 
 // get 6 recommended forums based on number of subscribers
-const getRecommended = async (req, res) => {
+async function getRecommended(req, res) {
     const recommendedForums = await Forum.aggregate([
         {
-          $addFields: {
-            numOfSubs: { $size: "$subscribers" }
-          }
+            $project: {
+                forum_name: 1,
+                forum_id: 1,
+                forum_pic_link: 1,
+                subscribers_count: { $size: "$subscribers" }
+            }
         },
         {
-          $sort: {
-            numOfSubs: -1
-          }
+            $sort: {
+                subscribers_count: -1
+            }
         },
         {
-          $limit: 6
-        },
-        {
-          $project: {
-            forum_name: 1,
-            forum_id: 1,
-            forum_pic_link: 1,
-            numOfSubs: 1
-          }
-        }
-      ]);
+            $limit: 6
+        }        
+    ]);
 
-    res.status(200).json(recommendedForums);
+    returnGoodReq(res, recommendedForums);
 }
 
 // get categorized forums
-const getCategorized = async (req, res) => {
+async function getCategorized(req, res) {
     const agg = [
         {
             $unwind: "$tags" // Unwind the tags array
-        }, 
+        },
         {
-          $addFields: {
-            subscribers_count: { $size: "$subscribers" }
-          }
-        }, 
+            $addFields: {
+                subscribers_count: { $size: "$subscribers" }
+            }
+        },
         {
-          $sort: { "subscribers_count": -1 } // sort by subscribers_count in descending order
-        }, {
-          $group: {
-              _id: "$tags", // Group by each unique tag
-              forums: { $push: "$$ROOT" }, // Collect the forums with the same tag into an array
-          },
-        }, 
+            $sort: { "subscribers_count": -1 } // sort by subscribers_count in descending order
+        },
         {
-          $project: {
-            _id: 1,
-            forums: { $slice: ["$forums", 6] }, // Limit the forums array to 6 elements
-          },
-        }, 
+            $group: {
+                _id: "$tags", // Group by each unique tag
+                forums: {
+                    $push: {
+                        "_id": "$$ROOT._id",
+                        "forum_name": "$$ROOT.forum_name",
+                        "tags": "$$ROOT.tags",
+                        "banner_link": "$$ROOT.banner_link",
+                        "forum_pic_link": "$$ROOT.forum_pic_link"
+                    }
+                }, // Collect the forums with the same tag into an array
+            },
+        },
         {
-          $sort: { "_id": 1 } // sort interests by alphabet
-        }, 
+            $project: {
+                _id: 1,
+                forums: { $slice: ["$forums", 6] }, // Limit the forums array to 6 elements
+            }
+        },
         {
-          '$unset': [
-            'forums.subscribers', 'forums.subscribers_count', 'forums.forum_desc', 'forums.forum_id', 'forums.creation_time', 'forums.creator_id'
-          ] 
+            $sort: { "_id": 1 } // sort interests by alphabet
         }
     ]
+    
     const sortedForums = await Forum.aggregate(agg);
-    res.status(200).json(sortedForums);
+    
+    returnGoodReq(res, sortedForums);
 }
 
 module.exports = {
@@ -133,4 +132,12 @@ module.exports = {
     getSubscribed,
     getRecommended,
     getCategorized
+}
+
+// common function to retrieve forums based on given filter
+async function retrieveForums(filter) {
+    return await Forum
+        .find(filter)
+        .select('forum_name forum_id forum_pic_link')
+        .lean();
 }

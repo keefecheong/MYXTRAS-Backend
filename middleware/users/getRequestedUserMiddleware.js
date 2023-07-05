@@ -2,19 +2,22 @@
 
 const User = require('../../models/user.js');
 
+const returnNotFoundReq = require('../../utils/general/returnNotFoundReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // find user by id
-const getUser = async (req, res, next) => {
+async function getUser (req, res, next) {
     let target;
 
     try {
         target = await User.findById(req.params.userId);
 
         if (!target) {
-            return res.status(404).json({ message: 'Unable to find the specified user.' });
+            return returnNotFoundReq(res);
         }
     }
     catch (error) {
-        return res.status(500).json({ message: error.message });
+        return returnServerErrorReq(res);
     }
 
     res.user = target;
@@ -22,5 +25,5 @@ const getUser = async (req, res, next) => {
 }
 
 module.exports = {
-    getUser,
+    getUser
 }

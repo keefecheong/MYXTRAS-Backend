@@ -54,6 +54,14 @@ const postSchema = new mongoose.Schema({
     }
 });
 
+// custom query to get creator details
+postSchema.query.getCreator = function() {
+    return this.populate({
+        path: 'creator_id',
+        select: 'username profile_pic_link'
+    });
+}
+
 // automatically clean up files and comments associated with the post on delete
 postSchema.post('findOneAndDelete', async function(doc, next) {
     try {

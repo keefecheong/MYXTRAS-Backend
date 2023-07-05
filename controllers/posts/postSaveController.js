@@ -5,13 +5,18 @@ const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js')
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 const mongoose = require('mongoose');
 
+const returnGoodReq = require('../../utils/general/returnGoodReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // create a post
-const createPost = async (req, res) => {
+async function createPost(req, res) {
     // check if images are provided in the body
     // if provided, continue to create post
     // otherwise return 400 error
     if (req.files.length <= 0) {
-        return res.status(400).json({ message: 'At least one image is required.' });
+        return returnBadReq(res, 'At least one image is required.');
     }
 
     // create new ObjectID
@@ -49,24 +54,25 @@ const createPost = async (req, res) => {
 
         // if failed to upload images then return error message
         if (!uploadSuccessful) {
-            return res.status(500).json({ message: 'Failed to upload images, please try again later.' });
+            return returnServerErrorReq(res);
         }
 
         await post.save();
 
-        res.status(200).json({ message: 'Post created.' });
+        returnGoodReq(res, { message: 'Post created.' });
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
-const updatePost = async (req, res) => {
+// update a post
+async function updatePost(req, res) {
     // check if there is request body provided
     // if no request body is present return 400 error
     // otherwise continue to update post
     if (!req.body) {
-        return res.status(400).json({ message: 'At least one field is required.' });
+        return returnBadReq(res, 'At least one field is required.');
     }
 
     // check if images are provided in the body
@@ -74,13 +80,13 @@ const updatePost = async (req, res) => {
     // otherwise, if 'noFilesChanged' field is provided and set to true, continue to update post
     // otherwise return 400 error
     if (req.files.length <= 0 && req.body.noFilesChanged != 'true') {
-        return res.status(400).json({ message: 'At least one image is required.' });   
+        return returnBadReq(res, 'At least one image is required.'); 
     }
 
     // check if the creator of the post is the requesting user
     // if creator is not the requesting user return 401 error
     if (!req.user._id.equals(res.post.creator_id._id)) {
-        return res.status(401).json({ message: 'Unauthorized.' });
+        return returnUnauthorizedReq(res);
     }
 
     // update fields
@@ -109,7 +115,7 @@ const updatePost = async (req, res) => {
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {
-                return res.status(500).json({ message: 'Failed to update post, please try again later.' });
+                return returnServerErrorReq(res);
             }
     
             // otherwise delete old images, update content_links and save the post
@@ -124,10 +130,10 @@ const updatePost = async (req, res) => {
         
         await res.post.save();
 
-        res.status(200).json({ message: 'Post updated.' });
+        returnGoodReq(res, { message: 'Post updated.' });
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 

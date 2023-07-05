@@ -4,6 +4,9 @@ const User = require('../../models/user.js');
 const jwt = require('jsonwebtoken');
 const cookie = require('cookie');
 
+const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // make sure jwt is valid and user is authenticated
 // for http requests
 async function validateUserHTTP(req, res, next) {
@@ -13,7 +16,7 @@ async function validateUserHTTP(req, res, next) {
 
         // return 401 error if there is no authapi cookie
         if (!token) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            return returnUnauthorizedReq(res);
         }
 
         // Verify and decode the JWT token
@@ -25,7 +28,7 @@ async function validateUserHTTP(req, res, next) {
 
         // return 401 error if user not found
         if (!user) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            return returnUnauthorizedReq(res);
         }
 
         // Attach the user object to the request for further processing
@@ -35,7 +38,7 @@ async function validateUserHTTP(req, res, next) {
     }
     // Handle token verification or database errors
     catch (error) {
-        return res.status(500).json({ message: 'Internal Server Error' });
+        return returnServerErrorReq(res);
     }
 }
 

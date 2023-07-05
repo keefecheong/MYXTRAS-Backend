@@ -1,12 +1,17 @@
 // controller functions to add/remove a post to/from saved_posts
 
+const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
+const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
+const returnBadReq = require('../../utils/general/returnBadReq.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 // to save a post
 async function savePost(req, res) {
     // check if the specified post is saved by the user
     const saveExists = req.user.saved_posts.find(postId => postId == req.params.postId);
 
     if (saveExists) {
-        return res.status(400).json({ message: 'You have already saved this post.' });
+        return returnBadReq(res, 'You have already saved this post.');
     }
 
     // update user's saved_posts list
@@ -14,10 +19,10 @@ async function savePost(req, res) {
 
     try {
         await req.user.save();
-        res.status(201).end();
+        returnCreatedReq(res);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
@@ -29,7 +34,7 @@ async function removeSavedPost(req, res) {
     // if the user has saved the post, continue to remove the post
     // otherwise return 400 error
     if (saveIndex == -1) {
-        return res.status(400).json({ message: 'You have not saved this post' });
+        return returnBadReq(res, 'You have not saved this post');
     }
 
     // remove post id from the user's saved_posts list
@@ -37,10 +42,10 @@ async function removeSavedPost(req, res) {
 
     try {
         await req.user.save();
-        res.status(204).end();
+        returnNoContentReq(res);
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        returnServerErrorReq(res);
     }
 }
 
