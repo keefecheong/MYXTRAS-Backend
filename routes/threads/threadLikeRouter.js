@@ -3,7 +3,7 @@
 const express = require('express');
 const likeRouter = express.Router();
 
-const { addLikeThread, removeLikeThread } = require('../../controllers/forums/threadLikeController');
+const { addLikeThread, removeLikeThread } = require('../../controllers/threads/threadLikeController');
 
 // add a like to thread
 likeRouter.post('/', addLikeThread);

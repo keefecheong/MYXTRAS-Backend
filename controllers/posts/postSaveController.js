@@ -1,9 +1,15 @@
 // controller functions to handle POST and PATCH requests for posts
 
+const mongoose = require('mongoose');
 const Post = require('../../models/post.js');
+
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
-const mongoose = require('mongoose');
+
+const compareId = require('../../utils/general/compareId.js');
+
+const { getUserPostKey } = require('../../cache/posts/postCache.js');
+const { cacheNewPost, updateCachedPost } = require('../../cache/posts/postUpdateCache.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
@@ -20,11 +26,12 @@ async function createPost(req, res) {
     }
 
     // create new ObjectID
-    const id = new mongoose.Types.ObjectId();
+    const postId = new mongoose.Types.ObjectId();
+    const creatorId = req.user._id;
 
     const post = new Post({
-        _id: id,
-        creator_id: req.user._id,
+        _id: postId,
+        creator_id: creatorId,
         content_links: [],
         original_names: req.files.map(image => image.originalname)
     });
@@ -50,14 +57,21 @@ async function createPost(req, res) {
 
     try {
         // upload images and store the links in content_links of the new post
-        const uploadSuccessful = await uploadImages(req.files, post.content_links, id, 'post');
+        const uploadSuccessful = await uploadImages(req.files, post.content_links, postId, 'post');
 
         // if failed to upload images then return error message
         if (!uploadSuccessful) {
             return returnServerErrorReq(res);
         }
 
-        await post.save();
+        const userDetails = {
+            _id: creatorId,
+            username: req.user.username,
+            profile_pic_link: req.user.profile_pic_link
+        }
+
+        // upload to cache if key exists or update database immediately otherwise
+        await cacheNewPost(post, getUserPostKey(creatorId), userDetails);
 
         returnGoodReq(res, { message: 'Post created.' });
     }
@@ -85,25 +99,35 @@ async function updatePost(req, res) {
 
     // check if the creator of the post is the requesting user
     // if creator is not the requesting user return 401 error
-    if (!req.user._id.equals(res.post.creator_id._id)) {
+    if (!compareId(req.user._id, res.post.creator_id._id)) {
         return returnUnauthorizedReq(res);
     }
 
-    // update fields
-    if (req.body.caption) {
-        res.post.caption = req.body.caption;
+    // convert post to mongoose document to perform operations
+    const post = new Post(res.post);
+    post.isNew = false;
+
+    const updatedValues = {};
+
+    // update fields and add to updatedValues if changed
+    if (req.body.caption && req.body.caption != post.caption) {
+        post.caption = req.body.caption;
+        updatedValues.caption = req.body.caption;
     }
 
-    if (req.body.location) {
-        res.post.location = req.body.location;
+    if (req.body.location && req.body.location != post.location) {
+        post.location = req.body.location;
+        updatedValues.location = req.body.location;
     }
 
-    if (req.body.commentsEnabled) {
-        res.post.comments_enabled = req.body.commentsEnabled == 'true';
+    if (req.body.commentsEnabled && req.body.commentsEnabled != post.comments_enabled) {
+        post.comments_enabled = req.body.commentsEnabled == 'true';
+        updatedValues.comments_enabled = req.body.commentsEnabled == 'true';
     }
 
-    if (req.body.tags) {
-        res.post.tags = req.body.tags;
+    if (req.body.tags && req.body.tags != post.tags) {
+        post.tags = req.body.tags;
+        updatedValues.tags = req.body.tags;
     }
 
     try {
@@ -119,16 +143,31 @@ async function updatePost(req, res) {
             }
     
             // otherwise delete old images, update content_links and save the post
-            deleteFiles(res.post.content_links);
+            deleteFiles(post.content_links);
+
+            const newOriginalNames = req.files.map(image => image.originalname);
     
-            res.post.content_links = newImageLinks;
-            res.post.original_names = req.files.map(image => image.originalname);
+            post.content_links = newImageLinks;
+            post.original_names = newOriginalNames;
+
+            updatedValues.content_links = newImageLinks;
+            updatedValues.original_names = newOriginalNames;
         }
 
         // update last modified time
-        res.post.last_modified_time = Date.now();
+        const newLastModifiedTime = Date.now();
+
+        post.last_modified_time = newLastModifiedTime;
+        updatedValues.last_modified_time = newLastModifiedTime;
         
-        await res.post.save();
+        // update cache entry if post is in cache and update database asynchronously
+        if (res.postFromCache) {
+            await updateCachedPost(updatedValues, getUserPostKey(req.user._id), res.postIndex, post);
+        }
+        // otherwise update database immediately
+        else {
+            await post.save();
+        }
 
         returnGoodReq(res, { message: 'Post updated.' });
     }

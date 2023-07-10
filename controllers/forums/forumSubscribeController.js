@@ -1,24 +1,37 @@
 // controller functions to subscribe/unsubscribe from forums
 
+const Forum = require('../../models/forum.js');
+
 const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const compareId = require('../../utils/general/compareId.js');
+
+const { getForumKey } = require('../../cache/forums/forumCache.js');
+const { cachedForumAddSubscriber, cachedForumRemoveSubscriber } = require('../../cache/forums/forumSubscribeCache.js');
 
 // subscribe to forum
 async function subscribeToForum(req, res) {
     try {
+        const userId = req.user._id;
+
         // check if the requesting user has subscribed to the forum already
-        const subscribed = res.forum.subscribers.find(creator_id => creator_id.equals(req.user._id));
+        const subscribed = res.forum.subscribers.find(creator_id => compareId(creator_id, userId));
 
         if (subscribed) {
             return returnBadReq(res, 'You have already subscribed to this forum.');
         }
 
-        // update forum subscriber list
-        res.forum.subscribers.push(req.user._id);
+        // convert forum to mongoose document to perform operations
+        const forum = new Forum(res.forum);
+        forum.isNew = false;
 
-        await res.forum.save();
+        // update forum subscriber list
+        forum.subscribers.push(userId);
+        
+        await cachedForumAddSubscriber(getForumKey(forum._id), userId, forum);
+
         returnCreatedReq(res);
     } catch (error) {
         returnServerErrorReq(res);
@@ -28,18 +41,25 @@ async function subscribeToForum(req, res) {
 // unsubscribe from forum
 async function unsubscribeFromForum(req, res) {
     try {
+        const userId = req.user._id;
+
         // check if the requesting user has subscribed to the forum already
-        const subscribedIndex = res.forum.subscribers.findIndex(creator_id => creator_id.equals(req.user._id));
+        const subscriberIndex = res.forum.subscribers.findIndex(creator_id => compareId(creator_id, userId));
 
         // if the user has not subscribed to the forum return 400 error
-        if (subscribedIndex == -1) {
+        if (subscriberIndex == -1) {
             return returnBadReq(res, 'You have not subscribed to this forum yet.');
         }
 
-        // remove user id from the forum subscriber list
-        res.forum.subscribers.splice(subscribedIndex, 1);
+        // convert forum to mongoose document to perform operations
+        const forum = new Forum(res.forum);
+        forum.isNew = false;
 
-        await res.forum.save();
+        // remove user id from the forum subscriber list
+        forum.subscribers.splice(subscriberIndex, 1);
+
+        await cachedForumRemoveSubscriber(getForumKey(forum._id), subscriberIndex, forum);
+        
         returnNoContentReq(res);
     }
     catch (error) {

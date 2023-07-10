@@ -6,6 +6,7 @@ const cookie = require('cookie');
 
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const { getUserKey } = require('../../cache/users/userCache.js');
 
 // make sure jwt is valid and user is authenticated
 // for http requests
@@ -24,7 +25,9 @@ async function validateUserHTTP(req, res, next) {
 
         // get user based on id in jwt token
         const userId = decodedToken.id;
-        const user = await User.findById(userId);
+        const user = await User.findById(userId).lean().cache({
+            key: getUserKey(userId)
+        });
 
         // return 401 error if user not found
         if (!user) {
@@ -67,9 +70,10 @@ async function validateUserSocket(socket, next) {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
         // get user based on id in jwt token
-        // get username and profile_pic_link to store in socket
         const userId = decodedToken.id;
-        const user = await User.findById(userId).select('username profile_pic_link');
+        const user = await User.findById(userId).lean().cache({
+            key: getUserKey(userId)
+        });
 
         // disconnect socket if user not found
         if (!user) {
@@ -79,13 +83,17 @@ async function validateUserSocket(socket, next) {
         }
 
         // attach the user information to the socket for use
-        socket.user = user;
+        // get username and profile_pic_link to store in socket
+        socket.user = {
+            _id: user._id,
+            username: user.username,
+            profile_pic_link: user.profile_pic_link
+        };
 
         next();
     }
     // Handle token verification or database errors
     catch (error) {
-        console.log(error)
         socket.disconnect(true);
         socket.emit('server-error', { message: 'Internal Server Error' });
         return;

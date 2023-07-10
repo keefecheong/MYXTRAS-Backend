@@ -5,10 +5,14 @@ const Forum = require('../../models/forum.js');
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const compareId = require('../../utils/general/compareId.js');
+
+const getForumQuery = require('../../utils/forums/getForumQuery.js');
+const { getCreatedForumKey, getSubscribedForumKey, FORUM_RECOMMENDED_KEY_BASE, FORUM_CATEGORIZED_KEY_BASE } = require('../../cache/forums/forumCache.js');
 
 // verify if forum_id is already in use
 async function verifyForumID(req, res) {
-    const existingForum = await Forum.findOne({ forum_id: req.body.forum_id }, { _id: 1 });
+    const existingForum = await Forum.findOne({ forum_id: req.body.forum_id }, { _id: 1 }).lean();
 
     if (existingForum) {
         returnBadReq(res, 'ForumID already exists');
@@ -20,21 +24,22 @@ async function verifyForumID(req, res) {
 
 // get forum by _id
 async function getOneForum(req, res) {
-    // copy forum from middleware to object to modify
-    const workingForum = res.forum.toObject();
-
     // set fields
-    workingForum.isCreator = res.forum.creator_id._id.equals(req.user._id);
-    workingForum.isSubscribed = res.forum.subscribers.includes(req.user._id);
+    res.forum.isCreator = compareId(res.forum.creator_id._id, req.user._id);
+    res.forum.isSubscribed = res.forum.subscribers.some(subscriber_id => compareId(subscriber_id, req.user._id));
 
-    returnGoodReq(res, workingForum);
+    returnGoodReq(res, res.forum);
 }
 
 // get created forums
 async function getCreated(req, res) {
     try {
-        const forums = await retrieveForums({
-            creator_id: req.user._id
+        const userId = req.user._id;
+
+        const forums = await getForumQuery({
+            creator_id: userId
+        }, true, {
+            key: getCreatedForumKey(userId)
         });
 
         returnGoodReq(res, forums);
@@ -46,8 +51,12 @@ async function getCreated(req, res) {
 // get subscribed forums
 async function getSubscribed(req, res) {
     try {
-        const subbed_forums = await retrieveForums({
-            subscribers: { $in: [req.user._id] }
+        const userId = req.user._id;
+
+        const subbed_forums = await getForumQuery({
+            subscribers: { $in: [userId] }
+        }, true, {
+            key: getSubscribedForumKey(userId)
         });
     
         returnGoodReq(res, subbed_forums);
@@ -76,7 +85,9 @@ async function getRecommended(req, res) {
         {
             $limit: 6
         }        
-    ]);
+    ]).cache({
+        key: FORUM_RECOMMENDED_KEY_BASE
+    });
 
     returnGoodReq(res, recommendedForums);
 }
@@ -120,7 +131,9 @@ async function getCategorized(req, res) {
         }
     ]
     
-    const sortedForums = await Forum.aggregate(agg);
+    const sortedForums = await Forum.aggregate(agg).cache({
+        key: FORUM_CATEGORIZED_KEY_BASE
+    });
     
     returnGoodReq(res, sortedForums);
 }
@@ -132,12 +145,4 @@ module.exports = {
     getSubscribed,
     getRecommended,
     getCategorized
-}
-
-// common function to retrieve forums based on given filter
-async function retrieveForums(filter) {
-    return await Forum
-        .find(filter)
-        .select('forum_name forum_id forum_pic_link')
-        .lean();
 }

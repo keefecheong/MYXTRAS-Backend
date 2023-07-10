@@ -1,5 +1,7 @@
 // functions to check attributes of comments before returning data to frontend
 
+const compareId = require("../general/compareId");
+
 // add fields to the comment object:
 // check if the requesting user is the owner of the comment
 // for an array of comments
@@ -15,7 +17,7 @@ function checkCommentAttributesAll(comments, userId) {
 
 // for one comment
 function checkCommentAttributes(comment, userId) {
-    comment.isOwner = comment.creator_id._id.equals(userId);
+    comment.isOwner = compareId(comment.creator_id._id, userId);
 
     return comment;
 }

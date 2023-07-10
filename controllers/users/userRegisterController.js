@@ -10,6 +10,8 @@ const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
+const { cacheNewUser } = require('../../cache/users/userUpdateCache.js');
+
 // register new user
 async function registerUser(req, res) {
     // return 400 error if no data is sent
@@ -21,7 +23,6 @@ async function registerUser(req, res) {
 
     // validate phone number
     if (phoneNumber.length != 8){
-        // TO DO: ADD FIREBASE AUTH 
         return returnBadReq(res, 'Inavlid phone number');
     }
 
@@ -38,8 +39,8 @@ async function registerUser(req, res) {
             password: await bcrypt.hash(password, 10),
         });
 
-        // Save user into database
-        await newUser.save();
+        // Save user into cache and database
+        await cacheNewUser(newUser);
         
         // sign jwt and return as cookie
         setJWT(newUser._id, res);

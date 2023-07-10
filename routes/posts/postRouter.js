@@ -9,12 +9,9 @@ const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
 const { multerConfig, multerErrorHandler } = require('../../middleware/posts/multerMiddleware.js');
 
 // get controller functions
-const { getAllPosts, getFollowingPosts, getOnePost, getOwnPosts, getUserPost, getPopularPosts, getSavedPosts } = require('../../controllers/posts/postController.js');
+const { getFollowingPosts, getUserPosts, getPopularPosts, getSavedPosts } = require('../../controllers/posts/postController.js');
 const { createPost, updatePost } = require('../../controllers/posts/postSaveController.js');
 const { deletePost } = require('../../controllers/posts/postDeleteController.js');
-
-// retrieve all posts
-postRouter.get('/', getAllPosts);
 
 // retrieve user's own posts and posts by users followed
 postRouter.get('/following', getFollowingPosts);
@@ -23,24 +20,21 @@ postRouter.get('/following', getFollowingPosts);
 postRouter.get('/explore', getPopularPosts);
 
 // retireve user's own posts
-postRouter.get('/by/self', getOwnPosts);
+postRouter.get('/by/self', getUserPosts);
 
 // retrieve a post by userid
-postRouter.get('/by/:userId', getUserPost);
+postRouter.get('/by/:userId', getUserPosts);
 
 // retrieve posts saved by the user
 postRouter.get('/saved', getSavedPosts);
-
-// retrieve a post by id
-postRouter.get('/:postId', getPost, getOnePost);
 
 // create a post
 postRouter.post('/', multerConfig.array('selectedImages'), multerErrorHandler, createPost);
 
 // modify a post
-postRouter.patch('/:postId', multerConfig.array('selectedImages'), multerErrorHandler, getPost, updatePost);
+postRouter.patch('/user/:userId/post/:postId', multerConfig.array('selectedImages'), multerErrorHandler, getPost, updatePost);
 
 // delete a post
-postRouter.delete('/:postId', getPost, deletePost);
+postRouter.delete('/user/:userId/post/:postId', getPost, deletePost);
 
 module.exports = postRouter;

@@ -1,5 +1,7 @@
 // functions to check attributes of threads to set fields before returning to frontend
 
+const compareId = require('../general/compareId.js');
+
 // adds fields to the thread object:
 // 1. check if the requesting user is the owner of the thread
 // 2. check if the requesting user has liked/disliked the thread
@@ -16,9 +18,9 @@ function checkThreadAttributesAll(threads, userId) {
 
 // for one thread
 function checkThreadAttributes(thread, userId) {
-    thread.isOwner = thread.creator_id._id.equals(userId);
-    thread.liked = thread.likes.some(creator_id => creator_id.equals(userId));
-    thread.disliked = thread.dislikes.some(creator_id => creator_id.equals(userId));
+    thread.isOwner = compareId(thread.creator_id._id, userId);
+    thread.liked = thread.likes.some(user_id => compareId(user_id, userId));
+    thread.disliked = thread.dislikes.some(user_id => compareId(user_id, userId));
     
     return thread;
 }

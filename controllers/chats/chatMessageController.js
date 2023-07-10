@@ -2,6 +2,7 @@
 
 const Chat = require('../../models/chat.js');
 const Message = require('../../models/message.js');
+const compareId = require('../../utils/general/compareId.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
@@ -82,10 +83,10 @@ function formatMessages(messages, userId) {
 
     messages.forEach(message => {
         // set is_sender based on creator_id and requesting user id
-        message.is_sender = message.creator_id.equals(userId);
+        message.is_sender = compareId(message.creator_id, userId);
         
         if (message.reply_message) {
-            message.reply_message.is_sender = message.reply_message.creator_id.equals(userId);
+            message.reply_message.is_sender = compareId(message.reply_message.creator_id, userId);
 
             delete message.reply_message.creator_id;
         }

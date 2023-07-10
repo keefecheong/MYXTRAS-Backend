@@ -5,6 +5,7 @@ const Chat = require('../../models/chat.js');
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const compareId = require('../../utils/general/compareId.js');
 
 // get all enrolled chats of the requesting user
 async function getEnrolledChats(req, res) {
@@ -35,7 +36,7 @@ async function getEnrolledChats(req, res) {
 // to check if the current user has an existing chat with another user
 async function checkExistingChat(req, res) {
     // if user is requesting to have chat with the same user id then return 400 error
-    if (req.user._id.equals(req.params.userId)) {
+    if (compareId(req.user._id, req.params.userId)) {
         return returnBadReq(res, 'Cannot chat with self.');
     }
 

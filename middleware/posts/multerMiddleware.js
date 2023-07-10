@@ -27,7 +27,7 @@ const multerConfig = multer({
 });
 
 // error handler
-const multerErrorHandler = (error, req, res, next) => {
+function multerErrorHandler(error, req, res, next) {
     if (error instanceof multer.MulterError) {
         if (error.code === "LIMIT_UNEXPECTED_FILE") {
             return returnBadReq(res, `Illegal file type, allowed file types: ${acceptedFileTypes.join(', ')}`);

@@ -1,9 +1,12 @@
 // controller functions to handle user profile related requests
 
 const User = require('../../models/user.js');
+const compareId = require('../../utils/general/compareId.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
+const { getUserKey } = require('../../cache/users/userCache.js');
 
 // return current user profile
 // user retrieved with authMiddleware
@@ -19,9 +22,13 @@ async function getRequestedUser(req, res) {
         const user = await User
             .findById(targetUserId)
             .getFollowers()
-            .lean();
+            .lean()
+            .cache({
+                key: getUserKey(targetUserId),
+                populateFollowers: true
+            });
     
-        const isFollowing = user.followers.some(follower => follower._id.equals(req.user._id));
+        const isFollowing = user.followers.some(follower => compareId(follower._id, req.user._id));
     
         // return information about requesting user to update follower list on frontend immediately
         const self = {
@@ -33,6 +40,7 @@ async function getRequestedUser(req, res) {
         returnGoodReq(res, { user, isFollowing, self });
     }
     catch (error) {
+        console.log(error)
         returnServerErrorReq(res);
     }
 }

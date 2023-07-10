@@ -25,6 +25,9 @@ const db = mongoose.connection;
 db.on('error', (error) => console.error(error));
 db.once('open', () => console.log('Connected to database.'));
 
+// initialize cache
+require('./cache/init.js');
+
 // initialize Firebase (for storing files/images)
 const { initializeApp } = require('firebase/app');
 
@@ -35,26 +38,11 @@ const firebaseConfig = {
     appId: process.env.FIREBASE_APP_ID
 }
 
-const firebaseApp = initializeApp(firebaseConfig);
+initializeApp(firebaseConfig);
 
-// routes
-const postsRouter = require('./routes/posts/mainRouter.js');
-app.use('/api/posts', postsRouter);
-
-const usersRouter = require('./routes/users/mainRouter.js');
-app.use('/api/users', usersRouter);
-
-const schoolRouter = require('./routes/schools/mainRouter.js');
-app.use('/api/schools', schoolRouter);
-
-const forumRouter = require('./routes/forums/mainRouter.js');
-app.use('/api/forums', forumRouter);
-
-const searchRouter = require('./routes/search/mainRouter.js');
-app.use('/api/search', searchRouter);
-
-const chatRouter = require('./routes/chats/mainRouter.js');
-app.use('/api/chats', chatRouter);
+// mount routes
+const mountRoutes = require('./routes/mountRoutes.js');
+mountRoutes(app);
 
 // start server
 const server = app.listen(process.env.PORT, () => console.log(`Listening on Port ${process.env.PORT}...`));

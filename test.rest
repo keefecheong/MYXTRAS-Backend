@@ -145,7 +145,7 @@ Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTd
 ###
 
 GET http://127.0.0.1:8081/api/posts/following
-Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzU5MjlkZDBiOTdjNWMzNTM2MDJhZiIsImlhdCI6MTY4Nzc2MzU5MH0.cyis_HxhtsFwQBgU4IILDw8jv1SlxXfYWo7VZjHC-eI
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTdiYjU2Y2M3Y2JhZDcwZDI5NiIsImlhdCI6MTY4ODMwMzA4M30.rcyArXN-8vH28iiqDhu5UVce0Cf-JDrkyBg4TrfFle0
 
 ###
 
@@ -153,9 +153,20 @@ GET http://127.0.0.1:8081/api/forums/thread/
 Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTdiYjU2Y2M3Y2JhZDcwZDI5NiIsImlhdCI6MTY4ODMwMzA4M30.rcyArXN-8vH28iiqDhu5UVce0Cf-JDrkyBg4TrfFle0
 
 ###
-POST http://127.0.0.1:8081/api/users/verify/phone
+POST http://127.0.0.1:8081/api/users/register
 Content-type:application/json
 
 {
-    "phoneNumber": "22222222"
+    "emailAddress": "random@gmail.com",
+    "phoneNumber": "12345678",
+    "password": "Passw0rd"
 }
+
+###
+
+get http://127.0.0.1:8081/api/users/cookie/remove
+
+###
+
+GET http://127.0.0.1:8081/api/users/profile/self
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTNjYjU2Y2M3Y2JhZDcwZDI3NiIsImlhdCI6MTY4ODk2Mjg1NX0.sQtHZzIb1kD-OU6HsHrOs79U39SQfQRYB18aF_U-pS4

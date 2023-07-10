@@ -1,16 +1,20 @@
 // controller functions for creation and update of threads
 
+const mongoose = require('mongoose');
 const Thread = require('../../models/thread.js');
 
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
-const mongoose = require('mongoose');
 
 const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const compareId = require('../../utils/general/compareId.js');
+
+const { getForumThreadKey } = require('../../cache/threads/threadCache.js');
+const { cacheNewThread, updateCachedThread } = require('../../cache/threads/threadUpdateCache.js');
 
 // create new thread
 async function createThread(req, res) {
@@ -25,13 +29,15 @@ async function createThread(req, res) {
         
         const { title, content, tags } = threadObject;
 
-        const id = new mongoose.Types.ObjectId();
+        const threadId = new mongoose.Types.ObjectId();
+        const forumId = req.params.forumID;
+        const creatorId = req.user._id;
 
         // create new thread
         const newThread = new Thread({
-            _id: id,
-            parent_id: req.params.forumID,
-            creator_id: req.user._id,
+            _id: threadId,
+            parent_id: forumId,
+            creator_id: creatorId,
             title: title,
             content: content,
             tags: tags
@@ -41,7 +47,7 @@ async function createThread(req, res) {
         if (req.files.length > 0) {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, id, 'thread', req.params.forumID);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, threadId, 'thread', forumId);
         
             // if upload not successful then delete the new thread
             if (!threadPicUploadSuccessful) {
@@ -50,8 +56,22 @@ async function createThread(req, res) {
 
             newThread.content_link = newImageLinks[0];
         }
-        
-        await newThread.save();
+
+        const userDetails = {
+            _id: creatorId,
+            username: req.user.username,
+            profile_pic_link: req.user.profile_pic_link
+        }
+
+        const forumDetails = {
+            _id: forumId,
+            forum_name: res.forum.forum_name,
+            forum_id: res.forum.forum_id,
+            forum_pic_link: res.forum.forum_pic_link
+        }
+
+        // update cache if key exists or update database immediately otherwise
+        await cacheNewThread(newThread, getForumThreadKey(forumId), userDetails, forumDetails);
 
         returnCreatedReq(res);
     }
@@ -77,24 +97,42 @@ async function updateThread(req, res) {
 
     // check if the creator of the thread is the requesting user
     // if creator is not the requesting user then return 401 error
-    if (!req.user._id.equals(res.thread.creator_id._id)) {
+    if (!compareId(req.user._id, res.thread.creator_id._id)) {
         return returnUnauthorizedReq(res);
     }
 
     try {
-        const threadObject = JSON.parse(req.body.threadObject);
+        const { title, content, tags } = JSON.parse(req.body.threadObject);
         
-        const { title, content, tags } = threadObject;
+        // convert thread to mongoose document to perform operations
+        const thread = new Thread(res.thread);
+        thread.isNew = false;
 
-        res.thread.title = title;
-        res.thread.content = content;
-        res.thread.tags = tags;
+        const updatedValues = {};
 
-        // save images if changed
+        // update fields and add to updatedValues if changed
+        if (title != thread.title) {
+            thread.title = title;
+            updatedValues.title = title;
+        }
+        
+        if (content != thread.content) {
+            thread.content = content;
+            updatedValues.content = content;
+        }
+        
+        if (tags != thread.tags) {
+            thread.tags = tags;
+            updatedValues.tags = tags;
+        }
+
+        const forumId = thread.parent_id._id;
+
+        // save image if changed
         if (req.body.pictureUnchanged != 'true') {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, res.thread._id, 'thread', res.thread.parent_id);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, thread._id, 'thread', forumId);
         
             // if upload not successful then return 500 error
             if (!threadPicUploadSuccessful) {
@@ -102,14 +140,22 @@ async function updateThread(req, res) {
             }
 
             // otherwise delete old image and set new image link
-            deleteFiles([res.thread.content_link]);
+            deleteFiles([thread.content_link]);
 
-            res.thread.content_link = newImageLinks[0];
+            thread.content_link = newImageLinks[0];
+            updatedValues.content_link = newImageLinks[0];
         }
 
-        await res.thread.save();
+        // update cache entry if thread is in cache and update database asynchronously
+        if (res.threadFromCache) {
+            await updateCachedThread(updatedValues, getForumThreadKey(forumId), res.threadIndex, thread);
+        }
+        // otherwise update database immediately
+        else {
+            await thread.save();
+        }
 
-        returnNoContentReq(res);
+        returnNoContentReq(res, { message: 'Thread updated.' });
     }
     catch (error) {
         returnServerErrorReq(res);

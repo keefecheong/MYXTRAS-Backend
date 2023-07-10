@@ -5,6 +5,7 @@ const Chat = require('../../models/chat.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnNotFoundReq = require('../../utils/general/returnNotFoundReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const compareId = require('../../utils/general/compareId.js');
 
 // find chat by id
 async function getChat(req, res, next) {
@@ -20,7 +21,7 @@ async function getChat(req, res, next) {
 
         // check if user is a member of the chat
         // if requesting user is not a member of the chat return 401 error
-        if (target.users.indexOf(req.user._id) == -1) {
+        if (!target.users.some(user_id => compareId(user_id, req.user._id))) {
             return returnUnauthorizedReq(res);
         }
     }

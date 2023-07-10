@@ -1,11 +1,17 @@
 // controller functions to handle user profile updating related requests
 
+const User = require('../../models/user.js');
+
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
+const schools = require('../../schools.json');
+
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
 // update user info
 // user retrieved from authMiddleware
@@ -15,27 +21,48 @@ async function updateUser(req, res) {
         return returnBadReq(res, 'Invalid request body');
     }
 
-    const {userName, biography, selectedInterests, gender} = JSON.parse(req.body.userObject);
+    const { userName, biography, selectedInterests, gender } = JSON.parse(req.body.userObject);
+
+    if (userName.length > 25){
+        return returnBadReq(res, 'Username is too long');
+    }
+
+    if (biography.length > 100){
+        return returnBadReq(res, 'Biography is too long');
+    }
 
     try {
-        const user = req.user;
+        const user = new User(req.user);
+        user.isNew = false;
+
+        const updatedValues = {};
     
         // update user details
-        user.username = userName;
-        user.biography = biography;
-        user.interests = selectedInterests.sort();
-        user.gender = gender;
-        var profile_pic_link = [];
-
-        if (userName.length > 25){
-            return returnBadReq(res, 'Username is too long');
+        if (user.username != userName) {
+            user.username = userName;
+            updatedValues.username = userName;
+        }
+        
+        if (user.biography != biography) {
+            user.biography = biography;
+            updatedValues.biography = biography;
         }
 
-        if (biography.length > 100){
-            return returnBadReq(res, 'Biography is too long');
+        const interests = selectedInterests.sort();
+        
+        if (user.interests != interests) {
+            user.interests = interests;
+            updatedValues.interests = interests;
+        }
+        
+        if (user.gender != gender) {
+            user.gender = gender;
+            updatedValues.gender = gender;
         }
 
         if (req.files[0] != undefined){
+            var profile_pic_link = [];
+
             const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, 'user');
             
             if (!uploadSuccessful) {
@@ -46,13 +73,15 @@ async function updateUser(req, res) {
             deleteFiles([user.profile_pic_link]);
 
             user.profile_pic_link = profile_pic_link[0];
+            updatedValues.profile_pic_link = profile_pic_link[0];
         }
 
-        await user.save();
+        await updateCachedUser(updatedValues, user);
         
         returnNoContentReq(res);
     }
     catch (error) {
+        console.log(error)
         returnServerErrorReq(res);
     }
 }
@@ -70,10 +99,8 @@ async function setupUser(req, res) {
     var detailsList = [realName, userName, selectedSchool, selectedCourse]
     
     try {
-        const user = req.user;
-        // TO DO (add validation for course in courses)
-        // ||!(Object.values(this.courses).flat().includes(selectedCourse)
-        //|| !(selectedSchool in this.selectedCourse)
+        const user = new User(req.user);
+        user.isNew = false;
 
         // validate details
         if (realName.length > 32){
@@ -98,40 +125,56 @@ async function setupUser(req, res) {
         
         if (realName.length > 32) {
             return returnBadReq(res, 'Real name must not be more than 32 characters long');
-
         }
         
         if (userName.length > 16) {
             return returnBadReq(res, 'Username must not be more than 16 characters long');
         }
 
-        try {
-            // update user info
-            user.real_name = realName;
-            user.username = userName;
-            user.biography = biography;
-            user.school = selectedSchool;
-            user.course = selectedCourse;
-            user.interests = selectedInterests.sort();
-            user.is_profile_setup = true;
+        if (!Object.keys(schools).includes(selectedSchool)) {
+            return returnBadReq(res, 'Invalid school');
+        }
+        
+        if (!Object.keys(schools[selectedSchool]["courses"].includes(selectedCourse))) {
+            return returnBadReq(res, 'Invalid course');
+        }
 
-            await user.save();
+        // update user info
+        const school = schools[selectedSchool]["short"];
+        const course = schools[selectedSchool]["short"][selectedCourse];
+        const interests = selectedInterests.sort();
+
+        user.username = userName;
+        user.real_name = realName;
+        user.biography = biography;
+        user.school = school;
+        user.course = course;
+        user.interests = interests;
+        user.is_profile_setup = true;
+
+        const updatedValues = {
+            username: userName,
+            real_name: realName,
+            biography,
+            school,
+            course,
+            interests,
+            is_profile_setup: true
         }
-        catch (error) {
-            if (error.code === 11000) {
-                // Duplicate username error
-                return returnBadReq(res, 'Username already exists');
-            }
-            else {
-                // Other error
-                return returnServerErrorReq(res);
-            }
-        }
+
+        await updateCachedUser(updatedValues, user);
 
         returnNoContentReq(res);
     }
     catch (error) {
-        return returnServerErrorReq(res);
+        if (error.code === 11000) {
+            // Duplicate username error
+            return returnBadReq(res, 'Username already exists');
+        }
+        else {
+            // Other error
+            return returnServerErrorReq(res);
+        }
     }
 }
 

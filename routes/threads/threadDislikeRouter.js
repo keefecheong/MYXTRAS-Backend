@@ -3,7 +3,7 @@
 const express = require('express');
 const dislikeRouter = express.Router();
 
-const { addDislikeThread, removeDislikeThread } = require('../../controllers/forums/threadDislikeController.js');
+const { addDislikeThread, removeDislikeThread } = require('../../controllers/threads/threadDislikeController.js');
 
 // add dislike to thread
 dislikeRouter.post('/', addDislikeThread);

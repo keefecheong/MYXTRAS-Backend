@@ -30,10 +30,10 @@ const commentSchema = new mongoose.Schema({
 });
 
 // custom query to get creator details
-commentSchema.query.getCreator = function() {
+commentSchema.query.getCreator = function(getRealname) {
     return this.populate({
         path: 'creator_id',
-        select: 'username profile_pic_link real_name'
+        select: `username profile_pic_link ${ getRealname ? 'real_name' : '' }`
     })
 }
 

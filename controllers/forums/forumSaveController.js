@@ -1,15 +1,19 @@
 // controller functions for creation and update of forums
 
+const mongoose = require('mongoose');
 const Forum = require('../../models/forum.js');
 
 const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
-const mongoose = require('mongoose');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const compareId = require('../../utils/general/compareId.js');
+
+const { getForumKey, getCreatedForumKey } = require('../../cache/forums/forumCache.js');
+const { cacheNewForum, updateCachedForum } = require('../../cache/forums/forumUpdateCache.js');
 
 // create a new forum
 async function createForum(req, res) {
@@ -47,12 +51,13 @@ async function createForum(req, res) {
             return returnBadReq(res, 'Forum Name is too long');
         }
 
-        const id = new mongoose.Types.ObjectId();
+        const forumId = new mongoose.Types.ObjectId();
+        const creatorId = req.user._id;
 
         // create new forum
         const newForum = new Forum({
-            _id: id,
-            creator_id: req.user._id,
+            _id: forumId,
+            creator_id: creatorId,
             forum_name: forum_name,
             forum_id: forum_id,
             forum_desc: forum_desc,
@@ -61,7 +66,7 @@ async function createForum(req, res) {
 
         // upload images
         const imageLinks = [];
-        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, id, 'forum');
+        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, forumId, 'forum');
 
         // if unsuccessful return internal server error
         if (!forumPicUploadSuccessful) {
@@ -72,9 +77,15 @@ async function createForum(req, res) {
         newForum.forum_pic_link = imageLinks[0];
         newForum.banner_link = imageLinks[1];
 
-        await newForum.save();
+        const userDetails = {
+            _id: creatorId,
+            username: req.user.username,
+            profile_pic_link: req.user.profile_pic_link
+        }
 
-        returnGoodReq(res, { forum_id: id });
+        await cacheNewForum(newForum, userDetails, getForumKey(forumId), getCreatedForumKey(creatorId));
+
+        returnGoodReq(res, { forum_id: forumId });
     }
     catch (error) {
         returnServerErrorReq(res);
@@ -83,6 +94,9 @@ async function createForum(req, res) {
 
 // edit existing forum
 async function updateForum(req, res) {
+    const userId = req.user._id;
+    const forumId = req.params.forumID;
+
     // check if text fields are provided in the body
     // if provided, continue to create post
     // otherwise return 400 error
@@ -99,7 +113,7 @@ async function updateForum(req, res) {
 
     // check if the creator of the forum is the requesting user
     // if creator is not the requesting user return 401 error
-    if (!req.user._id.equals(res.forum.creator_id._id)) {
+    if (!compareId(userId, res.forum.creator_id._id)) {
         return returnUnauthorizedReq(res);
     }
     
@@ -111,10 +125,32 @@ async function updateForum(req, res) {
             return returnBadReq(res, 'Input length too long');
         }
 
-        res.forum.forum_name = forum_name;
-        res.forum.forum_id = forum_id;
-        res.forum.forum_desc = forum_desc;
-        res.forum.tags = tags;
+        // convert forum to mongoose document to perform operations
+        const forum = new Forum(res.forum);
+        forum.isNew = false;
+
+        const updatedValues = {};
+
+        // update fields and add to updatedValues if changed
+        if (forum_name != forum.forum_name) {
+            forum.forum_name = forum_name;
+            updatedValues.forum_name = forum_name;
+        }
+        
+        if (forum_id != forum.forum_id) {
+            forum.forum_id = forum_id;
+            updatedValues.forum_id = forum_id;
+        }
+        
+        if (forum_desc != forum.forum_desc) {
+            forum.forum_desc = forum_desc;
+            updatedValues.forum_desc = forum_desc;
+        }
+        
+        if (tags != forum.tags) {
+            forum.tags = tags;
+            updatedValues.tags = tags;
+        }
 
         let index = 0;
 
@@ -122,7 +158,7 @@ async function updateForum(req, res) {
         if (req.body.pictureUnchanged != 'true') {
             var newImageLinks = [];
     
-            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, req.params.forumID, 'forum');
+            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, forumId, 'forum');
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {
@@ -130,9 +166,10 @@ async function updateForum(req, res) {
             }
     
             // otherwise delete old picture and update forum_pic_link
-            deleteFiles([res.forum.forum_pic_link]);
+            deleteFiles([forum.forum_pic_link]);
     
-            res.forum.forum_pic_link = newImageLinks[0];
+            forum.forum_pic_link = newImageLinks[0];
+            updatedValues.forum_pic_link = newImageLinks[0];
 
             index += 1;
         }
@@ -141,7 +178,7 @@ async function updateForum(req, res) {
         if (req.body.bannerUnchanged != 'true') {
             var newImageLinks = [];
     
-            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, req.params.forumID, 'forum');
+            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, forumId, 'forum');
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {
@@ -149,12 +186,14 @@ async function updateForum(req, res) {
             }
     
             // otherwise delete old picture and update banner_link
-            deleteFiles([res.forum.banner_link]);
+            deleteFiles([forum.banner_link]);
     
-            res.forum.banner_link = newImageLinks[0];
+            forum.banner_link = newImageLinks[0];
+            updatedValues.banner_link = newImageLinks[0];
         }
 
-        await res.forum.save();
+        // update cache entry and update database asynchronously
+        await updateCachedForum(updatedValues, getForumKey(forumId), getCreatedForumKey(userId), forum);
 
         returnGoodReq(res);
     } catch (error) {

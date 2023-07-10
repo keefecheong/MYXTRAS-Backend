@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
-        required: true,
+        immutable: false,
         unique: true,
         select: false
     },
@@ -14,10 +14,11 @@ const userSchema = new mongoose.Schema({
     },
     real_name: {
         type: String,
+        immutable: false
     },
     phone_number: {
         type: String,
-        required: true,
+        immutable: false,
         unique: true,
         select: false
     },
@@ -72,7 +73,7 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        immutable: false,
         select: false
     },
     is_profile_setup: {
@@ -88,5 +89,24 @@ userSchema.query.getFollowers = function() {
         select: 'username profile_pic_link'
     });
 }
+
+// specify validation only for new documents
+userSchema.pre('save', function(next) {
+    if (this.isNew) {
+        if (!this.email) {
+            throw new mongoose.Error.ValidatorError({ type: 'required', path: 'email' });
+        }
+
+        if (!this.password) {
+            throw new mongoose.Error.ValidatorError({ type: 'required', path: 'password' });
+        }
+
+        if (!this.phone_number) {
+            throw new mongoose.Error.ValidatorError({ type: 'required', path: 'phone_number' });
+        }
+    }
+
+    next();
+});
 
 module.exports = mongoose.model('User', userSchema);

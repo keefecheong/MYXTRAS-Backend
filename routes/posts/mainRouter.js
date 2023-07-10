@@ -21,9 +21,9 @@ mainRouter.use(validateUserHTTP);
 mainRouter.use('/', postRouter);
 
 // handle comment requests
-mainRouter.use('/comments/:postId', getPost, postCommentRouter);
+mainRouter.use('/comments/user/:userId/post/:postId', getPost, postCommentRouter);
 
 // handle like requests
-mainRouter.use('/likes/:postId', getPost, postLikeRouter);
+mainRouter.use('/likes/user/:userId/post/:postId', getPost, postLikeRouter);
 
 module.exports = mainRouter;

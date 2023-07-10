@@ -86,7 +86,7 @@ async function uploadFunction(buffer, prefix, name, type) {
 
     // set metadata of the file
     const metadata = {
-        cacheControl: 'max-age=300',
+        cacheControl: 'max-age=31536000',  // set max cache lifetime to 1 year
         contentType: type
     }
 
@@ -98,9 +98,6 @@ async function uploadFunction(buffer, prefix, name, type) {
                 .then((downloadURL) => {
                     link = downloadURL.split('&token')[0];
                     success = true;
-                })
-                .catch((error) => {
-                    console.log(error);
                 });
         })
         .catch((error) => {

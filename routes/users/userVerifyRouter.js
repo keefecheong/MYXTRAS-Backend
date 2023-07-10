@@ -11,6 +11,7 @@ verifyRouter.post('/email', verifyEmail);
 // verify phone number
 verifyRouter.post('/phone', verifyPhoneNum);
 
+// verify username
 verifyRouter.post('/username', verifyUsername);
 
 module.exports = verifyRouter;

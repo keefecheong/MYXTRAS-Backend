@@ -51,12 +51,12 @@
     "Humanities & Social Sciences": {
         "short": "HMS",
         "courses": {
-            "ABM": "Arts Business Management",
-            "CMC": "Chinese Media & Communication",
-            "CHS": "Chinese Studies",
-            "CDT": "Community Development",
-            "ECDE": "Early Childhood Development & Education",
-            "TSE": "Tamil Studies with Early Education"
+            "Arts Business Management": "ABM",
+            "Chinese Media & Communication": "CMC",
+            "Chinese Studies": "CHS",
+            "Community Development": "CDT",
+            "Early Childhood Development & Education": "ECDE",
+            "Tamil Studies with Early Education": "TSE"
         }
     },
     "InfoComm Technology": {
