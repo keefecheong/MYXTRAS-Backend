@@ -8,22 +8,26 @@ const getPostQuery = require('../../utils/posts/getPostQuery.js');
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
-// cache key prefixes
+const { getFollowingKey } = require('../../cache/users/userCache.js');
 const { getUserPostKey, getPopularPostKey } = require('../../cache/posts/postCache.js');
 
 // retrieve user's own posts and posts by users followed
 async function getFollowingPosts(req, res){
     try {
+        const userId = req.user._id;
+
         // get users that the requesting user follows
         const followingUsers = await User.find({
-            followers: { $in: req.user._id }
+            followers: { $in: userId }
         }, {
             '_id': 1
-        }).lean();
+        }).lean().cache({
+            key: getFollowingKey(userId)
+        });
 
         // add user ids into an array
         var userIds = followingUsers.map(user => user._id);
-        userIds.push(req.user._id);
+        userIds.push(userId);
 
         const queries = [];
 
