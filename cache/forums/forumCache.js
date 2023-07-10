@@ -12,7 +12,7 @@ const FORUM_SINGLE_KEY_BASE = 'forum:single';
 // format: 'forum:created:userid'
 const FORUM_CREATED_KEY_BASE = 'forum:created';
 
-// to cache subscribed forums by usr
+// to cache subscribed forums by user
 // format: 'forum:subscribed:userid'
 const FORUM_SUBSCRIBED_KEY_BASE = 'forum:subscribed';
 

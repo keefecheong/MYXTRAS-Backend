@@ -10,7 +10,7 @@ const { getUserPostKey, getPostFromCache } = require('../../cache/posts/postCach
 // find post by id
 async function getPost(req, res, next) {
     const userId = req.user._id;
-    const postId = req.parms.postId;
+    const postId = req.params.postId;
     let target = null;
     
     try {
