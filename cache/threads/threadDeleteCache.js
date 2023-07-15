@@ -1,23 +1,24 @@
 // to delete thread from cache
 
 const redisClient = require('../redis.js');
-const Thread = require('../../models/thread.js');
 
-const { getIndexKey } = require('../../utils/cache/cacheIndexUtils.js');
+const { getForumThreadKey, getThreadIdPath } = require('./threadCache.js');
 const { getThreadCommentKey } = require('../comments/commentCache.js');
 const { deleteAllCachedComments } = require('../comments/commentDeleteCache.js');
 
-// to delete thread from cache and database
-function deleteCachedThread(key, threadIndex, threadId) {
-    const threadIdKey = getIndexKey(key);
+// to delete thread from cache 
+function deleteCachedThread(forumId, threadId) {
+    if (!redisClient.isReady) {
+        return [];
+    }
+    
+    const forumThreadKey = getForumThreadKey(forumId);
 
-    // remove thread entry and associated comments from cache and database
-    return Promise.all([
-        redisClient.json.arrPop(key, '$', threadIndex),
-        redisClient.json.arrPop(threadIdKey, '$', threadIndex),
-        Thread.findByIdAndDelete(threadId),
+    // remove thread entry and associated comments from cache
+    return [
+        redisClient.json.del(forumThreadKey, getThreadIdPath(threadId)),
         deleteAllCachedComments(getThreadCommentKey(threadId))
-    ]);
+    ];
 }
 
 module.exports = {

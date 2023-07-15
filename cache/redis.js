@@ -1,16 +1,17 @@
 // initialize cache
+const { createClient } = require('redis');
 
-const Redis = require('redis');
-const redisClient = Redis.createClient({
-    host: process.env.REDIS_URL,
-    post: process.env.REDIS_PORT
-});
+const redisClient = createClient({
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    socket: {
+        // reconnect after 1 minute
+        reconnectStrategy: 60 * 1000
+    }
+})
 
 // connect to redis server
-redisClient.connect()
-.then(async () => {
-    // clear cache when connected
-    await redisClient.flushDb();
+redisClient.connect().then(async () => {
     console.log('Connected to Redis Server.');
 });
 

@@ -1,6 +1,5 @@
 // to add forums to the cache from database
 
-const { getIndexKey } = require('../../utils/cache/cacheIndexUtils.js');
 const redisClient = require('../redis.js');
 
 // cache key prefixes
@@ -43,21 +42,6 @@ function cacheForums(forums, key) {
         redisClient.expire(key, expiry)
     ];
 
-    // if cache entry is for storing created forums then add another array of forum ids for referencing
-    if (forCreated) {
-        // get array of forum ids
-        const forumIds = forums.map(forum => forum._id);
-
-        // get new key value for forumIds
-        const forumIdKey = getIndexKey(key);
-
-        // add to promises
-        promises.concat([
-            redisClient.json.set(forumIdKey, '$', forumIds),
-            redisClient.expire(forumIdKey, expiry)
-        ]);
-    }
-
     return Promise.all(promises);
 }
 
@@ -74,6 +58,11 @@ function getForumKey(forumId) {
     return `${FORUM_SINGLE_KEY_BASE}:${forumId}`;
 }
 
+// to get path for a forum id in subscribers/created arrays
+function getForumIdPath(forumId) {
+    return `$[?(@._id=="${forumId}")]`;
+}
+
 module.exports = {
     FORUM_RECOMMENDED_KEY_BASE,
     FORUM_CATEGORIZED_KEY_BASE,
@@ -81,5 +70,6 @@ module.exports = {
     cacheForums,
     getCreatedForumKey,
     getSubscribedForumKey,
-    getForumKey
+    getForumKey,
+    getForumIdPath
 }

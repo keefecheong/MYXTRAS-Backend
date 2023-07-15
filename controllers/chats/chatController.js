@@ -7,6 +7,8 @@ const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
 
+const formatChat = require('../../utils/chats/formatChat.js');
+
 // get all enrolled chats of the requesting user
 async function getEnrolledChats(req, res) {
     try {
@@ -22,9 +24,9 @@ async function getEnrolledChats(req, res) {
         // if user has chats then format each chat to suit frontend parsing
         if (enrolledChats) {
             enrolledChats.forEach(chat => {
-                result.push(formatChat(chat));
+                result.push(formatChat(chat, req.user._id, req.user.blocked_users));
             });
-        }  
+        }
     
         returnGoodReq(res, { chats: result });
     }
@@ -53,11 +55,11 @@ async function checkExistingChat(req, res) {
 
         // format existing chat if present
         if (existingChat) {
-            existingChat = formatChat(existingChat);
+            existingChat = formatChat(existingChat, req.user._id, req.user.blocked_users);
         }
 
         // returns the existing chat if present, null otherwise
-        returnGoodReq(res, { existingChat: existingChat });
+        returnGoodReq(res, { existingChat });
     }
     catch (error) {
         returnServerErrorReq(res);
@@ -67,15 +69,4 @@ async function checkExistingChat(req, res) {
 module.exports = {
     getEnrolledChats,
     checkExistingChat
-}
-
-// to format retrieved chat to match front-end display
-function formatChat(chat) {
-    return {
-        _id: chat._id,
-        targetUserId: chat.users[0]._id,
-        name: chat.users[0].username,
-        pic: chat.users[0].profile_pic_link,
-        last_message_timestamp: chat.last_message_timestamp
-    };
 }

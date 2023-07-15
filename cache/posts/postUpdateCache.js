@@ -1,51 +1,53 @@
 // functions to add new post to cache/update existing post in cache
 
 const redisClient = require('../redis.js');
-const { getIndexKey } = require('../../utils/cache/cacheIndexUtils.js');
+const { getUserPostKey, getPostIdPath } = require('./postCache.js');
+const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
 
 // to add new post to cache if parent key already exists
-async function cacheNewPost(post, key, userDetails) {
-    // check if key exists
-    const keyExists = await redisClient.exists(key);
-
-    // if key does not exist in cache then update database immediately and return
-    if (!keyExists) {
-        await post.save();
-        return;
+async function cacheNewPost(post, userDetails) {
+    if (!redisClient.isReady) {
+        return false;
     }
 
-    const postIdKey = getIndexKey(key);
+    const postKey = getUserPostKey(post.creator_id);
+
+    // check if key exists
+    const keyExists = await redisClient.exists(postKey);
+
+    // if key does not exist in cache then return
+    if (!keyExists) {
+        return false;
+    }
 
     const jsonPost = post.toObject();
     jsonPost.creator_id = userDetails;
     
-    // add post and update post id array (prepend)
-    await Promise.all([
-        redisClient.json.arrInsert(key, '$', 0, jsonPost),
-        redisClient.json.arrInsert(postIdKey, '$', 0, jsonPost._id)
-    ]);
-
-    // asynchronously save post
-    post.save().catch(error => console.log(error));
+    // add post (prepend)
+    return await returnPromiseResult(redisClient.json.arrInsert(postKey, '$', 0, jsonPost));
 }
 
 // to update post data in cache if exists
-async function updateCachedPost(updatedValues, key, postIndex, post) {
+async function updateCachedPost(updatedValues, creatorId, postId, postFromCache) {
+    if (!redisClient.isReady || !postFromCache) {
+        return false;
+    }
+
+    const postKey = getUserPostKey(creatorId);
+    const postPath = getPostIdPath(postId);
+
     // increase version key
-    const promises = [redisClient.json.numIncrBy(key, `$[${postIndex}].__v`, 1)];
+    const promises = [redisClient.json.numIncrBy(postKey, `${postPath}.__v`, 1)];
 
     // add promise for each updated key/value
     for (const updatedKey in updatedValues) {
         if (updatedValues.hasOwnProperty(updatedKey)) {
-            promises.push(redisClient.json.set(key, `$[${postIndex}].${updatedKey}`, updatedValues[updatedKey]));
+            promises.push(redisClient.json.set(postKey, `${postPath}.${updatedKey}`, updatedValues[updatedKey]));
         }
     }
 
-    // udpate post
-    await Promise.all(promises);
-
-    // asynchronously save post
-    post.save().catch(error => console.log(error));
+    // update cache
+    return await returnPromiseResult(promises);
 }
 
 module.exports = {

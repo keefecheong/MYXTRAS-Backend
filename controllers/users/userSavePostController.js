@@ -7,14 +7,27 @@ const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
+const compareId = require('../../utils/general/compareId.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+
+const checkBlocked = require('../../utils/users/checkBlocked.js');
+
 const { cachedUserSavePost, cachedUserRemoveSavedPost } = require('../../cache/users/userSavePostCache.js');
 
 // to save a post
 async function savePost(req, res) {
-    const postId = req.params.postId;
+    const post = res.post;
+    const postId = post._id;
+
+    // check if either creator or requesting user has blocked each other
+    const blocked = checkBlocked(post.creator_id._id, post.creator_id.blocked_users, req.user._id, req.user.blocked_users);
+
+    if (blocked) {
+        return returnBadReq(res, 'Could not save this post.');
+    }
 
     // check if the specified post is saved by the user
-    const saveExists = req.user.saved_posts.find(post_id => post_id == postId);
+    const saveExists = req.user.saved_posts.find(entry => compareId(entry.post_id, postId));
 
     if (saveExists) {
         return returnBadReq(res, 'You have already saved this post.');
@@ -24,10 +37,19 @@ async function savePost(req, res) {
     const user = new User(req.user);
     user.isNew = false;
 
-    user.saved_posts.push(postId);
+    const savedPostEntry = {
+        post_id: postId,
+        creator_id: post.creator_id._id
+    };
+
+    user.saved_posts.push(savedPostEntry);
 
     try {
-        await cachedUserSavePost(user, postId);
+        // update cache
+        const updateCacheResult = await cachedUserSavePost(user, savedPostEntry);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(user, updateCacheResult);
         
         returnCreatedReq(res);
     }
@@ -41,7 +63,7 @@ async function removeSavedPost(req, res) {
     const postId = req.params.postId;
 
     // check if the specified post is saved by the user
-    const saveIndex = req.user.saved_posts.indexOf(postId);
+    const saveIndex = req.user.saved_posts.findIndex(entry => compareId(entry.post_id, postId));
 
     // if the user has saved the post, continue to remove the post
     // otherwise return 400 error
@@ -56,7 +78,11 @@ async function removeSavedPost(req, res) {
     user.saved_posts.splice(saveIndex, 1);
 
     try {
-        await cachedUserRemoveSavedPost(user, saveIndex);
+        // update cache
+        const updateCacheResult = await cachedUserRemoveSavedPost(user, saveIndex);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(user, updateCacheResult);
         
         returnNoContentReq(res);
     }

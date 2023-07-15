@@ -5,7 +5,9 @@ function emitSocketEvent(socket, room, event, data) {
     if (room == 'self') {
         room = socket.user._id.toString();
     }
-    socket.to(room).emit(event, data);
+
+    // don't broadcast to blocked users
+    socket.to(room).except(socket.user.blockedUsers).emit(event, data);
 }
 
 module.exports = {

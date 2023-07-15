@@ -8,7 +8,8 @@ const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
 const compareId = require('../../utils/general/compareId.js');
-const { getForumThreadKey } = require('../../cache/threads/threadCache.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+
 const { cachedThreadAddLike, cachedThreadRemoveLike } = require('../../cache/threads/threadLikeCache.js');
 
 // add like to thread
@@ -31,14 +32,11 @@ async function addLikeThread(req, res) {
     thread.likes.push(userId);
 
     try {
-        // if thread is in cache then update cache immediately and update database asynchronously
-        if (res.threadFromCache) {
-            await cachedThreadAddLike(getForumThreadKey(res.thread.parent_id._id), res.threadIndex, userId, thread);
-        }
-        // otherwise update database immediately
-        else {
-            await res.thread.save();
-        }
+        // if thread is in cache then update cache
+        const updateCacheResult = await cachedThreadAddLike(thread.parent_id._id, thread._id, userId, res.threadFromCache);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(thread, updateCacheResult);
 
         returnCreatedReq(res);
     }
@@ -68,14 +66,11 @@ async function removeLikeThread(req, res) {
     thread.likes.splice(likeIndex, 1);
 
     try {
-        // if thread is in cache then update cache immediately and update database asynchronously
-        if (res.threadFromCache) {
-            await cachedThreadRemoveLike(getForumThreadKey(res.thread.parent_id._id), res.threadIndex, likeIndex, thread);
-        }
-        // otherwise update database immediately
-        else {
-            await res.thread.save();
-        }
+        // if thread is in cache then update cache
+        const updateCacheResult = await cachedThreadRemoveLike(thread.parent_id._id, thread._id, likeIndex, res.threadFromCache);
+        
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(thread, updateCacheResult);
         
         returnNoContentReq(res);
     }

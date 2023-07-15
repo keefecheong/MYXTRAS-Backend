@@ -2,8 +2,6 @@
 
 const redisClient = require('../redis.js');
 
-const { getIndexKey, getIdIndex } = require('../../utils/cache/cacheIndexUtils.js');
-
 // cache key prefixes
 // to cache comments for a post
 // format: 'comment:post:postid'
@@ -16,36 +14,23 @@ const COMMENT_THREAD_KEY_BASE = 'comment:thread';
 // expiration time for comments cache (1 hour for all) - (cache is updated)
 const EXPIRATION_TIME = 60 * 60;
 
-// to retrieve a single comment from cache if exists
-async function getCommentFromCache(key, commentId) {
-    try {
-        const commentIndex = await getIdIndex(key, commentId);
-
-        const comment = await redisClient.json.get(key, {
-            path: `$[${commentIndex}]`
-        });
-
-        return { success: true, comment: comment[0], commentIndex };
+// to retrieve a single comment from cache
+function getCommentFromCache(key, commentId) {
+    if (!redisClient.isReady) {
+        return null;
     }
-    catch (error) {
-        return { success: false, error: error.message };
-    }
+
+    return redisClient.json.get(key, {
+        path: getCommentIdPath(commentId)
+    });
 }
 
 // to store comment data from database in cache
 function cacheComments(comments, key) {
-    // get array of comment ids
-    const commentIds = comments.map(comment => comment._id);
-
-    // get new key value for the above array
-    const commentIdKey = getIndexKey(key);
-
     // add comments and array of comment ids to cache and set expiry
     return Promise.all([
         redisClient.json.set(key, '$', comments),
-        redisClient.json.set(commentIdKey, '$', commentIds),
-        redisClient.expire(key, EXPIRATION_TIME),
-        redisClient.expire(commentIdKey, EXPIRATION_TIME)
+        redisClient.expire(key, EXPIRATION_TIME)
     ]);
 }
 
@@ -58,9 +43,21 @@ function getPostCommentKey(postId) {
     return `${COMMENT_POST_KEY_BASE}:${postId}`;
 }
 
+// to get path for the given comment id
+function getCommentIdPath(commentId) {
+    return `$[?(@._id=="${commentId}")]`;
+}
+
+// to get path for comments by a user
+function getCommentByUserPath(userId) {
+    return `$[?(@.creator_id=="${userId}")]`;
+}
+
 module.exports = {
     getCommentFromCache,
     cacheComments,
     getThreadCommentKey,
-    getPostCommentKey
+    getPostCommentKey,
+    getCommentIdPath,
+    getCommentByUserPath
 }

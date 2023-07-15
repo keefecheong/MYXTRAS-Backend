@@ -7,9 +7,9 @@ const savePostRouter = express.Router();
 const { savePost, removeSavedPost } = require('../../controllers/users/userSavePostController.js');
 
 // to save a post
-savePostRouter.post('/:postId', savePost);
+savePostRouter.post('/', savePost);
 
 // to remove a saved post
-savePostRouter.delete('/:postId', removeSavedPost);
+savePostRouter.delete('/', removeSavedPost);
 
 module.exports = savePostRouter;

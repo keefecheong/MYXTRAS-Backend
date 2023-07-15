@@ -9,6 +9,7 @@ const { cachePosts } = require('./posts/postCache.js');
 const { cacheComments } = require('./comments/commentCache.js');
 const { cacheForums } = require('./forums/forumCache.js');
 const { cacheThreads } = require('./threads/threadCache.js');
+const { cacheUnblock } = require('./unblock/unblockCache.js');
 
 // save exec for use later
 const exec = mongoose.Query.prototype.exec;
@@ -26,7 +27,7 @@ mongoose.Aggregate.prototype.cache = function(options = {}) {
 // override exec function for custom caching implementation (for queries)
 mongoose.Query.prototype.exec = async function() {
     // if not using cache then execute the query and return the results
-    if (!this.enableCache) {
+    if (!this.enableCache || !redisClient.isReady) {
         return exec.apply(this, arguments);
     }
 
@@ -69,6 +70,10 @@ mongoose.Query.prototype.exec = async function() {
                 await cacheComments(data, cacheKey);
                 break;
 
+            case 'Unblock':
+                await cacheUnblock(data, cacheKey);
+                break;
+
             default:
                 break;
         }
@@ -80,7 +85,7 @@ mongoose.Query.prototype.exec = async function() {
 // override exec function for custom caching implementation (for aggregation)
 mongoose.Aggregate.prototype.exec = async function() {
     // if not using cache then execute the query
-    if (!this.enableCache) {
+    if (!this.enableCache || !redisClient.isReady) {
         return aggExec.apply(this, arguments);
     }
 

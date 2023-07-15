@@ -1,23 +1,5 @@
-const Thread = require('../../models/thread.js');
-
-// common function to craft query based on given filter, sort, and cache options
-function getThreadQuery(filter, sort, cache, cacheOptions) {
-    const query = Thread
-        .find(filter)
-        .sort(sort ?? { creation_time: -1 })
-        .getForum()
-        .getCreator()
-        .lean();
-
-    if (cache) {
-        query.cache(cacheOptions);
-    }
-
-    return query;
-}
-
 // to get aggregation function for popular/relevant threads based on the given interest list and thread limit
-function getAggFunction(interests, limit) {
+module.exports = function getAggFunction(interests, limit) {
     return [
         {
             '$addFields': {
@@ -105,9 +87,4 @@ function getAggFunction(interests, limit) {
             ]
         }
     ]
-}
-
-module.exports = {
-    getThreadQuery,
-    getAggFunction
 }

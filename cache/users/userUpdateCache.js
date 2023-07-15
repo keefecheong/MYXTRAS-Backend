@@ -3,8 +3,12 @@
 const redisClient = require('../redis.js');
 const { getUserKey, USER_EXPIRATION_TIME } = require('./userCache.js');
 
-// to add new user to cache and to database synchronously
-function cacheNewUser(user) {
+// to add new user to cache
+async function cacheNewUser(user) {
+    if (!redisClient.isReady) {
+        return;
+    }
+
     const jsonUser = user.toObject();
 
     delete jsonUser.email;
@@ -13,19 +17,22 @@ function cacheNewUser(user) {
 
     const key = getUserKey(user._id);
 
-    // update cache and database synchronously
+    // update cache
     const promises = [
         redisClient.json.set(key, '$', jsonUser),
-        redisClient.expire(key, USER_EXPIRATION_TIME),
-        user.save()
+        redisClient.expire(key, USER_EXPIRATION_TIME)
     ];
 
-    return Promise.all(promises);
+    await Promise.all(promises);
 }
 
-// to update user data in cache and update database asynchronously
-async function updateCachedUser(updatedValues, user) {
-    const key = getUserKey(user._id);
+// to update user data in cache
+async function updateCachedUser(updatedValues, userId) {
+    if (!redisClient.isReady) {
+        return false;
+    }
+
+    const key = getUserKey(userId);
 
     // increase version key
     const promises = [redisClient.json.numIncrBy(key, '$.__v', 1)];
@@ -38,10 +45,7 @@ async function updateCachedUser(updatedValues, user) {
     }
 
     // update user
-    await Promise.all(promises);
-
-    // asynchronously update database
-    user.save().catch(error => console.log(error));
+    return await returnPromiseResult(promises);
 }
 
 module.exports = {

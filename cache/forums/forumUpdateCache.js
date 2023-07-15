@@ -1,18 +1,25 @@
-// to add new forum/udpate existing forum in cache
+// to add new forum/update existing forum in cache
 
 const redisClient = require('../redis.js');
-const { getIndexKey, getIdIndex } = require('../../utils/cache/cacheIndexUtils.js');
-const { FORUM_LONG_EXPIRATION_TIME } = require('./forumCache.js');
+const { FORUM_LONG_EXPIRATION_TIME, getForumIdPath, getForumKey, getCreatedForumKey } = require('./forumCache.js');
+const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
 
-// to add new forum to cache and update forum:created entry if exists then asynchronously update database
-async function cacheNewForum(forum, userDetails, key, createdKey) {
+// to add new forum to cache and update forum:created entry if exists
+async function cacheNewForum(forum, userDetails) {
+    if (!redisClient.isReady) {
+        return false;
+    }
+
+    const forumKey = getForumKey(forum._id);
+    const createdKey = getCreatedForumKey(forum.creator_id);
+
     const jsonForum = forum.toObject();
 
     jsonForum.creator_id = userDetails;
 
     const promises = [
-        redisClient.json.set(key, '$', jsonForum),
-        redisClient.expire(key, FORUM_LONG_EXPIRATION_TIME)
+        redisClient.json.set(forumKey, '$', jsonForum),
+        redisClient.expire(forumKey, FORUM_LONG_EXPIRATION_TIME)
     ];
 
     // check if created key exists
@@ -20,8 +27,6 @@ async function cacheNewForum(forum, userDetails, key, createdKey) {
 
     // if key exists then update the key with the new forum's required details
     if (createdKeyExists) {
-        const createdIdKey = getIndexKey(createdKey);
-    
         const createdForum = {
             _id: forum._id,
             forum_name: forum.forum_name,
@@ -29,54 +34,37 @@ async function cacheNewForum(forum, userDetails, key, createdKey) {
             forum_pic_link: forum.forum_pic_link
         }
 
-        promises.concat([
-            redisClient.json.arrAppend(createdKey, '$', createdForum),
-            redisClient.json.arrAppend(createdIdKey, '$', createdForum._id)
-        ]);
+        promises.push(redisClient.json.arrAppend(createdKey, '$', createdForum));
     }
 
-    await Promise.all(promises);
-
-    forum.save().catch(error => console.log(error));
+    return await returnPromiseResult(promises);
 }
 
-// to update forum data in cache and update database asynchronously
-async function updateCachedForum(updatedValues, key, createdKey, forum) {
+// to update forum data in cache
+async function updateCachedForum(updatedValues, forumId, creatorId) {
+    if (!redisClient.isReady) {
+        return false;
+    }
+
+    const forumKey = getForumKey(forumId);
+    const createdKey = getCreatedForumKey(creatorId);
+    
     // increase version key
-    const promises = [redisClient.json.numIncrBy(key, '$.__v', 1)];
-
-    let createdIndex = null;
-
-    try {
-        createdIndex = await getIdIndex(createdKey, forum._id);
-    }
-    catch (error) {
-        // if error is not produced from inexistent path then throw error to handle in caller function
-        if (error.message != "ERR Path '$' does not exist") {
-            throw new Error();
-        }
-    }
+    const promises = [redisClient.json.numIncrBy(forumKey, '$.__v', 1)];
 
     // add promise for each updated key/value
     for (const updatedKey in updatedValues) {
         if (updatedValues.hasOwnProperty(updatedKey)) {
-            promises.push(redisClient.json.set(key, `$.${updatedKey}`, updatedValues[updatedKey]));
+            const updatedValue = updatedValues[updatedKey];
 
-            // if forum:created entry exists:
-            // update forum:created entry's key/value pairs if they already exist (prevent adding other unnecessary information of the forum)
-            if (createdIndex != null) {
-                promises.push(redisClient.json.set(createdKey, `$[${createdIndex}].${updatedKey}`, updatedValues[updatedKey], {
-                    XX: true
-                }));
-            }
+            promises.push(redisClient.json.set(forumKey, `$.${updatedKey}`, updatedValue));
+
+            // if forum:created entry exists, update forum:created entry's key/value pairs
+            promises.push(redisClient.json.set(createdKey, `${getForumIdPath(forumId)}.${updatedKey}`, updatedValue, { XX: true }));
         }
     }
     
-    // update forum
-    await Promise.all(promises);
-
-    // asynchronously save forum
-    forum.save().catch(error => console.log(error));
+    return await returnPromiseResult(promises);
 }
 
 module.exports = {

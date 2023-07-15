@@ -1,25 +1,41 @@
 // to update cached thread when dislike is added/removed
 
 const redisClient = require('../redis.js');
+const { getForumThreadKey, getThreadIdPath } = require('./threadCache.js');
+const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
 
-// to add dislike to thread in cache and asynchronously update database
-async function cachedThreadAddDislike(key, threadIndex, userId, thread) {
-    await Promise.all([
-        redisClient.json.arrAppend(key, `$[${threadIndex}].dislikes`, userId),
-        redisClient.json.numIncrBy(key, `$[${threadIndex}].__v`, 1)
-    ]);
+// to add dislike to thread in cache
+async function cachedThreadAddDislike(forumId, threadId, userId, threadFromCache) {
+    if (!redisClient.isReady || !threadFromCache) {
+        return false;
+    }
 
-    thread.save().catch(error => console.log(error));
+    const forumThreadKey = getForumThreadKey(forumId);
+    const threadPath = getThreadIdPath(threadId);
+
+    const promises = [
+        redisClient.json.arrAppend(forumThreadKey, `${threadPath}.dislikes`, userId),
+        redisClient.json.numIncrBy(forumThreadKey, `${threadPath}.__v`, 1)
+    ];
+
+    return await returnPromiseResult(promises);
 }
 
-// to remove dislike from thread in cache and asynchronously update database
-async function cachedThreadRemoveDislike(key, threadIndex, dislikeIndex, thread) {
-    await Promise.all([
-        redisClient.json.arrPop(key, `$[${threadIndex}].dislikes`, dislikeIndex),
-        redisClient.json.numIncrBy(key, `$[${threadIndex}].__v`, -1)
-    ]);
+// to remove dislike from thread in cache
+async function cachedThreadRemoveDislike(forumId, threadId, dislikeIndex, threadFromCache) {
+    if (!redisClient.isReady || !threadFromCache) {
+        return false;
+    }
 
-    thread.save().catch(error => console.log(error));
+    const forumThreadKey = getForumThreadKey(forumId);
+    const threadPath = getThreadIdPath(threadId);
+
+    const promises = [
+        redisClient.json.arrPop(forumThreadKey, `${threadPath}.dislikes`, dislikeIndex),
+        redisClient.json.numIncrBy(forumThreadKey, `${threadPath}.__v`, 1)
+    ];
+
+    return await returnPromiseResult(promises);
 }
 
 module.exports = {

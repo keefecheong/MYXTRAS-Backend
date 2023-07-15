@@ -11,8 +11,8 @@ const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
-const { getForumKey, getCreatedForumKey } = require('../../cache/forums/forumCache.js');
 const { cacheNewForum, updateCachedForum } = require('../../cache/forums/forumUpdateCache.js');
 
 // create a new forum
@@ -39,16 +39,8 @@ async function createForum(req, res) {
         }
 
         // field length validation
-        if (forum_id.length > 25){
-            return returnBadReq(res, 'Forum ID is too long');
-        }
-
-        if (forum_name.length > 50){
-            return returnBadReq(res, 'Forum Name is too long');
-        }
-
-        if (forum_desc.length > 250){
-            return returnBadReq(res, 'Forum Name is too long');
+        if (forum_name.length > 25 || forum_id.length > 25 || forum_desc.length > 100) {
+            return returnBadReq(res, 'Input length too long');
         }
 
         const forumId = new mongoose.Types.ObjectId();
@@ -83,7 +75,11 @@ async function createForum(req, res) {
             profile_pic_link: req.user.profile_pic_link
         }
 
-        await cacheNewForum(newForum, userDetails, getForumKey(forumId), getCreatedForumKey(creatorId));
+        // update cache
+        const updateCacheResult = await cacheNewForum(newForum, userDetails);
+
+        // update database asynchronously if cache is updated successfully, or synchronously otherwise
+        await saveDocAsync(newForum, updateCacheResult);
 
         returnGoodReq(res, { forum_id: forumId });
     }
@@ -192,8 +188,11 @@ async function updateForum(req, res) {
             updatedValues.banner_link = newImageLinks[0];
         }
 
-        // update cache entry and update database asynchronously
-        await updateCachedForum(updatedValues, getForumKey(forumId), getCreatedForumKey(userId), forum);
+        // update cache entry
+        const updateCacheResult = await updateCachedForum(updatedValues, forumId, userId);
+
+        // update database asynchronously if cache is updated successfully, or synchronously otherwise
+        await saveDocAsync(forum, updateCacheResult);
 
         returnGoodReq(res);
     } catch (error) {

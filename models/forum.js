@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Thread = require('./thread.js');
 
 const forumSchema = new mongoose.Schema({
     creator_id: {
@@ -53,20 +54,31 @@ forumSchema.query.getCreator = function() {
     });
 }
 
+// craft query based on given arguments
+forumSchema.statics.commonQuery = function (filter, cache, cacheOptions) {
+    const query = this
+        .find(filter)
+        .select('forum_name forum_id forum_pic_link')
+        .lean();
+
+    if (cache) {
+        query.cache(cacheOptions);
+    }
+
+    return query;
+}
+
 // on delete automatically clean up threads associated with the forum if any
 forumSchema.post('findOneAndDelete', async function(doc, next) {
     try {
-        // get Thread model
-        const threadModel = mongoose.model('Thread');
-
         // get all threads under this forum
-        const associatedThreads = await threadModel.find({ parent_id: doc._id }, { '_id': 1 });
+        const associatedThreads = await Thread.find({ parent_id: doc._id }, { '_id': 1 });
     
         const promises = [];
     
         // add promise to delete individual thread to trigger thread middleware to clean up comments as well
         for (let i = 0; i < associatedThreads.length; i++) {
-            promises.push(threadModel.findByIdAndDelete(associatedThreads[i]._id));
+            promises.push(Thread.findByIdAndDelete(associatedThreads[i]._id));
         }
     
         // execute all promises

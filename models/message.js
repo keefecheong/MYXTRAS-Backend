@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Chat = require('./chat.js');
 const { deleteFiles } = require('../utils/general/firebaseStorageDelete.js');
 
 const messageSchema = new mongoose.Schema({
@@ -74,9 +75,7 @@ messageSchema.post('save', async function(doc, next) {
     }
 
     try {
-        const chatModel = mongoose.model('Chat');
-
-        chatModel.findByIdAndUpdate(
+        Chat.findByIdAndUpdate(
             doc.chat_id,
             { last_message_timestamp: doc.creation_time }
         ).catch(error => console.log(error));

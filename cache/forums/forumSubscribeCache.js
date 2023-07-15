@@ -1,25 +1,39 @@
 // to update cached forum when a subscriber is added/removed
 
 const redisClient = require('../redis.js');
+const { getForumKey } = require('./forumCache.js');
+const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
 
-// to add subscriber to forum in cache and update database asynchronously
-async function cachedForumAddSubscriber(key, userId, forum) {
-    await Promise.all([
-        redisClient.json.arrAppend(key, '$.subscribers', userId),
-        redisClient.json.numIncrBy(key, '$.__v', 1)
-    ]);
+// to add subscriber to forum in cache
+async function cachedForumAddSubscriber(forumId, userId) {
+    if (!redisClient.isReady) {
+        return false;
+    }
 
-    forum.save().catch(error => console.log(error));
+    const forumKey = getForumKey(forumId);
+
+    const promises = [
+        redisClient.json.arrAppend(forumKey, '$.subscribers', userId),
+        redisClient.json.numIncrBy(forumKey, '$.__v', 1)
+    ];
+
+    return await returnPromiseResult(promises);
 }
 
-// to remove subscriber from forum in cache and update database asynchronously
-async function cachedForumRemoveSubscriber(key, subscriberIndex, forum) {
-    await Promise.all([
-        redisClient.json.arrPop(key, '$.subscribers', subscriberIndex),
-        redisClient.json.numIncrBy(key, '$.__v', 1)
-    ]);
+// to remove subscriber from forum in cache
+async function cachedForumRemoveSubscriber(forumId, subscriberIndex) {
+    if (!redisClient.isReady) {
+        return false;
+    }
 
-    forum.save().catch(error => console.log(error));
+    const forumKey = getForumKey(forumId);
+
+    const promises = [
+        redisClient.json.arrPop(forumKey, '$.subscribers', subscriberIndex),
+        redisClient.json.numIncrBy(forumKey, '$.__v', 1)
+    ];
+
+    return await returnPromiseResult(promises);
 }
 
 module.exports = {

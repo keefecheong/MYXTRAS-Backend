@@ -3,29 +3,38 @@
 const redisClient = require('../redis.js');
 
 const { getUserKey } = require('../users/userCache.js');
+const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
 
-// to add a saved post to user in cache and update database asynchronously
-async function cachedUserSavePost(user, postId) {
+// to add a saved post to user in cache
+async function cachedUserSavePost(user, entry) {
+    if (!redisClient.isReady) {
+        return false;
+    }
+
     const key = getUserKey(user._id);
 
-    await Promise.all([
-        redisClient.json.arrAppend(key, '$.saved_posts', postId),
+    const promises = [
+        redisClient.json.arrAppend(key, '$.saved_posts', entry),
         redisClient.json.numIncrBy(key, '$.__v', 1)
-    ]);
+    ];
 
-    user.save().catch(error => console.log(error));
+    return await returnPromiseResult(promises);
 }
 
-// to remove a saved post from user in cache and update database asynchronously
+// to remove a saved post from user in cache
 async function cachedUserRemoveSavedPost(user, saveIndex) {
+    if (!redisClient.isReady) {
+        return false;
+    }
+
     const key = getUserKey(user._id);
 
-    await Promise.all([
+    const promises = [
         redisClient.json.arrPop(key, '$.saved_posts', saveIndex),
-        redisClient.json.numIncrBy(key, '$.__v', -1)
-    ]);
+        redisClient.json.numIncrBy(key, '$.__v', 1)
+    ];
 
-    user.save().catch(error => console.log(error));
+    return await returnPromiseResult(promises);
 }
 
 module.exports = {

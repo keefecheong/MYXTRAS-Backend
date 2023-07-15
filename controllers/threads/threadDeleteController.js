@@ -6,8 +6,8 @@ const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
+const performAllSync = require('../../utils/cache/performAllSync.js');
 
-const { getForumThreadKey } = require('../../cache/threads/threadCache.js');
 const { deleteCachedThread } = require('../../cache/threads/threadDeleteCache.js');
 
 // to delete a thread
@@ -19,14 +19,15 @@ async function deleteThread(req, res) {
     }
 
     try {
-        // if post is in cache then update both cache and database immediately
+        const threadId = req.params.threadID;
+        let promises = [];
+
+        // if post is in cache then get promises to update cache
         if (res.threadFromCache) {
-            await deleteCachedThread(getForumThreadKey(req.params.forumID), res.threadIndex, req.params.threadID);
+            promises = deleteCachedThread(req.params.forumID, threadId);
         }
-        // otherwise delete thread from database immediately
-        else {
-            await Thread.findByIdAndDelete(req.params.threadID);
-        }
+        
+        await performAllSync(promises, Thread.findByIdAndDelete(threadId));
 
         returnGoodReq(res, { message: 'Thread removed.' });
     }

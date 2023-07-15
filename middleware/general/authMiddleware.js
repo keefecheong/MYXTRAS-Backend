@@ -84,10 +84,12 @@ async function validateUserSocket(socket, next) {
 
         // attach the user information to the socket for use
         // get username and profile_pic_link to store in socket
+        // store blocked_user's user ids also
         socket.user = {
             _id: user._id,
             username: user.username,
-            profile_pic_link: user.profile_pic_link
+            profile_pic_link: user.profile_pic_link,
+            blocked_users: user.blocked_users.map(entry =>  entry.user_id.toString())
         };
 
         next();

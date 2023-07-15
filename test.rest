@@ -170,3 +170,13 @@ get http://127.0.0.1:8081/api/users/cookie/remove
 
 GET http://127.0.0.1:8081/api/users/profile/self
 Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTNjYjU2Y2M3Y2JhZDcwZDI3NiIsImlhdCI6MTY4ODk2Mjg1NX0.sQtHZzIb1kD-OU6HsHrOs79U39SQfQRYB18aF_U-pS4
+
+###
+
+post http://127.0.0.1:8081/api/users/block/649fda7bb56cc7cbad70d296
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTNjYjU2Y2M3Y2JhZDcwZDI3NiIsImlhdCI6MTY4ODk2Mjg1NX0.sQtHZzIb1kD-OU6HsHrOs79U39SQfQRYB18aF_U-pS4
+
+###
+
+get http://127.0.0.1:8081/api/users/cookie/verify
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTNjYjU2Y2M3Y2JhZDcwZDI3NiIsImlhdCI6MTY4ODk2Mjg1NX0.sQtHZzIb1kD-OU6HsHrOs79U39SQfQRYB18aF_U-pS4

@@ -9,6 +9,11 @@ const { uploadFile } = require('../../utils/general/firebaseStorageUpload.js');
 
 // handle 'send-message' event
 async function handleSendMessage(data, socket, connections) {
+    // do nothing if either user is blocked by the other user
+    if (data.chat.blocked) {
+        return;
+    }
+
     let fileUpload;
 
     if (data.file) {
@@ -142,6 +147,11 @@ function processFileChunks(data, socket) {
 
 // handle 'edit-message' event
 function handleEditMessage(data, socket, connections) {
+    // do nothing if either user is blocked by the other user
+    if (data.chat.blocked) {
+        return;
+    }
+
     const editEvent = 'receive-edit-message';
     const sendData = { message: data.message };
 
@@ -165,6 +175,11 @@ function handleEditMessage(data, socket, connections) {
 
 // handle 'delete-message' event
 function handleDeleteMessage(data, socket, connections) {
+    // do nothing if either user is blocked by the other user
+    if (data.chat.blocked) {
+        return;
+    }
+
     const deletedEvent = 'receive-delete-message';
     const sendData = { message: data.message };
 

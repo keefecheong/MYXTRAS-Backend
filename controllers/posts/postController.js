@@ -3,7 +3,6 @@
 const Post = require('../../models/post.js');
 const User = require('../../models/user.js');
 const { checkPostAttributesAll } = require('../../utils/posts/checkAttributes.js');
-const getPostQuery = require('../../utils/posts/getPostQuery.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
@@ -34,7 +33,7 @@ async function getFollowingPosts(req, res){
         for (let i = 0; i < userIds.length; i++) {
             const userId = userIds[i];
 
-            queries.push(getPostQuery({
+            queries.push(Post.commonQuery({
                 creator_id: userId
             }, null, true, {
                 key: getUserPostKey(userId)
@@ -52,7 +51,7 @@ async function getFollowingPosts(req, res){
             });
         });
 
-        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
+        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts, req.user.blocked_users);
 
         returnGoodReq(res, posts);
     }
@@ -67,13 +66,13 @@ async function getUserPosts(req, res) {
         // set targetUserId to provided userId or requesting user's id otherwise
         const targetUserId = req.params.userId || req.user._id;
 
-        var posts = await getPostQuery({
+        var posts = await Post.commonQuery({
             creator_id: targetUserId
         }, null, true, {
             key: getUserPostKey(targetUserId)
         });
 
-        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
+        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts, req.user.blocked_users);
 
         returnGoodReq(res, posts);
     }
@@ -141,6 +140,11 @@ async function getPopularPosts(req, res) {
                         '$arrayElemAt': [
                             '$user.profile_pic_link', 0
                         ]
+                    },
+                    'creator_id.blocked_users': {
+                        '$arrayElemAt': [
+                            '$user.blocked_users', 0
+                        ]
                     }
                 }
             },
@@ -158,7 +162,7 @@ async function getPopularPosts(req, res) {
         });
 
         // filter posts to those created by other users and set fields
-        posts = checkPostAttributesAll(posts.filter(post => post.creator_id._id != req.user._id), req.user._id, req.user.saved_posts);
+        posts = checkPostAttributesAll(posts.filter(post => post.creator_id._id != req.user._id), req.user._id, req.user.saved_posts, req.user.blocked_users);
 
         returnGoodReq(res, posts);
     }
@@ -170,11 +174,11 @@ async function getPopularPosts(req, res) {
 // get posts saved by the user
 async function getSavedPosts(req, res) {
     try {
-        var posts = await getPostQuery({
+        var posts = await Post.commonQuery({
             _id: { $in: req.user.saved_posts }
         }, {});
 
-        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts);
+        posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts, req.user.blocked_users);
 
         returnGoodReq(res, posts);
     }

@@ -1,7 +1,6 @@
 // to initially add post data from the database to the cache
 
 const redisClient = require('../redis.js');
-const { getIndexKey, getIdIndex } = require('../../utils/cache/cacheIndexUtils.js');
 
 // cache key prefixes
 // to cache posts grouped by user id
@@ -20,19 +19,14 @@ const POST_USER_EXPIRATION_TIME = 60 * 60;
 const POST_POPULAR_EXPIRATION_TIME = 60;
 
 // to retrieve a single post from cache if exists
-async function getPostFromCache(key, postId) {
-    try {
-        const postIndex = await getIdIndex(key, postId);
-    
-        const post = await redisClient.json.get(key, {
-            path: `$[${postIndex}]`
-        });
+function getPostFromCache(userId, postId) {
+    if (!redisClient.isReady) {
+        return null;
+    }
 
-        return { success: true, post: post[0], postIndex };
-    }
-    catch (error) {
-        return { success: false, error: error.message };
-    }
+    return redisClient.json.get(getUserPostKey(userId), {
+        path: getPostIdPath(postId)
+    });
 }
 
 // to store post data from database in cache
@@ -48,21 +42,6 @@ function cachePosts(posts, key) {
         redisClient.expire(key, expiry)
     ];
 
-    // if cache entry is for storing by user then add another array of post ids for referencing
-    if (byUser) {
-        // get array of post ids
-        const postIds = posts.map(post => post._id);
-    
-        // get new key value for the above array
-        const postIdKey = getIndexKey(key);
-
-        // add to promises
-        promises.concat([
-            redisClient.json.set(postIdKey, '$', postIds),
-            redisClient.expire(postIdKey, expiry)
-        ]);
-    }
-
     return Promise.all(promises);
 }
 
@@ -75,9 +54,22 @@ function getPopularPostKey(tags) {
     return `${POST_POPULAR_KEY_BASE}:${tags}`;
 }
 
+// to get path for a post id
+function getPostIdPath(postId) {
+    return `$[?(@._id=="${postId}")]`;
+}
+
+// get path for likes by a user
+function getPostLikesPath(userId, specificLike) {
+    const likesPath = `.likes[?(@=="${userId}")]`;
+    return `$[?(@${likesPath})]${specificLike ? likesPath : ''}`;
+}
+
 module.exports = {
     cachePosts,
     getPostFromCache,
     getUserPostKey,
-    getPopularPostKey
+    getPopularPostKey,
+    getPostIdPath,
+    getPostLikesPath
 }

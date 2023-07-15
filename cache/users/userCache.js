@@ -1,7 +1,6 @@
 // to add users from the database to the cache
 
 const redisClient = require('../redis.js');
-const { getIndexKey } = require('../../utils/cache/cacheIndexUtils.js');
 
 // cache key prefixes
 // to cache individual users
@@ -22,6 +21,10 @@ const USER_EXPIRATION_TIME = 60 * 60;
 
 // to retrieve a single user from cache if exists
 async function getUserFromCache(key, populateFollowers) {
+    if (!redisClient.isReady) {
+        return null;
+    }
+    
     let user = await redisClient.json.get(key);
 
     if (populateFollowers) {
@@ -44,27 +47,16 @@ async function getUserFromCache(key, populateFollowers) {
 // to store user from database to cache
 function cacheUser(data, key, populateFollowers) {
     const workingData = Array.isArray(data) ? [...data] : {...data};
-    
-    // check if cache entry is for storing individual users
-    const forSingle = key.startsWith(USER_SINGLE_KEY_BASE);
 
-    let followers, followerKey, userIds, userIdKey;
+    let followers, followerKey;
 
-    if (forSingle && populateFollowers) {
+    if (populateFollowers) {
         // if cache entry is for storing individual users and user's followers are populated then get the follower data
         followers = workingData.followers;
         followerKey = getFollowerKey(key.split(':')[2]);
 
-        userIds = followers.map(user => user._id);
-        userIdKey = getIndexKey(followerKey);
-
         // depopulate followers
-        workingData.followers = userIds;
-    }
-    // otherwise if cache entry is for following users' data then get user id array for referencing
-    else if (!forSingle) {
-        userIds = workingData.map(user => user._id);
-        userIdKey = getIndexKey(key);
+        workingData.followers = followers.map(user => user._id);
     }
 
     // set promises
@@ -75,18 +67,8 @@ function cacheUser(data, key, populateFollowers) {
 
     // if there is follower data then add follower data to cache
     if (followers) {
-        promises.concat([
-            redisClient.json.set(followerKey, '$', followers),
-            redisClient.expire(followerKey, USER_EXPIRATION_TIME)
-        ]);
-    }
-
-    // if user id array is not null then add to cache
-    if (userIds) {
-        promises.concat([
-            redisClient.json.set(userIdKey, '$', userIds),
-            redisClient.expire(userIdKey, USER_EXPIRATION_TIME)
-        ]);
+        promises.push(redisClient.json.set(followerKey, '$', followers));
+        promises.push(redisClient.expire(followerKey, USER_EXPIRATION_TIME));
     }
 
     return Promise.all(promises);
@@ -105,11 +87,27 @@ function getFollowingKey(userId) {
     return `${USER_FOLLOWING_KEY_BASE}:${userId}`;
 }
 
+// to get path by user id
+function getFollowingPath(userId) {
+    return `$[?(@._id=="${userId}")]`;
+}
+
+function getBlockedPath(userId) {
+    return `$.blocked_users[?(@.user_id=="${userId}")]`;
+}
+
+function getSavedPostPath(userId) {
+    return `$.saved_posts[?(@.creator_id=="${userId}")]`;
+}
+
 module.exports = {
     USER_EXPIRATION_TIME,
     getUserFromCache,
     cacheUser,
     getUserKey,
     getFollowerKey,
-    getFollowingKey
+    getFollowingKey,
+    getFollowingPath,
+    getBlockedPath,
+    getSavedPostPath
 }

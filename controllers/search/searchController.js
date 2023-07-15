@@ -20,7 +20,10 @@ async function search(req, res, type) {
     // set limit based on query type
     const limit = searchTerm == 'all' ? 3 : 6;
 
-    const userPromise = searchUserPromise(regexTerm, req.user._id, limit);
+    const excludeUsers = req.user.blocked_users.map(entry => entry.user_id);
+    excludeUsers.push(req.user._id);
+
+    const userPromise = searchUserPromise(regexTerm, req.user._id, excludeUsers, limit);
     const forumPromise = searchForumPromise(regexTerm, limit);
 
     let results;

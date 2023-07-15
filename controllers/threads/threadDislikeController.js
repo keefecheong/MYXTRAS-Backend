@@ -8,7 +8,8 @@ const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
 const compareId = require('../../utils/general/compareId.js');
-const { getForumThreadKey } = require('../../cache/threads/threadCache.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+
 const { cachedThreadAddDislike, cachedThreadRemoveDislike } = require('../../cache/threads/threadDislikeCache.js');
 
 // add dislike to thread
@@ -31,14 +32,11 @@ async function addDislikeThread(req, res) {
     thread.dislikes.push(userId);
 
     try {
-        // if thread is in cache then update cache immediately and update database asynchronously
-        if (res.threadFromCache) {
-            await cachedThreadAddDislike(getForumThreadKey(res.thread.parent_id._id), res.threadIndex, userId, thread);
-        }
-        // otherwise update database immediately
-        else {
-            await res.thread.save();
-        }
+        // update cache if thread is in cache
+        const updateCacheResult = await cachedThreadAddDislike(thread.parent_id._id, thread._id, userId, res.threadFromCache);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(thread, updateCacheResult);
         
         returnCreatedReq(res);
     }
@@ -68,14 +66,11 @@ async function removeDislikeThread(req, res) {
     thread.dislikes.splice(dislikeIndex, 1);
 
     try {
-        // if thread is in cache then update cache immediately and update database asynchronously
-        if (res.threadFromCache) {
-            await cachedThreadRemoveDislike(getForumThreadKey(res.thread.parent_id._id), res.threadIndex, dislikeIndex, thread);
-        }
-        // otherwise update database immediately
-        else {
-            await res.thread.save();
-        }
+        // update cache if thread is in cache
+        const updateCacheResult = await cachedThreadRemoveDislike(thread.parent_id._id, thread._id, dislikeIndex, res.threadFromCache);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(thread, updateCacheResult);
         
         returnNoContentReq(res);
     }

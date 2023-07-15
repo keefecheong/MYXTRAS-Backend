@@ -7,6 +7,7 @@ function handleNewConnection(socket, connections) {
     // manage user connection information
 
     const userId = socket.user._id.toString();
+    const blockedUsers = socket.user.blocked_users;
 
     // check if user has an existing socket connection
     const userConnectionIndex = getUserConnectionIndex(connections, userId);
@@ -14,12 +15,13 @@ function handleNewConnection(socket, connections) {
     // if user does not have an existing socket then add the user id and socket id to connections
     if (userConnectionIndex == -1) {
         connections.push({
-            userId: userId,
+            userId,
+            blockedUsers,
             socketId: [socket.id]
         });
 
-        // tell all other sockets that this user is online
-        socket.broadcast.emit('update-user-presence', {
+        // tell all other sockets that this user is online, except for those blocked by the user
+        socket.broadcast.except(blockedUsers).emit('update-user-presence', {
             userId: userId,
             online: true
         });

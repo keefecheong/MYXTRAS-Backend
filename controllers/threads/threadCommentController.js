@@ -1,10 +1,11 @@
 // controller functions related to thread comments
 
-const Comment = require('../../models/comment.js');
+const { Comment, PARENT_MODEL_THREAD } = require('../../models/comment.js');
 
-const getCommentQuery = require('../../utils/comments/getCommentQuery.js');
 const { checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 const compareId = require('../../utils/general/compareId.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+const performAllSync = require('../../utils/cache/performAllSync.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
@@ -21,7 +22,7 @@ async function getThreadComments(req, res) {
     try {
         const threadId = res.thread._id;
 
-        var threadComments = await getCommentQuery({
+        var threadComments = await Comment.commonQuery({
             parent_id: threadId
         }, null, true, {
             key: getThreadCommentKey(threadId)
@@ -45,22 +46,22 @@ async function createComment(req, res) {
         return returnBadReq(res, 'Comment content is required.');
     }
 
-    const creatorId = req.user._id;
-    const threadId = res.thread._id;
+    const creator = req.user;
+    const thread = res.thread;
 
     const comment = new Comment({
-        creator_id: creatorId,
+        creator_id: creator._id,
         content: req.body.content,
         creation_time: Date.now(),
-        parent_id: threadId,
-        parent_model: 'Thread'
+        parent_id: thread._id,
+        parent_model: PARENT_MODEL_THREAD
     });
     
     try {
         const userDetails = {
-            _id: creatorId,
-            username: req.user.username,
-            profile_pic_link: req.user.profile_pic_link
+            _id: creator._id,
+            username: creator.username,
+            profile_pic_link: creator.profile_pic_link
         }
 
         const jsonComment = comment.toObject();
@@ -70,14 +71,16 @@ async function createComment(req, res) {
         delete jsonComment.parent_model;
 
         // store new comment in cache if key exists or update database otherwise
-        await cacheNewComment(comment, getThreadCommentKey(threadId), jsonComment, res.threadFromCache, getForumThreadKey(res.thread.parent_id._id), res.threadIndex);
+        const updateCacheResult = await cacheNewComment(false, jsonComment, res.threadFromCache, getForumThreadKey(thread.parent_id._id), thread._id);
+
+        // save comment asynchronously if cache is updated, and synchronously otherwise
+        await saveDocAsync(comment, updateCacheResult);
 
         jsonComment.isOwner = true;
 
         returnGoodReq(res, { message: 'Comment created.', comment: jsonComment });
     }
     catch (error) {
-        console.log(error)
         returnServerErrorReq(res);
     }
 }
@@ -91,14 +94,14 @@ async function deleteComment(req, res) {
     }
 
     try{
-        // if comment is in cache then update both cache and database immediately
-        if (res.commentFromCache) {
-            await deleteCachedComment(getThreadCommentKey(res.thread._id), res.commentIndex, req.params.commentId, res.threadFromCache, getForumThreadKey(res.thread.parent_id._id), res.threadIndex);
-        }
-        // otherwise update database immediately
-        else {
-            await Comment.findByIdAndDelete(req.params.commentId);
-        }
+        const commentId = req.params.commentId;
+        let promises = [];
+        
+        // update cache
+        promises = deleteCachedComment(false, commentId, res.commentFromCache, res.threadFromCache, getForumThreadKey(res.thread.parent_id._id), res.thread._id);
+
+        // delete from cache and database together
+        await performAllSync(promises, Comment.findByIdAndDelete(commentId));
 
         returnGoodReq(res, { message: 'Comment removed.' });
     }

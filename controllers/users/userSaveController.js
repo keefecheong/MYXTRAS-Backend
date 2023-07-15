@@ -13,6 +13,8 @@ const schools = require('../../schools.json');
 
 const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+
 // update user info
 // user retrieved from authMiddleware
 async function updateUser(req, res) {
@@ -76,12 +78,15 @@ async function updateUser(req, res) {
             updatedValues.profile_pic_link = profile_pic_link[0];
         }
 
-        await updateCachedUser(updatedValues, user);
+        // update cache
+        const updateCacheResult = await updateCachedUser(updatedValues, user);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(user, updateCacheResult);
         
         returnNoContentReq(res);
     }
     catch (error) {
-        console.log(error)
         returnServerErrorReq(res);
     }
 }
@@ -162,18 +167,22 @@ async function setupUser(req, res) {
             is_profile_setup: true
         }
 
-        await updateCachedUser(updatedValues, user);
+        // update cache
+        const updateCachedResult = await updateCachedUser(updatedValues, user);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(user, updateCachedResult);
 
         returnNoContentReq(res);
     }
     catch (error) {
         if (error.code === 11000) {
             // Duplicate username error
-            return returnBadReq(res, 'Username already exists');
+            returnBadReq(res, 'Username already exists');
         }
         else {
             // Other error
-            return returnServerErrorReq(res);
+            returnServerErrorReq(res);
         }
     }
 }

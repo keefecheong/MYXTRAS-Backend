@@ -8,15 +8,26 @@ const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
 const compareId = require('../../utils/general/compareId.js');
-const { getUserPostKey } = require('../../cache/posts/postCache.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+
+const checkBlocked = require('../../utils/users/checkBlocked.js');
+
 const { cachedPostAddLike, cachedPostRemoveLike } = require('../../cache/posts/postLikeCache.js');
 
 // to add a like under the requested post
 async function postLike(req, res) {
+    var post = res.post;
     const userId = req.user._id;
 
+    // check if either the creator or requesting user has blocked each other
+    const blocked = checkBlocked(post.creator_id._id, post.creator_id.blocked_users, userId, req.user.blocked_users);
+
+    if (blocked) {
+        return returnBadReq(res, 'Could not like this post.');
+    }
+
     // check if the specified post is liked by the user
-    const likeExists = res.post.likes.find(creator_id => creator_id == userId);
+    const likeExists = post.likes.find(creator_id => creator_id == userId);
     
     // if the user has not liked the post, continue to add the like
     // otherwise, return 400 error
@@ -25,21 +36,18 @@ async function postLike(req, res) {
     }
 
     // convert post to mongoose document to perform operations
-    const post = new Post(res.post);
+    post = new Post(post);
     post.isNew = false;
 
     // update post's likes list
     post.likes.push(userId);
 
     try {
-        // if post is in cache then update cache immediately and update database asynchronously
-        if (res.postFromCache) {
-            await cachedPostAddLike(getUserPostKey(post.creator_id._id), res.postIndex, userId, post);
-        }
-        // otherwise update database immediately
-        else {
-            await post.save();
-        }
+        // update cache entry
+        const updateCacheResult = await cachedPostAddLike(post.creator_id._id, post._id, userId);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(post, updateCacheResult);
 
         returnCreatedReq(res);
     }
@@ -69,14 +77,11 @@ async function deleteLike(req, res) {
     post.likes.splice(likeIndex, 1);
 
     try {
-        // if post is in cache then update cache immediately and update database asynchronously
-        if (res.postFromCache) {
-            await cachedPostRemoveLike(getUserPostKey(post.creator_id._id), res.postIndex, likeIndex, post)
-        }
-        // otherwise update database immediately
-        else {
-            await post.save();
-        }
+        // update cache entry
+        const updateCacheResult = await cachedPostRemoveLike(post.creator_id._id, post._id, likeIndex);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(post, updateCacheResult);
 
         returnNoContentReq(res);
     }

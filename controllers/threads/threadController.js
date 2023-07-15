@@ -1,11 +1,11 @@
 // controller functions to handle GET requests for threads
 
+const Forum = require('../../models/forum.js');
 const Thread = require('../../models/thread.js');
 
-const getForumQuery = require('../../utils/forums/getForumQuery.js');
 const { getCreatedForumKey, getSubscribedForumKey } = require('../../cache/forums/forumCache.js');
 
-const { getThreadQuery, getAggFunction } = require('../../utils/threads/getThreadQuery.js');
+const getAggFunction = require('../../utils/threads/getAggFunction.js');
 const { checkThreadAttributesAll } = require('../../utils/threads/checkAttributes.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
@@ -18,7 +18,7 @@ async function getForumThreads(req, res) {
     try {
         const forumId = req.params.forumID;
 
-        var threads = await getThreadQuery({
+        var threads = await Thread.commonQuery({
             parent_id: forumId
         }, null, true, {
             key: getForumThreadKey(forumId)
@@ -82,14 +82,13 @@ async function getRecentThreads(req, res) {
     try {
         const userId = req.user._id;
 
-        // reuse getForumQuery to craft queries for getting forums created by the requesting user or subscribed by the requesting user with cache
-        const createdForumQuery = getForumQuery({
+        const createdForumQuery = Forum.commonQuery({
             creator_id: userId
         }, true, {
             key: getCreatedForumKey(userId)
         });
         
-        const subscribedForumQuery = getForumQuery({
+        const subscribedForumQuery = Forum.commonQuery({
             subscribers: { $in: [userId] }
         }, true, {
             key: getSubscribedForumKey(userId)
@@ -109,7 +108,7 @@ async function getRecentThreads(req, res) {
         for (let i = 0; i < forumIds.length; i++) {
             const forumId = forumIds[i];
 
-            queries.push(getThreadQuery({
+            queries.push(Thread.commonQuery({
                 parent_id: forumId
             }, null, true, {
                 key: getForumThreadKey(forumId)

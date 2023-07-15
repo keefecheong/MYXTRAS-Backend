@@ -1,10 +1,12 @@
 const User = require('../../models/user.js');
 
-function searchUserPromise(regexTerm, userId, limit) {
+// get users with username/real names that contain the search term, where both users are not blocking each other
+function searchUserPromise(regexTerm, userId, excludeUsers, limit) {
     return User
         .find({
             $and: [
-                { _id: { $ne: userId } },
+                { _id: { $nin: excludeUsers } },
+                { 'blocked_users.user_id': { $ne: userId } },
                 {
                     $or: [
                         { username: { $regex: regexTerm } },

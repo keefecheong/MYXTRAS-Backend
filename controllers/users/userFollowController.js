@@ -6,16 +6,27 @@ const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
-const compareId = require('../../utils/general/compareId.js');
 
-const { getIdIndex } = require('../../utils/cache/cacheIndexUtils.js');
-const { getFollowingKey } = require('../../cache/users/userCache.js');
+const compareId = require('../../utils/general/compareId.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+const checkBlocked = require('../../utils/users/checkBlocked.js');
+
 const { cachedUserAddFollower, cachedUserRemoveFollower } = require('../../cache/users/userFollowCache.js');
 
 // to follow the user
 async function followUser(req, res) {
+    var self = req.user;
+    var targetUser = res.user;
+
+    // if either user has blocked the other user then prevent following
+    const blocked = checkBlocked(self._id, self.blocked_users, targetUser._id, targetUser.blocked_users);
+
+    if (blocked) {
+        return returnBadReq(res, 'Could not follow this user.');
+    }
+
     // check if the requesting user is following the specified user
-    const following = res.user.followers.some(follower_id => compareId(follower_id, req.user._id));
+    const following = targetUser.followers.some(follower_id => compareId(follower_id, self._id));
 
     // if the requesting user has not followed the requested user, continue to follow the user
     // otherwise return 400 error
@@ -24,19 +35,23 @@ async function followUser(req, res) {
     }
 
     // update followers list
-    const user = new User(res.user);
-    user.isNew = false;
+    targetUser = new User(targetUser);
+    targetUser.isNew = false;
 
-    user.followers.push(req.user._id);
+    targetUser.followers.push(self._id);
 
     const followerDetails = {
-        _id: req.user._id,
-        username: req.user.username,
-        profile_pic_link: req.user.profile_pic_link
+        _id: self._id,
+        username: self.username,
+        profile_pic_link: self.profile_pic_link
     }
 
     try {
-        await cachedUserAddFollower(user, followerDetails);
+        // update cache
+        const updateCacheResult = await cachedUserAddFollower(targetUser._id, followerDetails);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(targetUser, updateCacheResult);
         
         returnCreatedReq(res);
     }
@@ -47,8 +62,11 @@ async function followUser(req, res) {
 
 // to unfollow the user
 async function unfollowUser(req, res) {
+    const selfId = req.user._id;
+    var targetUser = res.user;
+
     // check if the requesting user is following the requested user
-    const followerIndex = res.user.followers.findIndex(follower_id => compareId(follower_id, req.user._id));
+    const followerIndex = targetUser.followers.findIndex(follower_id => compareId(follower_id, selfId));
 
     // if the requesting user has followed the requested user, continue to unfollow the user
     // otherwise return 400 error
@@ -57,25 +75,17 @@ async function unfollowUser(req, res) {
     }
 
     // remove requesting user from requested user's followers list
-    const user = new User(res.user);
-    user.isNew = false;
+    targetUser = new User(targetUser);
+    targetUser.isNew = false;
     
-    user.followers.splice(followerIndex, 1);
-
-    let followingIndex = null;
+    targetUser.followers.splice(followerIndex, 1);
 
     try {
-        try {
-            followingIndex = await getIdIndex(getFollowingKey(req.user._id), res.user._id);
-        }
-        catch (error) {
-            // if error is not produced because the requesting user's following cache entry does not exist then throw an error
-            if (error.message != "ERR Path '$' does not exist") {
-                throw new Error();
-            }
-        }
+        // update cache
+        const updateCacheResult = await cachedUserRemoveFollower(targetUser._id, selfId, followerIndex);
 
-        await cachedUserRemoveFollower(user, req.user._id, followerIndex, followingIndex);
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(targetUser, updateCacheResult);
 
         returnNoContentReq(res);
     }

@@ -7,8 +7,8 @@ const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js')
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 const compareId = require('../../utils/general/compareId.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
-const { getUserPostKey } = require('../../cache/posts/postCache.js');
 const { cacheNewPost, updateCachedPost } = require('../../cache/posts/postUpdateCache.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
@@ -70,8 +70,11 @@ async function createPost(req, res) {
             profile_pic_link: req.user.profile_pic_link
         }
 
-        // upload to cache if key exists or update database immediately otherwise
-        await cacheNewPost(post, getUserPostKey(creatorId), userDetails);
+        // upload to cache if key exists
+        const updateCacheResult = await cacheNewPost(post, userDetails);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(post, updateCacheResult);
 
         returnGoodReq(res, { message: 'Post created.' });
     }
@@ -82,6 +85,9 @@ async function createPost(req, res) {
 
 // update a post
 async function updatePost(req, res) {
+    const userId = req.user._id;
+    const postId = req.params.postId;
+
     // check if there is request body provided
     // if no request body is present return 400 error
     // otherwise continue to update post
@@ -99,7 +105,7 @@ async function updatePost(req, res) {
 
     // check if the creator of the post is the requesting user
     // if creator is not the requesting user return 401 error
-    if (!compareId(req.user._id, res.post.creator_id._id)) {
+    if (!compareId(userId, res.post.creator_id._id)) {
         return returnUnauthorizedReq(res);
     }
 
@@ -135,7 +141,7 @@ async function updatePost(req, res) {
         if (req.body.noFilesChanged != 'true') {
             var newImageLinks = [];
     
-            const uploadSuccessful = await uploadImages(req.files, newImageLinks, req.params.postId, 'post');
+            const uploadSuccessful = await uploadImages(req.files, newImageLinks, postId, 'post');
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {
@@ -160,14 +166,11 @@ async function updatePost(req, res) {
         post.last_modified_time = newLastModifiedTime;
         updatedValues.last_modified_time = newLastModifiedTime;
         
-        // update cache entry if post is in cache and update database asynchronously
-        if (res.postFromCache) {
-            await updateCachedPost(updatedValues, getUserPostKey(req.user._id), res.postIndex, post);
-        }
-        // otherwise update database immediately
-        else {
-            await post.save();
-        }
+        // update cache entry if post is in cache
+        const updateCacheResult = await updateCachedPost(updatedValues, userId, postId, res.postFromCache);
+        
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(post, updateCacheResult);
 
         returnGoodReq(res, { message: 'Post updated.' });
     }

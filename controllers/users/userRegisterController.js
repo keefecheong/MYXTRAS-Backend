@@ -12,6 +12,8 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.j
 
 const { cacheNewUser } = require('../../cache/users/userUpdateCache.js');
 
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+
 // register new user
 async function registerUser(req, res) {
     // return 400 error if no data is sent
@@ -40,7 +42,10 @@ async function registerUser(req, res) {
         });
 
         // Save user into cache and database
-        await cacheNewUser(newUser);
+        await Promise.all([
+            cacheNewUser(newUser),
+            saveDocAsync(newUser, false)
+        ]);
         
         // sign jwt and return as cookie
         setJWT(newUser._id, res);

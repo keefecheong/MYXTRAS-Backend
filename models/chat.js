@@ -18,7 +18,7 @@ const chatSchema = new mongoose.Schema({
 chatSchema.query.getUser = function(userId) {
     return this.populate({
         path: 'users',
-        select: 'username profile_pic_link',
+        select: 'username profile_pic_link blocked_users.user_id',
         match: { _id: { $ne: userId } }
     });
 }

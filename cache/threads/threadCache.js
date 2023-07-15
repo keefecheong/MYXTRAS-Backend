@@ -1,7 +1,6 @@
 // to add thread data from database to the cache
 
 const redisClient = require('../redis.js');
-const { getIndexKey, getIdIndex } = require('../../utils/cache/cacheIndexUtils.js');
 
 // cache key prefixes
 // to cache threads grouped by parent forum id
@@ -20,19 +19,14 @@ const THREAD_FORUM_EXPIRATION_TIME = 60 * 60;
 const THREAD_POPULAR_EXPIRATION_TIME = 60;
 
 // to retrieve a single thread from cache if exists
-async function getThreadFromCache(key, threadId) {
-    try {
-        const threadIndex = await getIdIndex(key, threadId);
-
-        const thread = await redisClient.json.get(key, {
-            path: `$[${threadIndex}]`
-        });
-
-        return { success: true, thread: thread[0], threadIndex };
+function getThreadFromCache(forumId, threadId) {
+    if (!redisClient.isReady) {
+        return null;
     }
-    catch (error) {
-        return { success: false, error: error.message };
-    }
+
+    return redisClient.json.get(getForumThreadKey(forumId), {
+        path: getThreadIdPath(threadId)
+    });
 }
 
 // to store thread data from database in cache
@@ -52,21 +46,6 @@ function cacheThreads(threads, key, popularType) {
         redisClient.expire(key, expiry)
     ];
 
-    // if cache entry is for storing by forum then add another array of thread ids for referencing
-    if (byForum) {
-        // get array of thread ids
-        const threadIds = threads.map(thread => thread._id);
-
-        // get new key value for threadIds
-        const threadIdKey = getIndexKey(key);
-
-        // add to promises
-        promises.concat([
-            redisClient.json.set(threadIdKey, '$', threadIds),
-            redisClient.expire(threadIdKey, expiry)
-        ]);
-    }
-
     return Promise.all(promises);
 }
 
@@ -79,9 +58,15 @@ function getPopularThreadKey(tags) {
     return `${THREAD_POPULAR_KEY_BASE}:${tags}`;
 }
 
+// to get path for a thread id 
+function getThreadIdPath(threadId) {
+    return `$[?(@._id=="${threadId}")]`;
+}
+
 module.exports = {
     getThreadFromCache,
     cacheThreads,
     getForumThreadKey,
-    getPopularThreadKey
+    getPopularThreadKey,
+    getThreadIdPath
 }

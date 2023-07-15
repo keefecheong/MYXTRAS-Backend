@@ -7,7 +7,6 @@ const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
 
-const getForumQuery = require('../../utils/forums/getForumQuery.js');
 const { getCreatedForumKey, getSubscribedForumKey, FORUM_RECOMMENDED_KEY_BASE, FORUM_CATEGORIZED_KEY_BASE } = require('../../cache/forums/forumCache.js');
 
 // verify if forum_id is already in use
@@ -27,6 +26,7 @@ async function getOneForum(req, res) {
     // set fields
     res.forum.isCreator = compareId(res.forum.creator_id._id, req.user._id);
     res.forum.isSubscribed = res.forum.subscribers.some(subscriber_id => compareId(subscriber_id, req.user._id));
+    res.forum.subscribers = res.forum.subscribers.length;
 
     returnGoodReq(res, res.forum);
 }
@@ -36,7 +36,7 @@ async function getCreated(req, res) {
     try {
         const userId = req.user._id;
 
-        const forums = await getForumQuery({
+        const forums = await Forum.commonQuery({
             creator_id: userId
         }, true, {
             key: getCreatedForumKey(userId)
@@ -53,7 +53,7 @@ async function getSubscribed(req, res) {
     try {
         const userId = req.user._id;
 
-        const subbed_forums = await getForumQuery({
+        const subbed_forums = await Forum.commonQuery({
             subscribers: { $in: [userId] }
         }, true, {
             key: getSubscribedForumKey(userId)

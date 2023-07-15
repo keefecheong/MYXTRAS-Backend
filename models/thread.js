@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Comment = require('./comment.js');
 const { deleteFiles } = require('../utils/general/firebaseStorageDelete.js');
 
 const threadSchema = new mongoose.Schema({
@@ -66,6 +67,22 @@ threadSchema.query.getCreator = function() {
     });
 }
 
+// craft query based on given arguments
+threadSchema.statics.commonQuery = function (filter, sort, cache, cacheOptions) {
+    const query = this
+        .find(filter)
+        .sort(sort ?? { creation_time: -1 })
+        .getForum()
+        .getCreator()
+        .lean();
+
+    if (cache) {
+        query.cache(cacheOptions);
+    }
+
+    return query;
+}
+
 // automatically clean comments associated with the thread on delete
 threadSchema.post('findOneAndDelete', function(doc, next) {
     try {
@@ -75,8 +92,7 @@ threadSchema.post('findOneAndDelete', function(doc, next) {
         }
 
         // delete associated comments
-        const commentModel = mongoose.model('Comment');
-        commentModel.deleteMany({ parent_id: doc._id }).catch(error => console.log(error));
+        Comment.deleteMany({ parent_id: doc._id }).catch(error => console.log(error));
 
         next();
     }

@@ -15,6 +15,7 @@ const compareId = require('../../utils/general/compareId.js');
 
 const { getForumThreadKey } = require('../../cache/threads/threadCache.js');
 const { cacheNewThread, updateCachedThread } = require('../../cache/threads/threadUpdateCache.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
 // create new thread
 async function createThread(req, res) {
@@ -70,8 +71,11 @@ async function createThread(req, res) {
             forum_pic_link: res.forum.forum_pic_link
         }
 
-        // update cache if key exists or update database immediately otherwise
-        await cacheNewThread(newThread, getForumThreadKey(forumId), userDetails, forumDetails);
+        // update cache if key exists
+        const updateCacheResult = await cacheNewThread(newThread, userDetails, forumDetails);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(newThread, updateCacheResult);
 
         returnCreatedReq(res);
     }
@@ -146,14 +150,11 @@ async function updateThread(req, res) {
             updatedValues.content_link = newImageLinks[0];
         }
 
-        // update cache entry if thread is in cache and update database asynchronously
-        if (res.threadFromCache) {
-            await updateCachedThread(updatedValues, getForumThreadKey(forumId), res.threadIndex, thread);
-        }
-        // otherwise update database immediately
-        else {
-            await thread.save();
-        }
+        // update cache entry if thread is in cache
+        const updateCacheResult = await updateCachedThread(updatedValues, forumId, thread._id, res.threadFromCache);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(thread, updateCacheResult);
 
         returnNoContentReq(res, { message: 'Thread updated.' });
     }

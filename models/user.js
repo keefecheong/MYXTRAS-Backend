@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
-        immutable: false,
+        immutable: true,
         unique: true,
         select: false
     },
@@ -13,12 +13,11 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     real_name: {
-        type: String,
-        immutable: false
+        type: String
     },
     phone_number: {
         type: String,
-        immutable: false,
+        immutable: true,
         unique: true,
         select: false
     },
@@ -50,8 +49,15 @@ const userSchema = new mongoose.Schema({
     },
     saved_posts: {
         type: [{
-            type: mongoose.SchemaTypes.ObjectId,
-            ref: 'Post'
+            post_id: {
+                type: mongoose.SchemaTypes.ObjectId,
+                ref: 'Post'
+            },
+            // to easily remove saved posts when user is blocked
+            creator_id: {
+                type: mongoose.SchemaTypes.ObjectId,
+                ref: 'User'
+            }
         }],
         default: []
     },
@@ -61,19 +67,27 @@ const userSchema = new mongoose.Schema({
     },
     is_admin: {
         type: Boolean,
-        default: false,
-        select: false
+        default: false
     },
-    blocked: {
+    blocked_users: {
         type: [{
-            type: mongoose.SchemaTypes.ObjectId,
-            ref: 'User'
+            user_id: {
+                type: mongoose.SchemaTypes.ObjectId,
+                ref: 'User',
+                required: true,
+                immutable: true
+            },
+            block_time: {
+                type: Date,
+                required: true,
+                immutable: true
+            }
         }],
         default: []
     },
     password: {
         type: String,
-        immutable: false,
+        immutable: true,
         select: false
     },
     is_profile_setup: {

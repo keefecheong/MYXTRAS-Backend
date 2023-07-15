@@ -1,15 +1,18 @@
 // controller functions to handle actions for comments under posts
 
-const Comment = require('../../models/comment.js');
+const { Comment, PARENT_MODEL_POST } = require('../../models/comment.js');
 
-const getCommentQuery = require('../../utils/comments/getCommentQuery.js');
 const { checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 const compareId = require('../../utils/general/compareId.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+const performAllSync = require('../../utils/cache/performAllSync.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
+const checkBlocked = require('../../utils/users/checkBlocked.js');
 
 const { getUserPostKey } = require('../../cache/posts/postCache.js');
 const { getPostCommentKey } = require('../../cache/comments/commentCache.js');
@@ -19,15 +22,23 @@ const { deleteCachedComment } = require('../../cache/comments/commentDeleteCache
 // retrieve all comments for a post
 async function getComments(req, res) {
     try {
-        const postId = res.post._id;
+        const post = res.post;
+        const userId = req.user._id;
 
-        const postComments = await getCommentQuery({
-            parent_id: postId
+        // check if either the creator or requesting user has blocked each other
+        const blocked = checkBlocked(post.creator_id._id, post.creator_id.blocked_users, userId, req.user.blocked_users);
+    
+        if (blocked) {
+            return returnBadReq(res, 'Could not comment under this post.');
+        }
+
+        const postComments = await Comment.commonQuery({
+            parent_id: post._id
         }, null, true, {
-            key: getPostCommentKey(postId)
+            key: getPostCommentKey(post._id)
         });
 
-        const comments = checkCommentAttributesAll(postComments, req.user._id);
+        const comments = checkCommentAttributesAll(postComments, userId);
 
         returnGoodReq(res, comments);
     }
@@ -38,10 +49,13 @@ async function getComments(req, res) {
 
 // create a comment and update the post's comments field
 async function postComment(req, res) {
+    const post = res.post;
+    const creator = req.user;
+
     // check if comments are enabled on the requested post
     // if enabled, continue to create comment
     // otherwise return 400 error
-    if (!res.post.comments_enabled) {
+    if (!post.comments_enabled) {
         return returnBadReq(res, 'Comments are disabled for this post.');
     }
 
@@ -52,23 +66,20 @@ async function postComment(req, res) {
         return returnBadReq(res, 'Comment content is required.');
     }
 
-    const creatorId = req.user._id;
-    const postId = req.post._id;
-
     // create new comment
     const comment = new Comment({
-        creator_id: creatorId,
+        creator_id: creator._id,
         content: req.body.content,
         creation_time: Date.now(),
-        parent_id: postId,
-        parent_model: 'Post'
+        parent_id: post._id,
+        parent_model: PARENT_MODEL_POST
     });
 
     try {
         const userDetails = {
-            _id: creatorId,
-            username: req.user.username,
-            profile_pic_link: req.user.profile_pic_link
+            _id: creator._id,
+            username: creator.username,
+            profile_pic_link: creator.profile_pic_link
         }
 
         const jsonComment = comment.toObject();
@@ -78,7 +89,9 @@ async function postComment(req, res) {
         delete jsonComment.parent_model;
 
         // store new comment in cache if key exists or update database otherwise
-        await cacheNewComment(comment, getPostCommentKey(postId), jsonComment, res.postFromCache, getUserPostKey(res.post.creator_id._id), res.postIndex);
+        const updateCacheResult = await cacheNewComment(true, jsonComment, res.postFromCache, getUserPostKey(post.creator_id._id), post._id);
+
+        await saveDocAsync(comment, updateCacheResult);
 
         jsonComment.isOwner = true;
 
@@ -98,16 +111,16 @@ async function deleteComment(req, res) {
     }
 
     try {
-        // if comment is in cache then update both cache and database immediately
-        if (res.commentFromCache) {
-            await deleteCachedComment(getPostCommentKey(res.post._id), res.commentIndex, req.params.commentId, res.postFromCache, getUserPostKey(res.post.creator_id._id), res.postIndex);
-        }
-        // otherwise delete comment from database immediately
-        else {
-            await Comment.findByIdAndDelete(req.params.commentId);
-        }
+        const commentId = req.params.commentId;
+        let promises = [];
+        
+        // update cache
+        promises = deleteCachedComment(true, commentId, res.commentFromCache, res.postFromCache, getUserPostKey(res.post.creator_id._id), res.post._id);
 
-        returnGoodReq(res, { message: 'Comment deleted.' });
+        // delete comment from database and cache synchronously
+        await performAllSync(promises, Comment.findByIdAndDelete(commentId));
+
+        returnGoodReq(res, { message: 'Comment removed.' });
     }
     catch (error) {
         returnServerErrorReq(res);

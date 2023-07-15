@@ -1,14 +1,14 @@
 // controller functions for chat socket user status events
 
-const { emitSocketEvent } = require("../../utils/chats/emitSocketEvent");
-const { getUserOnline } = require("../../utils/chats/getUserStatus");
+const { emitSocketEvent } = require("../../utils/chats/emitSocketEvent.js");
+const { getUserOnline } = require("../../utils/chats/getUserStatus.js");
 
 // handle 'query-user-presence' event
-function handleQueryUserPresence(data, callback, connections) {
+function handleQueryUserPresence(data, callback, socket, connections) {
     // check if requested user has a socket connection in connections
     // return requested user's online status
     callback({
-        online: getUserOnline(connections, data.targetUserId)
+        online: getUserOnline(connections, data.targetUserId, true, socket.user)
     });
 }
 

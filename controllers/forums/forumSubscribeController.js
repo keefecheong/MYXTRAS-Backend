@@ -7,8 +7,8 @@ const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
-const { getForumKey } = require('../../cache/forums/forumCache.js');
 const { cachedForumAddSubscriber, cachedForumRemoveSubscriber } = require('../../cache/forums/forumSubscribeCache.js');
 
 // subscribe to forum
@@ -30,7 +30,11 @@ async function subscribeToForum(req, res) {
         // update forum subscriber list
         forum.subscribers.push(userId);
         
-        await cachedForumAddSubscriber(getForumKey(forum._id), userId, forum);
+        // update cached forum
+        const updateCacheResult = await cachedForumAddSubscriber(forum._id, userId);
+
+        // save forum asynchronously if cache is updated successfully, and synchronously otherwise
+        await saveDocAsync(forum, updateCacheResult);
 
         returnCreatedReq(res);
     } catch (error) {
@@ -58,7 +62,11 @@ async function unsubscribeFromForum(req, res) {
         // remove user id from the forum subscriber list
         forum.subscribers.splice(subscriberIndex, 1);
 
-        await cachedForumRemoveSubscriber(getForumKey(forum._id), subscriberIndex, forum);
+        // update cached forum
+        const updateCacheResult = await cachedForumRemoveSubscriber(forum._id, subscriberIndex);
+
+        // save forum asynchronously if cache is updated successfully, and synchronously otherwise
+        await saveDocAsync(forum, updateCacheResult);
         
         returnNoContentReq(res);
     }

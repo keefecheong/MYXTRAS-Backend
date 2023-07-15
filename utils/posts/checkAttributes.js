@@ -6,30 +6,39 @@ const compareId = require('../general/compareId.js');
 // 1. check if the requesting user is the owner of the post
 // 2. check if the requesting user has liked the post
 // for an array of posts
-function checkPostAttributesAll(posts, userId, savedPosts) {
+function checkPostAttributesAll(posts, selfId, savedPosts, blockedUsers) {
     let result = [];
 
     for (let i = 0; i < posts.length; i ++) {
-        result.push(checkPostAttributes(posts[i], userId, savedPosts));
+        result.push(checkPostAttributes(posts[i], selfId, savedPosts, blockedUsers));
     }
 
     return result;
 }
 
 // for one post
-function checkPostAttributes(post, userId, savedPosts) {
-    post.isOwner = compareId(post.creator_id._id, userId);
+function checkPostAttributes(post, selfId, savedPosts, blockedUsers) {
+    const creatorId = post.creator_id._id;
+
+    post.isOwner = compareId(creatorId, selfId);
 
     // delete original names if not owner since unnecesary
     if (!post.isOwner) {
         delete post.original_names;
     }
+
+    // check if the creator of the post or the requesting user have blocked each other
+    if (post.creator_id.blocked_users.some(entry => compareId(entry.user_id, selfId)) || blockedUsers.some(entry => compareId(entry.user_id, creatorId))) {
+        post.blocked = true;
+    }
+
+    delete post.creator_id.blocked_users;
     
-    post.liked = post.likes.some(user_id => compareId(user_id, userId));
+    post.liked = post.likes.some(user_id => compareId(user_id, selfId));
     // change likes to count to reduce data size
     post.likes = post.likes.length;
     
-    post.saved = savedPosts.some(post_id => compareId(post_id, post._id));
+    post.saved = savedPosts.some(entry => compareId(entry.post_id, post._id));
     
     return post;
 }

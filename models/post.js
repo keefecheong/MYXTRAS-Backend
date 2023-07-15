@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const User = require('./user.js');
+const Comment = require('./comment.js');
 const { deleteFiles } = require('../utils/general/firebaseStorageDelete.js');
 
 const postSchema = new mongoose.Schema({
@@ -58,8 +60,25 @@ const postSchema = new mongoose.Schema({
 postSchema.query.getCreator = function() {
     return this.populate({
         path: 'creator_id',
-        select: 'username profile_pic_link'
+        select: 'username profile_pic_link blocked_users.user_id'
     });
+}
+
+// craft query based on given arguments
+postSchema.statics.commonQuery = function (filter, sort, cache, cacheOptions) {
+    const query = this
+        .find(filter)
+        // set default sorting to descending creation_time
+        .sort(sort ?? { creation_time: -1 })
+        .getCreator()
+        .lean();
+
+    // set cache if true
+    if (cache) {
+        query.cache(cacheOptions);
+    }
+
+    return query;
 }
 
 // automatically clean up files and comments associated with the post on delete
@@ -68,21 +87,17 @@ postSchema.post('findOneAndDelete', async function(doc, next) {
         // delete associated images
         deleteFiles(doc.content_links);
 
-        // delete associated comments
-        const commentModel = mongoose.model('Comment');
-        commentModel.deleteMany({ parent_id: doc._id }).catch(error => console.log(error));
+        const promises = [
+            // delete associated comments
+            Comment.deleteMany({ parent_id: doc._id }).catch(error => console.log(error)),
+            // remove saved_posts entry for those with the deleted document's id as its post_id
+            User.updateMany(
+                { 'saved_posts.post_id': doc._id },
+                { $pull: { saved_posts: { post_id: doc._id } } }
+            )
+        ];
 
-        // remove from saved_posts
-        const userModel = mongoose.model('User');
-        const users = await userModel.find({ saved_posts: { $in: doc._id } });
-
-        for (let i = 0; i < users.length; i++) {
-            const user = users[i];
-            const saveIndex = user.saved_posts.indexOf(doc._id);
-            user.saved_posts.splice(saveIndex, 1);
-        }
-
-        userModel.bulkSave(users).catch(error => console.log(error));
+        Promise.all(promises).catch(error => console.log(error));
 
         next();
     }
