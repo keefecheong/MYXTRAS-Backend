@@ -79,7 +79,7 @@ async function updateUser(req, res) {
         }
 
         // update cache
-        const updateCacheResult = await updateCachedUser(updatedValues, user);
+        const updateCacheResult = await updateCachedUser(updatedValues, user._id);
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(user, updateCacheResult);
@@ -140,7 +140,7 @@ async function setupUser(req, res) {
             return returnBadReq(res, 'Invalid school');
         }
         
-        if (!Object.keys(schools[selectedSchool]["courses"].includes(selectedCourse))) {
+        if (!Object.keys(schools[selectedSchool]["courses"]).includes(selectedCourse)) {
             return returnBadReq(res, 'Invalid course');
         }
 
@@ -168,7 +168,7 @@ async function setupUser(req, res) {
         }
 
         // update cache
-        const updateCachedResult = await updateCachedUser(updatedValues, user);
+        const updateCachedResult = await updateCachedUser(updatedValues, user._id);
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(user, updateCachedResult);
@@ -176,6 +176,7 @@ async function setupUser(req, res) {
         returnNoContentReq(res);
     }
     catch (error) {
+        console.log(error)
         if (error.code === 11000) {
             // Duplicate username error
             returnBadReq(res, 'Username already exists');
