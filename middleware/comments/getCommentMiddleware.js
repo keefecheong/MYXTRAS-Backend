@@ -7,45 +7,43 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.j
 
 const { getCommentFromCache, getPostCommentKey, getThreadCommentKey } = require('../../cache/comments/commentCache.js');
 
-function getComment(type) {
+async function getComment(req, res, next, type) {
     const forPost = type == PARENT_MODEL_POST;
 
-    return async function(req, res, next) {
-        let target = null;
+    let target = null;
 
-        try {
-            const commentId = req.params.commentId;
+    try {
+        const commentId = req.params.commentId;
 
-            const key = forPost ? getPostCommentKey(res.post._id) : getThreadCommentKey(res.thread._id);
+        const key = forPost ? getPostCommentKey(res.post._id) : getThreadCommentKey(res.thread._id);
 
-            // attempt to get comment from cache
-            const result = await getCommentFromCache(key, commentId);
+        // attempt to get comment from cache
+        const result = await getCommentFromCache(key, commentId);
 
-            const commentRetrieved = result != null;
+        const commentRetrieved = result != null;
 
-            res.commentFromCache = commentRetrieved;
+        res.commentFromCache = commentRetrieved;
 
-            // if retrieval is successful then set target as retrieved comment
-            if (commentRetrieved) {
-                target = result[0];
-            }
-            else {
-                // if comment is not found from cache then retrieve from database
-                target = await Comment.findById(commentId).lean();
-            }
-
-            // if target is still null means the comment does not exist, return 404 error
-            if (!target) {
-                return returnNotFoundReq(res);
-            }
+        // if retrieval is successful then set target as retrieved comment
+        if (commentRetrieved) {
+            target = result[0];
         }
-        catch (error) {
-            return returnServerErrorReq(res);
+        else {
+            // if comment is not found from cache then retrieve from database
+            target = await Comment.findById(commentId).lean();
         }
 
-        res.comment = target;
-        next();
+        // if target is still null means the comment does not exist, return 404 error
+        if (!target) {
+            return returnNotFoundReq(res);
+        }
     }
+    catch (error) {
+        return returnServerErrorReq(res);
+    }
+
+    res.comment = target;
+    next();
 }
 
 module.exports = {

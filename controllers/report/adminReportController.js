@@ -3,7 +3,7 @@
 const { Report, REPORT_STATUS_SUBMITTED } = require('../../models/report.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
-const returnServerErrorReq = require('../../utils/general/returnServerError.js');
+const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
 // to get all pending reports
 async function getPendingReports(req, res) {

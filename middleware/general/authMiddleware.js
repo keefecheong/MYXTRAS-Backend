@@ -8,42 +8,40 @@ const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const { getUserKey } = require('../../cache/users/userCache.js');
 
-function validateUserHTTP(checkAdmin) {
-    // make sure jwt is valid and user is authenticated
-    // for http requests
-    return async function(req, res, next) {
-        try {
-            // Get the JWT token from the cookie
-            const token = req.cookies.authapi;
+// make sure jwt is valid and user is authenticated
+// for http requests
+async function validateUserHTTP(req, res, next, checkAdmin = false) {
+    try {
+        // Get the JWT token from the cookie
+        const token = req.cookies.authapi;
 
-            // return 401 error if there is no authapi cookie
-            if (!token) {
-                return returnUnauthorizedReq(res);
-            }
-
-            // Verify and decode the JWT token
-            const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-
-            // get user based on id in jwt token
-            const userId = decodedToken.id;
-            const user = await User.findById(userId).lean().cache({
-                key: getUserKey(userId)
-            });
-
-            // return 401 error if user not found or user is not admin (if admin check required)
-            if (!user || (checkAdmin && !user.is_admin)) {
-                return returnUnauthorizedReq(res);
-            }
-
-            // Attach the user object to the request for further processing
-            req.user = user;
-
-            next();
+        // return 401 error if there is no authapi cookie
+        if (!token) {
+            return returnUnauthorizedReq(res);
         }
-        // Handle token verification or database errors
-        catch (error) {
-            return returnServerErrorReq(res);
+
+        // Verify and decode the JWT token
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+        // get user based on id in jwt token
+        const userId = decodedToken.id;
+        const user = await User.findById(userId).lean().cache({
+            key: getUserKey(userId)
+        });
+
+        // return 401 error if user not found or user is not admin (if admin check required)
+        if (!user || (checkAdmin && !user.is_admin)) {
+            return returnUnauthorizedReq(res);
         }
+
+        // Attach the user object to the request for further processing
+        req.user = user;
+
+        next();
+    }
+    // Handle token verification or database errors
+    catch (error) {
+        return returnServerErrorReq(res);
     }
 }
 

@@ -16,7 +16,7 @@ const { validateUserHTTP } = require('../../middleware/general/authMiddleware');
 mainRouter.use('/user', validateUserHTTP, userReportRouter);
 
 // to get reports for admins
-mainRouter.use('/admin', validateUserHTTP(true), adminReportRouter);
+mainRouter.use('/admin', (req, res, next) => validateUserHTTP(req, res, next, true), adminReportRouter);
 
 // to submit reports
 mainRouter.use('/submit', validateUserHTTP, submitReportRouter);

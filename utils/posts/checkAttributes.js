@@ -9,9 +9,10 @@ const compareId = require('../general/compareId.js');
 function checkPostAttributesAll(posts, selfId, savedPosts, blockedUsers) {
     let result = [];
 
-    for (let i = 0; i < posts.length; i ++) {
-        result.push(checkPostAttributes(posts[i], selfId, savedPosts, blockedUsers));
-    }
+    posts.forEach(post => {
+        // create deep copy to modify only the given document each time
+        result.push(checkPostAttributes(JSON.parse(JSON.stringify(post)), selfId, savedPosts, blockedUsers));
+    });
 
     return result;
 }

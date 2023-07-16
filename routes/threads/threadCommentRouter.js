@@ -16,6 +16,6 @@ commentRouter.get('/', getThreadComments);
 commentRouter.post('/', express.json(), createComment);
 
 //delete comment
-commentRouter.delete('/:commentId', getComment(PARENT_MODEL_THREAD), deleteComment)
+commentRouter.delete('/:commentId', (req, res, next) => getComment(req, res, next, PARENT_MODEL_THREAD), deleteComment)
 
 module.exports = commentRouter;

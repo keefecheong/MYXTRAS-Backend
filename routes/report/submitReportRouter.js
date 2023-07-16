@@ -52,15 +52,15 @@ submitReportRouter.post(
 // report comment
 submitReportRouter.post(
     '/user/:userId/post/:postId/comment/:commentId', 
-    getPost, 
-    getComment(PARENT_MODEL_POST), 
+    getPost,
+    (req, res, next) => getComment(req, res, next, PARENT_MODEL_POST),
     (req, res) => createReport(req, res, REPORT_TARGET_TYPE_COMMENT, req.params.commentId)
 );
 
 submitReportRouter.post(
     '/forum/:forumID/thread/:threadID/comment/:commentId', 
     getThread, 
-    getComment(PARENT_MODEL_THREAD), 
+    (req, res, next) => getComment(req, res, next, PARENT_MODEL_THREAD),
     (req, res) => createReport(req, res, REPORT_TARGET_TYPE_COMMENT, req.params.commentId)
 );
 
