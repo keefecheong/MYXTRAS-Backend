@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 const Thread = require('../../models/thread.js');
 
-const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
+const { uploadImages, UPLOAD_IMAGE_TYPE_THREAD } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
@@ -48,7 +48,7 @@ async function createThread(req, res) {
         if (req.files.length > 0) {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, threadId, 'thread', forumId);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, threadId, UPLOAD_IMAGE_TYPE_THREAD, forumId);
         
             // if upload not successful then delete the new thread
             if (!threadPicUploadSuccessful) {
@@ -136,7 +136,7 @@ async function updateThread(req, res) {
         if (req.body.pictureUnchanged != 'true') {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, thread._id, 'thread', forumId);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, thread._id, UPLOAD_IMAGE_TYPE_THREAD, forumId);
         
             // if upload not successful then return 500 error
             if (!threadPicUploadSuccessful) {

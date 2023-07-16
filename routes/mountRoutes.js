@@ -6,6 +6,7 @@ const forumRouter = require('./forums/mainRouter.js');
 const threadRouter = require('./threads/mainRouter.js');
 const searchRouter = require('./search/mainRouter.js');
 const chatRouter = require('./chats/mainRouter.js');
+const reportRouter = require('./report/mainRouter.js');
 
 module.exports = function(app) {
     app.use('/api/users', usersRouter);
@@ -15,4 +16,5 @@ module.exports = function(app) {
     app.use('/api/threads', threadRouter);
     app.use('/api/search', searchRouter);
     app.use('/api/chats', chatRouter);
+    app.use('/api/report', reportRouter);
 }

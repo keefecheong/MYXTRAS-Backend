@@ -2,7 +2,7 @@
 
 const User = require('../../models/user.js');
 
-const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
+const { uploadImages, UPLOAD_IMAGE_TYPE_USER } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
@@ -65,7 +65,7 @@ async function updateUser(req, res) {
         if (req.files[0] != undefined){
             var profile_pic_link = [];
 
-            const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, 'user');
+            const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, UPLOAD_IMAGE_TYPE_USER);
             
             if (!uploadSuccessful) {
                 return returnServerErrorReq(res);

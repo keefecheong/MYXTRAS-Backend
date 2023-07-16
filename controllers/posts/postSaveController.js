@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 const Post = require('../../models/post.js');
 
-const { uploadImages } = require('../../utils/general/firebaseStorageUpload.js');
+const { uploadImages, UPLOAD_IMAGE_TYPE_POST } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
 
 const compareId = require('../../utils/general/compareId.js');
@@ -57,7 +57,7 @@ async function createPost(req, res) {
 
     try {
         // upload images and store the links in content_links of the new post
-        const uploadSuccessful = await uploadImages(req.files, post.content_links, postId, 'post');
+        const uploadSuccessful = await uploadImages(req.files, post.content_links, postId, UPLOAD_IMAGE_TYPE_POST);
 
         // if failed to upload images then return error message
         if (!uploadSuccessful) {
@@ -141,7 +141,7 @@ async function updatePost(req, res) {
         if (req.body.noFilesChanged != 'true') {
             var newImageLinks = [];
     
-            const uploadSuccessful = await uploadImages(req.files, newImageLinks, postId, 'post');
+            const uploadSuccessful = await uploadImages(req.files, newImageLinks, postId, UPLOAD_IMAGE_TYPE_POST);
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {

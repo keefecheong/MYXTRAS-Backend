@@ -1,6 +1,6 @@
 // middleware to get a comment
 
-const Comment = require('../../models/comment.js');
+const { Comment, PARENT_MODEL_POST } = require('../../models/comment.js');
 
 const returnNotFoundReq = require('../../utils/general/returnNotFoundReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
@@ -8,7 +8,7 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.j
 const { getCommentFromCache, getPostCommentKey, getThreadCommentKey } = require('../../cache/comments/commentCache.js');
 
 function getComment(type) {
-    const forPost = type == 'post';
+    const forPost = type == PARENT_MODEL_POST;
 
     return async function(req, res, next) {
         let target = null;
