@@ -64,16 +64,15 @@ async function updateUser(req, res) {
 
         if (req.files[0] != undefined){
             var profile_pic_link = [];
-
             const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, UPLOAD_IMAGE_TYPE_USER);
-            
             if (!uploadSuccessful) {
                 return returnServerErrorReq(res);
             }
 
             // if upload successful then delete old picture and update profile_pic_link
-            deleteFiles([user.profile_pic_link]);
-
+            if (user.profile_pic_link != "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"){
+                deleteFiles([user.profile_pic_link]);
+            }   
             user.profile_pic_link = profile_pic_link[0];
             updatedValues.profile_pic_link = profile_pic_link[0];
         }
