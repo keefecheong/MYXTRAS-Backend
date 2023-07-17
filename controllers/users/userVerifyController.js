@@ -1,6 +1,6 @@
 // controller functions to verify email and phone number during registration
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');

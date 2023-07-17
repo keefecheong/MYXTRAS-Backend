@@ -1,6 +1,6 @@
 // controller functions to handle follow/unfollow requests
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 
 const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');

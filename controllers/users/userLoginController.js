@@ -1,6 +1,6 @@
 // controller functions to handle user login
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 const { setJWT } = require('../../utils/users/setJWT.js');
 const bcrypt = require('bcryptjs');
 

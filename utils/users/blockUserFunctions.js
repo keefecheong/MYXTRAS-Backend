@@ -1,7 +1,7 @@
 // functions used in blocking a user
 
 const mongoose = require('mongoose');
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 const Post = require('../../models/post.js');
 const compareId = require('../../utils/general/compareId.js');
 const { cachedUserAddBlocked } = require('../../cache/users/userBlockCache.js');

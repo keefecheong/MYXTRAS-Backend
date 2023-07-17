@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const DEFAULT_PROFILE_PIC_LINK = "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg";
+
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
@@ -29,7 +31,7 @@ const userSchema = new mongoose.Schema({
     },
     profile_pic_link: {
         type: String,
-        default: "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
+        default: DEFAULT_PROFILE_PIC_LINK
     },
     gender:{
         type: String
@@ -123,4 +125,7 @@ userSchema.pre('save', function(next) {
     next();
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = {
+    User: mongoose.model('User', userSchema),
+    DEFAULT_PROFILE_PIC_LINK
+}

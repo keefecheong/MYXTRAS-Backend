@@ -1,7 +1,7 @@
 // controller functions to handle GET requests for posts
 
 const Post = require('../../models/post.js');
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 const { checkPostAttributesAll } = require('../../utils/posts/checkAttributes.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');

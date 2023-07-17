@@ -1,6 +1,6 @@
 // controller functions to handle user profile related requests
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 const compareId = require('../../utils/general/compareId.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');

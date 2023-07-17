@@ -1,6 +1,6 @@
 // controller functions to handle user profile updating related requests
 
-const User = require('../../models/user.js');
+const { User, DEFAULT_PROFILE_PIC_LINK } = require('../../models/user.js');
 
 const { uploadImages, UPLOAD_IMAGE_TYPE_USER } = require('../../utils/general/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
@@ -70,7 +70,7 @@ async function updateUser(req, res) {
             }
 
             // if upload successful then delete old picture and update profile_pic_link
-            if (user.profile_pic_link != "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"){
+            if (user.profile_pic_link != DEFAULT_PROFILE_PIC_LINK){
                 deleteFiles([user.profile_pic_link]);
             }   
             user.profile_pic_link = profile_pic_link[0];

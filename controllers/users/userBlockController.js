@@ -1,6 +1,6 @@
 // to block/unblock a user
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 const Post = require('../../models/post.js');
 const { Comment } = require('../../models/comment.js');
 const { Unblock, UNBLOCK_TTL } = require('../../models/unblock.js');

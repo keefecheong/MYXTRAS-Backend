@@ -1,6 +1,6 @@
 // controller functions to add/remove a post to/from saved_posts
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 
 const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');

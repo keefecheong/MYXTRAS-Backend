@@ -1,6 +1,6 @@
 // middleware to make sure user is authenticated
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 const jwt = require('jsonwebtoken');
 const cookie = require('cookie');
 

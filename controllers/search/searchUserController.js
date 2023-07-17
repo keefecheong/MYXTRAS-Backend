@@ -1,4 +1,4 @@
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 
 // get users with username/real names that contain the search term, where both users are not blocking each other
 function searchUserPromise(regexTerm, userId, excludeUsers, limit) {

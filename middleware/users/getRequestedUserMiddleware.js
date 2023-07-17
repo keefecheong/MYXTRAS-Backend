@@ -1,6 +1,6 @@
 // middleware to get a post based on post id in request URL
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 
 const returnNotFoundReq = require('../../utils/general/returnNotFoundReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
