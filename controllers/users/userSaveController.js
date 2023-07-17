@@ -146,7 +146,7 @@ async function setupUser(req, res) {
 
         // update user info
         const school = schools[selectedSchool]["short"];
-        const course = schools[selectedSchool]["short"][selectedCourse];
+        const course = schools[selectedSchool]["courses"][selectedCourse];
         const interests = selectedInterests.sort();
 
         user.username = userName;
