@@ -175,7 +175,7 @@ async function getPopularPosts(req, res) {
 async function getSavedPosts(req, res) {
     try {
         var posts = await Post.commonQuery({
-            _id: { $in: req.user.saved_posts }
+            _id: { $in: req.user.saved_posts.map(entry => entry.post_id) }
         }, {});
 
         posts = checkPostAttributesAll(posts, req.user._id, req.user.saved_posts, req.user.blocked_users);
@@ -183,6 +183,7 @@ async function getSavedPosts(req, res) {
         returnGoodReq(res, posts);
     }
     catch (error) {
+        console.log(error)
         returnServerErrorReq(res);
     }
 }
