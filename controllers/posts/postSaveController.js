@@ -67,7 +67,8 @@ async function createPost(req, res) {
         const userDetails = {
             _id: creatorId,
             username: req.user.username,
-            profile_pic_link: req.user.profile_pic_link
+            profile_pic_link: req.user.profile_pic_link,
+            blocked_users: req.user.blocked_users
         }
 
         // upload to cache if key exists
