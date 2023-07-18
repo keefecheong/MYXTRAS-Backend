@@ -17,13 +17,109 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+function getRandomElements(arr, n) {
+  const shuffled = arr.slice();
+  let i = arr.length;
+  const min = i - n;
+  let temp;
+  let index;
+
+  while (i-- > min) {
+    index = Math.floor((i + 1) * Math.random());
+    temp = shuffled[index];
+    shuffled[index] = shuffled[i];
+    shuffled[i] = temp;
+  }
+
+  return shuffled.slice(min);
+}
+
 // make connection with mongodb
 const mongoose = require('mongoose');
+const { User } = require('./models/user.js');
+const Mission = require('./models/missions.js');
+
 mongoose.connect(process.env.DATABASE_URL);
 
 const db = mongoose.connection;
 db.on('error', (error) => console.error(error));
 db.once('open', () => console.log('Connected to database.'));
+
+
+async function assignDailyMissions() {
+    try {
+      const users = await User.find({});
+      const missions = await Mission.find({});
+  
+      users.forEach(async (user) => {
+        // Get 4 random missions from the available missions
+        const randomMissions = getRandomElements(missions, 4);
+  
+        // Assign the daily missions to the user
+        user.dailyMissions = randomMissions;
+  
+        // Save the user with updated daily missions
+        await user.save();
+      });
+      console.log('Daily missions assigned successfully');
+    } catch (error) {
+      console.error('Error assigning daily missions:', error);
+    }
+  };
+  
+  // Call the function to assign daily missions
+  assignDailyMissions();
+  
+  // Function to reset the daily missions for all users
+  async function resetDailyMissions() {
+    try {
+      const users = await User.find({});
+      const missions = await Mission.find({});
+  
+      users.forEach(async (user) => {
+        // Clear existing assigned missions
+        user.dailyMissions = [];
+  
+        // Get 4 random missions from the available missions
+        const randomMissions = getRandomElements(missions, 4);
+  
+        // Assign the daily missions to the user
+        user.dailyMissions = randomMissions;
+  
+        // Save the user with updated daily missions
+        await user.save();
+      });
+  
+      console.log('Daily missions reset successfully');
+    } catch (error) {
+      console.error('Error resetting daily missions:', error);
+    }
+  };
+  
+  // Call the function to reset daily missions
+  resetDailyMissions();
+
+  const checkDateAndReset = () => {
+    // Get the current date
+    const currentDate = new Date();
+  
+    // Check if the date has changed
+    if (currentDate.getDate() !== checkDateAndReset.lastDate) {
+      // Call the resetDailyMissions function
+      resetDailyMissions();
+  
+      // Update the lastDate to the current date
+      checkDateAndReset.lastDate = currentDate.getDate();
+    }
+  };
+  
+  // Initialize the lastDate to the current date
+  checkDateAndReset.lastDate = new Date().getDate();
+  
+  // Set the interval to check the date every 1 day (adjust as needed)
+  setInterval(checkDateAndReset, 60 * 1000 * 60 * 24); // 1 minute
+
+
 
 // initialize cache
 require('./cache/init.js');
