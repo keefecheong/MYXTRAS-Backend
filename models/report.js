@@ -79,7 +79,6 @@ const reportSchema = new mongoose.Schema({
     },
     report_evidence: {
         type: String,
-        required: true,
         immutable: true
     },
     reporter_id: {
