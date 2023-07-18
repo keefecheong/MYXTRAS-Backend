@@ -19,7 +19,7 @@ async function getMessage(req, res, next) {
         }
     }
     catch (error) {
-        returnServerErrorReq(res);
+        return returnServerErrorReq(res);
     }
 
     res.message = target;
