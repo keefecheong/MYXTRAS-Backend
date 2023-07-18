@@ -27,26 +27,35 @@ async function createReport(req, res, type, objectId) {
         return returnBadReq(res, 'Invalid request body.');
     }
 
-    const report = new Report({
-        report_target: objectId,
-        report_target_type: type,
-        report_reason: req.body.reason,
-        reporter_id: req.user._id
-    });
-
     try {
-        // if reporting user and images are provided then upload the images and save links
-        if (type == REPORT_TARGET_TYPE_USER && req.files.length > 0) {
+        // check if a report by the same user exists for the same target object and return 400 error if so
+        const reportExists = await Report.findOne({ report_target: objectId, reporter_id: req.user._id });
+        if (reportExists) {
+            return returnBadReq(res, 'You have already submitted a report.')
+        }
+
+        const report = new Report({
+            report_target: objectId,
+            report_target_type: type,
+            report_reason: req.body.reason,
+            reporter_id: req.user._id
+        });
+
+        // if reporting user and image is provided then upload the image and save link
+        if (type == REPORT_TARGET_TYPE_USER && req.file) {
             const reportId = new mongoose.Types.ObjectId();
             report._id = reportId;
 
-            // upload images and store the links in report_evidence of the new report
-            const uploadSuccessful = await uploadImages(req.files, report.report_evidence, reportId, UPLOAD_IMAGE_TYPE_REPORT);
+            // upload image and store the link in report_evidence of the new report
+            const imageLinks = [];
+            const uploadSuccessful = await uploadImages([req.file], imageLinks, reportId, UPLOAD_IMAGE_TYPE_REPORT);
 
-            // if failed to upload images then return 500 error
+            // if failed to upload image then return 500 error
             if (!uploadSuccessful) {
                 return returnServerErrorReq(res);
             }
+
+            report.report_evidence = imageLinks[0];
         }
 
         await report.save();

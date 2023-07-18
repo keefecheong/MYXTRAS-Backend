@@ -78,7 +78,7 @@ const reportSchema = new mongoose.Schema({
         enum: REPORT_REASONS
     },
     report_evidence: {
-        type: [String],
+        type: String,
         required: true,
         immutable: true
     },

@@ -34,6 +34,7 @@ async function uploadImages(images, imageLinks, objId, type, forumID) {
                 break;
             case UPLOAD_IMAGE_TYPE_REPORT: 
                 prefix = `reports/${objId}`;
+                break;
             default:
                 return false;
         }

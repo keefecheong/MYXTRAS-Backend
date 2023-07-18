@@ -27,7 +27,7 @@ async function getPost(req, res, next) {
         }
         else {
             // if post not found from cache then retrieve from database
-            target = await Post.findById(postId).lean();
+            target = await Post.findById(postId).getCreator().lean();
         }
         
         // if target still null means post does not exist, return 404 error

@@ -68,7 +68,7 @@ submitReportRouter.post(
 submitReportRouter.post(
     '/user/:userId', 
     getUser, 
-    multerConfig.array('selectedImages'),
+    multerConfig.single('reportEvidence'),
     multerErrorHandler,
     (req, res) => createReport(req, res, REPORT_TARGET_TYPE_USER, req.params.userId)
 );
