@@ -91,7 +91,7 @@ async function assignDailyMissions() {
         // Get 4 random missions from the available missions
         const randomMissions = getRandomElements(missions, 4);
   
-        // Assign the daily missions to the user
+        // Assign the daily missions to the user (update!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
         user.daily_missions = randomMissions;
   
         // Save the user with updated daily missions
@@ -103,19 +103,14 @@ async function assignDailyMissions() {
       console.error('Error resetting daily missions:', error);
     }
   };
-  
-  // Call the function to reset daily missions
-  resetDailyMissions();
 
   const checkDateAndReset = () => {
     // Get the current date
     const currentDate = new Date();
-  
     // Check if the date has changed
     if (currentDate.getDate() !== checkDateAndReset.lastDate) {
       // Call the resetDailyMissions function
       resetDailyMissions();
-  
       // Update the lastDate to the current date
       checkDateAndReset.lastDate = currentDate.getDate();
     }
@@ -125,7 +120,7 @@ async function assignDailyMissions() {
   checkDateAndReset.lastDate = new Date().getDate();
   
   // Set the interval to check the date every 1 day (adjust as needed)
-  setInterval(checkDateAndReset, 60 * 1000 * 60 * 24); // 1 minute
+  setInterval(checkDateAndReset, 60); // 1 minute
 
 
 

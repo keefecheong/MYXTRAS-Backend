@@ -101,7 +101,8 @@ const userSchema = new mongoose.Schema({
         default: 0
     },
     daily_missions:{
-        type: [String]
+        type: [String],
+        default: []
     }
 });
 
