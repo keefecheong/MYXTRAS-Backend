@@ -99,6 +99,9 @@ const userSchema = new mongoose.Schema({
     gems: {
         type: Number,
         default: 0
+    },
+    daily_missions:{
+        type: [String]
     }
 });
 
