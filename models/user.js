@@ -95,6 +95,10 @@ const userSchema = new mongoose.Schema({
     is_profile_setup: {
         type: Boolean,
         default: false
+    },
+    gems: {
+        type: Number,
+        default: 0
     }
 });
 
