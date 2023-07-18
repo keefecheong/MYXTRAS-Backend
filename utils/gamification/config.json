@@ -1,0 +1,13 @@
+{
+    "missions":{
+        "Like 5 threads": 100,
+        "Follow a new user": 50,
+        "Create a new blog": 50,
+        "Say something nice": 50,
+        "Share a blog to a friend": 50,
+        "Start a new thread discussion": 50,
+        "Share your socials": 50,
+        "Find a love": 10000
+    }
+    
+}

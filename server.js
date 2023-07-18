@@ -64,7 +64,6 @@ async function assignDailyMissions() {
   
         // Assign the daily missions to the user
         user.daily_missions = randomMissions;
-        console.log(user.daily_missions)
   
         // Save the user with updated daily missions
         await user.save();

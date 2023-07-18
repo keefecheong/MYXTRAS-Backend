@@ -5,18 +5,17 @@ const express = require('express');
 const mainRouter = express.Router();
 
 // nested routers
-const forumRouter = require('./forumRouter.js');
-const subscribeRouter = require('./forumSubscribeRouter.js');
+const { getMissions } = require('../../controllers/gamification/gamificationController.js')
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
-const { getForum } = require('../../middleware/forums/getForumMiddleware.js');
+const { getUser } = require('../../middleware/users/getRequestedUserMiddleware.js');
+
 
 // validate user for all routes
 mainRouter.use(validateUserHTTP);
 
 // mount various routes
-mainRouter.use('/subscribe/:forumID', getForum, subscribeRouter);
-mainRouter.use('/', forumRouter);
+mainRouter.use('/missions', getUser, getMissions);
 
 module.exports = mainRouter;
