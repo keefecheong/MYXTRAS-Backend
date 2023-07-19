@@ -13,12 +13,10 @@ const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
 const userLoginRouter = require('./userLoginRouter.js');
 const userProfileRouter = require('./userProfileRouter.js');
 const userCookieRouter = require('./userCookieRouter.js');
-const userFollowRouter = require('./userFollowRouter.js');
 const userVerifyRouter = require('./userVerifyRouter.js');
 const userRegisterRouter = require('./userRegisterRouter.js');
 const userSavePostRouter = require('./userSavePostRouter.js');
-const userReportRouter = require('./userReportRouter.js');
-const userBlockRouter = require('./userBlockRouter.js');
+const userSpecificRouter = require('./userSpecificRouter.js');
 
 // mount various routes
 // handle user profile related requests
@@ -36,16 +34,10 @@ mainRouter.use('/cookie', validateUserHTTP, userCookieRouter);
 // handle verification requests
 mainRouter.use('/verify', express.json(), userVerifyRouter);
 
-// handle follow requests
-mainRouter.use('/follow/:userId', validateUserHTTP, getUser, userFollowRouter);
-
 // handle save post requests
 mainRouter.use('/save/user/:userId/post/:postId', validateUserHTTP, getPost, userSavePostRouter);
 
-// handle report user requests
-mainRouter.use('/report/:userId', validateUserHTTP, getUser, userReportRouter);
-
-// handle block user requests
-mainRouter.use('/block/:userId', validateUserHTTP, getUser, userBlockRouter);
+// handle requests for specific user
+mainRouter.use('/:userId', validateUserHTTP, getUser, userSpecificRouter);
 
 module.exports = mainRouter;

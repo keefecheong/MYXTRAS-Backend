@@ -1,14 +1,11 @@
 // controller functions to handle DELETE requests for posts
 
-const Post = require('../../models/post.js');
-
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
-const performAllSync = require('../../utils/cache/performAllSync.js');
 
-const { deleteCachedPost } = require('../../cache/posts/postDeleteCache.js');
+const deletePostUtil = require('../../utils/posts/deletePost.js');
 
 // to delete a post
 async function deletePost(req, res) {
@@ -22,15 +19,8 @@ async function deletePost(req, res) {
     }
 
     try {
-        let promises = [];
-
-        // if post is in cache then get promises to update cache
-        if (res.postFromCache) {
-            promises = deleteCachedPost(userId, postId);
-        }
-        
-        // delete from cache and database together
-        await performAllSync(promises, Post.findByIdAndDelete(postId));
+        // delete post from cache and database
+        await deletePostUtil(userId, postId, res.postFromCache);
 
         returnGoodReq(res, { message: 'Post removed.' });
     }

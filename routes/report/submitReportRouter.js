@@ -21,12 +21,11 @@ const {
     REPORT_TARGET_TYPE_POST,
     REPORT_TARGET_TYPE_FORUM,
     REPORT_TARGET_TYPE_THREAD,
-    REPORT_TARGET_TYPE_COMMENT,
+    REPORT_TARGET_TYPE_POST_COMMENT,
+    REPORT_TARGET_TYPE_THREAD_COMMENT,
     REPORT_TARGET_TYPE_USER,
     REPORT_TARGET_TYPE_MESSAGE
 } = require('../../models/report.js');
-
-submitReportRouter.use(express.json());
 
 // report post
 submitReportRouter.post(
@@ -54,14 +53,14 @@ submitReportRouter.post(
     '/user/:userId/post/:postId/comment/:commentId', 
     getPost,
     (req, res, next) => getComment(req, res, next, PARENT_MODEL_POST),
-    (req, res) => createReport(req, res, REPORT_TARGET_TYPE_COMMENT, req.params.commentId)
+    (req, res) => createReport(req, res, REPORT_TARGET_TYPE_POST_COMMENT, req.params.commentId)
 );
 
 submitReportRouter.post(
     '/forum/:forumID/thread/:threadID/comment/:commentId', 
     getThread, 
     (req, res, next) => getComment(req, res, next, PARENT_MODEL_THREAD),
-    (req, res) => createReport(req, res, REPORT_TARGET_TYPE_COMMENT, req.params.commentId)
+    (req, res) => createReport(req, res, REPORT_TARGET_TYPE_THREAD_COMMENT, req.params.commentId)
 );
 
 // report user

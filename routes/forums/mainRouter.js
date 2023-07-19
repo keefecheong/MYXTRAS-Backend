@@ -6,7 +6,7 @@ const mainRouter = express.Router();
 
 // nested routers
 const forumRouter = require('./forumRouter.js');
-const subscribeRouter = require('./forumSubscribeRouter.js');
+const forumSpecificRouter = require('./forumSpecificRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
@@ -16,7 +16,7 @@ const { getForum } = require('../../middleware/forums/getForumMiddleware.js');
 mainRouter.use(validateUserHTTP);
 
 // mount various routes
-mainRouter.use('/subscribe/:forumID', getForum, subscribeRouter);
 mainRouter.use('/', forumRouter);
+mainRouter.use('/:forumID', getForum, forumSpecificRouter);
 
 module.exports = mainRouter;

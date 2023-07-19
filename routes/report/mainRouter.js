@@ -7,6 +7,7 @@ const mainRouter = express.Router();
 const userReportRouter = require('./userReportRouter.js');
 const adminReportRouter = require('./adminReportRouter.js');
 const submitReportRouter = require('./submitReportRouter.js');
+const resolveReportRouter = require('./resolveReportRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware');
@@ -19,6 +20,9 @@ mainRouter.use('/user', validateUserHTTP, userReportRouter);
 mainRouter.use('/admin', (req, res, next) => validateUserHTTP(req, res, next, true), adminReportRouter);
 
 // to submit reports
-mainRouter.use('/submit', validateUserHTTP, submitReportRouter);
+mainRouter.use('/submit', express.json(), validateUserHTTP, submitReportRouter);
+
+// to resolve reports
+mainRouter.use('/resolve', express.json(), (req, res, next) => validateUserHTTP(req, res, next, true), resolveReportRouter);
 
 module.exports = mainRouter;

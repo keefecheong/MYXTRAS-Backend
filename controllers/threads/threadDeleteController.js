@@ -1,14 +1,11 @@
 // controller functions to handle DELETE requests for threads
 
-const Thread = require('../../models/thread.js');
-
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
-const performAllSync = require('../../utils/cache/performAllSync.js');
 
-const { deleteCachedThread } = require('../../cache/threads/threadDeleteCache.js');
+const deleteThreadUtil = require('../../utils/threads/deleteThread.js');
 
 // to delete a thread
 async function deleteThread(req, res) {
@@ -19,15 +16,8 @@ async function deleteThread(req, res) {
     }
 
     try {
-        const threadId = req.params.threadID;
-        let promises = [];
-
-        // if post is in cache then get promises to update cache
-        if (res.threadFromCache) {
-            promises = deleteCachedThread(req.params.forumID, threadId);
-        }
-        
-        await performAllSync(promises, Thread.findByIdAndDelete(threadId));
+        // delete thread from cache and database
+        await deleteThreadUtil(req.params.forumID, req.params.threadID, res.threadFromCache);
 
         returnGoodReq(res, { message: 'Thread removed.' });
     }

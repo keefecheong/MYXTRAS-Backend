@@ -1,14 +1,11 @@
 // controller functions to handle DELETE requests for forums
 
-const Forum = require('../../models/forum.js');
-
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
-const performAllSync = require('../../utils/cache/performAllSync.js');
 
-const { deleteCachedForum } = require('../../cache/forums/forumDeleteCache.js');
+const deleteForumUtil = require('../../utils/forums/deleteForum.js');
 
 // to delete a forum
 async function deleteForum(req, res) {
@@ -20,11 +17,8 @@ async function deleteForum(req, res) {
     }
 
     try {
-        // get promises to delete forum from cache
-        const cachePromises = await deleteCachedForum(forumId, userId);
-
-        // delete forum from cache and database synchronously
-        await performAllSync(cachePromises, Forum.findByIdAndDelete(forumId));
+        // delete forum from cache and database
+        await deleteForumUtil(forumId, userId);
 
         returnGoodReq(res, { message: 'Forum removed.' });
     }

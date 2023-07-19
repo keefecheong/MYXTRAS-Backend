@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Comment = require('./comment.js');
+const { Comment } = require('./comment.js');
 const { deleteFiles } = require('../utils/general/firebaseStorageDelete.js');
 
 const threadSchema = new mongoose.Schema({

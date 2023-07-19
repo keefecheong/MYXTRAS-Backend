@@ -5,7 +5,6 @@ const { Comment, PARENT_MODEL_POST } = require('../../models/comment.js');
 const { checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
-const performAllSync = require('../../utils/cache/performAllSync.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
@@ -17,7 +16,7 @@ const checkBlocked = require('../../utils/users/checkBlocked.js');
 const { getUserPostKey } = require('../../cache/posts/postCache.js');
 const { getPostCommentKey } = require('../../cache/comments/commentCache.js');
 const { cacheNewComment } = require('../../cache/comments/commentUpdateCache.js');
-const { deleteCachedComment } = require('../../cache/comments/commentDeleteCache.js');
+const deleteCommentUtil = require('../../utils/comments/deleteComment.js');
 
 // retrieve all comments for a post
 async function getComments(req, res) {
@@ -111,14 +110,8 @@ async function deleteComment(req, res) {
     }
 
     try {
-        const commentId = req.params.commentId;
-        let promises = [];
-        
-        // update cache
-        promises = deleteCachedComment(true, commentId, res.commentFromCache, res.postFromCache, getUserPostKey(res.post.creator_id._id), res.post._id);
-
-        // delete comment from database and cache synchronously
-        await performAllSync(promises, Comment.findByIdAndDelete(commentId));
+        // delete comment from cache and database
+        await deleteCommentUtil(true, req.params.commentId, res.commentFromCache, res.postFromCache, getUserPostKey(res.post.creator_id._id), res.post._id);
 
         returnGoodReq(res, { message: 'Comment removed.' });
     }

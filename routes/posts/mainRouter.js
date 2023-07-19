@@ -6,8 +6,7 @@ const mainRouter = express.Router();
 
 // nested routers
 const postRouter = require('./postRouter.js');
-const postLikeRouter = require('./postLikeRouter.js');
-const postCommentRouter = require('./postCommentRouter.js');
+const postSpecificRouter = require('./postSpecificRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
@@ -20,10 +19,6 @@ mainRouter.use(validateUserHTTP);
 // handle post requests
 mainRouter.use('/', postRouter);
 
-// handle comment requests
-mainRouter.use('/comments/user/:userId/post/:postId', getPost, postCommentRouter);
-
-// handle like requests
-mainRouter.use('/likes/user/:userId/post/:postId', getPost, postLikeRouter);
+mainRouter.use('/user/:userId/post/:postId', getPost, postSpecificRouter);
 
 module.exports = mainRouter;

@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const { REPORT_TARGET_TYPES, REPORT_REASONS } = require('./report.js');
+
 const DEFAULT_PROFILE_PIC_LINK = "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg";
 
 const userSchema = new mongoose.Schema({
@@ -102,6 +104,39 @@ const userSchema = new mongoose.Schema({
     },
     daily_missions:{
         type: [String],
+        default: []
+    },
+    warnings: {
+        type: [{
+            // include content_link if the reported and removed object is a post
+            content_link: {
+                type: String,
+                immutable: true
+            },
+            object_id: {
+                type: mongoose.SchemaTypes.ObjectId,
+                required: true,
+                immutable: true,
+                refPath: 'object_type'
+            },
+            object_type: {
+                type: String,
+                required: true,
+                immutable: true,
+                enum: REPORT_TARGET_TYPES
+            },
+            reason: {
+                type: String,
+                required: true,
+                immutable: true,
+                enum: REPORT_REASONS
+            },
+            review_time: {
+                type: Date,
+                required: true,
+                immutable: true
+            }
+        }],
         default: []
     }
 });

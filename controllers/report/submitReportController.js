@@ -6,8 +6,13 @@ const {
     Report,
     REPORT_TARGET_TYPES,
     REPORT_TARGET_TYPE_USER,
+    REPORT_TARGET_TYPE_POST,
+    REPORT_TARGET_TYPE_POST_COMMENT,
+    REPORT_TARGET_TYPE_THREAD,
+    REPORT_TARGET_TYPE_THREAD_COMMENT,
+    REPORT_TARGET_TYPE_COMMENT,
     REPORT_REASONS,
-    REPORT_MESSAGE_SUBMITTED
+    REPORT_MESSAGE_SUBMITTED,
 } = require('../../models/report.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
@@ -17,13 +22,15 @@ const { uploadImages, UPLOAD_IMAGE_TYPE_REPORT } = require('../../utils/general/
 
 // to create a report
 async function createReport(req, res, type, objectId) {
+    const validReportTypes = [REPORT_TARGET_TYPE_POST_COMMENT, REPORT_TARGET_TYPE_THREAD_COMMENT].concat(REPORT_TARGET_TYPES);
+
     // return 400 error if provided type is not a valid type
-    if (!REPORT_TARGET_TYPES.includes(type)) {
+    if (!validReportTypes.includes(type)) {
         return returnBadReq(res, 'Invalid report type.');
     }
 
     // return 400 error if report reason is not provided in body or it is not a valid reason
-    if (!req.body?.reason || !REPORT_REASONS.includes(req.body.reason)) {
+    if (!REPORT_REASONS.includes(req.body?.reason)) {
         return returnBadReq(res, 'Invalid request body.');
     }
 
@@ -41,21 +48,58 @@ async function createReport(req, res, type, objectId) {
             reporter_id: req.user._id
         });
 
-        // if reporting user and image is provided then upload the image and save link
-        if (type == REPORT_TARGET_TYPE_USER && req.file) {
-            const reportId = new mongoose.Types.ObjectId();
-            report._id = reportId;
+        // set additional information based on report target type
+        switch (type) {
+            case REPORT_TARGET_TYPE_USER:
+                // if reporting user and image is provided then upload the image and save link
+                if (req.file) {
+                    const reportId = new mongoose.Types.ObjectId();
+                    report._id = reportId;
 
-            // upload image and store the link in report_evidence of the new report
-            const imageLinks = [];
-            const uploadSuccessful = await uploadImages([req.file], imageLinks, reportId, UPLOAD_IMAGE_TYPE_REPORT);
+                    // upload image and store the link in report_evidence of the new report
+                    const imageLinks = [];
+                    const uploadSuccessful = await uploadImages([req.file], imageLinks, reportId, UPLOAD_IMAGE_TYPE_REPORT);
 
-            // if failed to upload image then return 500 error
-            if (!uploadSuccessful) {
-                return returnServerErrorReq(res);
-            }
+                    // if failed to upload image then return 500 error
+                    if (!uploadSuccessful) {
+                        return returnServerErrorReq(res);
+                    }
 
-            report.report_evidence = imageLinks[0];
+                    report.report_evidence = imageLinks[0];
+                }
+
+                break;
+
+            case REPORT_TARGET_TYPE_POST:
+                report.meta.creator_id = req.params.userId;
+
+                break;
+            
+            case REPORT_TARGET_TYPE_POST_COMMENT:
+                report.meta.creator_id = req.params.userId;
+                report.meta.post_id = req.params.postId;
+                report.meta.comment_parent_type = REPORT_TARGET_TYPE_POST;
+
+                report.report_target_type = REPORT_TARGET_TYPE_COMMENT;
+
+                break;
+
+            case REPORT_TARGET_TYPE_THREAD:
+                report.meta.forum_id = req.params.forumID;
+
+                break;
+
+            case REPORT_TARGET_TYPE_THREAD_COMMENT:
+                report.meta.forum_id = req.params.forumID;
+                report.meta.thread_id = req.params.threadID;
+                report.meta.comment_parent_type = REPORT_TARGET_TYPE_THREAD;
+
+                report.report_target_type = REPORT_TARGET_TYPE_COMMENT;
+
+                break;
+
+            default:
+                break;
         }
 
         await report.save();

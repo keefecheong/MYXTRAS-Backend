@@ -5,7 +5,6 @@ const { Comment, PARENT_MODEL_THREAD } = require('../../models/comment.js');
 const { checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
-const performAllSync = require('../../utils/cache/performAllSync.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
@@ -15,7 +14,7 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.j
 const { getForumThreadKey } = require('../../cache/threads/threadCache.js');
 const { getThreadCommentKey } = require('../../cache/comments/commentCache.js');
 const { cacheNewComment } = require('../../cache/comments/commentUpdateCache.js');
-const { deleteCachedComment } = require('../../cache/comments/commentDeleteCache.js');
+const deleteCommentUtil = require('../../utils/comments/deleteComment.js');
 
 // get all comments for a thread
 async function getThreadComments(req, res) {
@@ -94,15 +93,9 @@ async function deleteComment(req, res) {
     }
 
     try{
-        const commentId = req.params.commentId;
-        let promises = [];
+        // delete comment from cache and database
+        await deleteCommentUtil(false, req.params.commentId, res.commentFromCache, res.threadFromCache, getForumThreadKey(res.thread.parent_id._id), res.thread._id);
         
-        // update cache
-        promises = deleteCachedComment(false, commentId, res.commentFromCache, res.threadFromCache, getForumThreadKey(res.thread.parent_id._id), res.thread._id);
-
-        // delete from cache and database together
-        await performAllSync(promises, Comment.findByIdAndDelete(commentId));
-
         returnGoodReq(res, { message: 'Comment removed.' });
     }
     catch (error) {

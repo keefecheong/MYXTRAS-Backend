@@ -6,6 +6,8 @@ const REPORT_TARGET_TYPE_POST = 'Post';
 const REPORT_TARGET_TYPE_FORUM = 'Forum';
 const REPORT_TARGET_TYPE_THREAD = 'Thread';
 const REPORT_TARGET_TYPE_COMMENT = 'Comment';
+const REPORT_TARGET_TYPE_POST_COMMENT = 'postComment';
+const REPORT_TARGET_TYPE_THREAD_COMMENT = 'threadComment';
 const REPORT_TARGET_TYPE_MESSAGE = 'Message';
 
 const REPORT_TARGET_TYPES = [
@@ -65,6 +67,30 @@ const reportSchema = new mongoose.Schema({
         required: true,
         immutable: true
     },
+    // metadata for the report_target object
+    meta: {
+        creator_id: {
+            type: mongoose.SchemaTypes.ObjectId,
+            immutable: true
+        },
+        post_id: {
+            type: mongoose.SchemaTypes.ObjectId,
+            immutable: true
+        },
+        forum_id: {
+            type: mongoose.SchemaTypes.ObjectId,
+            immutable: true
+        },
+        thread_id: {
+            type: mongoose.SchemaTypes.ObjectId,
+            immutable: true
+        },
+        comment_parent_type: {
+            type: String,
+            immutable: true,
+            enum: [REPORT_TARGET_TYPE_POST, REPORT_TARGET_TYPE_THREAD]
+        }
+    },
     report_target_type: {
         type: String,
         required: true,
@@ -112,6 +138,20 @@ const reportSchema = new mongoose.Schema({
     }
 });
 
+// method to resolve report for given target and new status
+reportSchema.statics.resolveReport = function(objectId, newStatus, reviewerId, reviewTime) {
+    return this.updateMany({
+        report_target: objectId,
+        status: REPORT_STATUS_SUBMITTED
+    }, {
+        $set: {
+            status: newStatus,
+            reviewer_id: reviewerId,
+            review_time: reviewTime
+        }
+    });
+}
+
 // virtual property to craft message for report outcome
 reportSchema.virtual('report_message').get(function() {
     // append report_target_type
@@ -134,7 +174,7 @@ reportSchema.virtual('report_message').get(function() {
         message += `appropriate action has been taken: ${this.report_target_type == REPORT_TARGET_TYPE_USER ? REPORT_MESSAGE_SUCCESS_USER : REPORT_MESSAGE_SUCCESS_OTHER}`;
     }
     // otherwise return REPORT_MESSAGE_FAILED
-    else if (this.status == REPORT_STATUS_FAILED) {
+    else {
         message += REPORT_MESSAGE_FAILED;
     }
 
@@ -151,6 +191,8 @@ module.exports = {
     REPORT_TARGET_TYPE_FORUM,
     REPORT_TARGET_TYPE_THREAD,
     REPORT_TARGET_TYPE_COMMENT,
+    REPORT_TARGET_TYPE_POST_COMMENT,
+    REPORT_TARGET_TYPE_THREAD_COMMENT,
     REPORT_TARGET_TYPE_MESSAGE,
     REPORT_STATUSES,
     REPORT_STATUS_SUBMITTED,

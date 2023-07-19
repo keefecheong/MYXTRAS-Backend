@@ -178,5 +178,10 @@ Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTNjYjU2Y2M
 
 ###
 
-get http://127.0.0.1:8081/api/report/user/submitted
+PATCH http://127.0.0.1:8081/api/report/resolve/success/forum/64aa4010785f9d571f50ba36/thread/64b2c524deb0a2d3bc66c8ca/comment/64b6a937dfc9f14cb70e234c
 Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTdiYjU2Y2M3Y2JhZDcwZDI5NiIsImlhdCI6MTY4OTMyNzU0N30.GxQw24Q5kmE6C0rcnR_-CLH0n6epNF6iHTG_AVprcyk
+Content-Type: application/json
+
+{
+    "reason": "Spam"
+}

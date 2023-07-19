@@ -6,9 +6,7 @@ const mainRouter = express.Router();
 
 // nested routers
 const threadRouter = require('./threadRouter.js');
-const commentRouter = require('./threadCommentRouter.js')
-const likeRouter = require('./threadLikeRouter.js')
-const dislikeRouter = require('./threadDislikeRouter.js')
+const threadSpecificRouter = require('./threadSpecificRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
@@ -19,8 +17,6 @@ mainRouter.use(validateUserHTTP);
 
 // mount various routes
 mainRouter.use('/', threadRouter);
-mainRouter.use('/forum/:forumID/thread/:threadID/like', getThread, likeRouter);
-mainRouter.use('/forum/:forumID/thread/:threadID/dislike', getThread, dislikeRouter);
-mainRouter.use('/forum/:forumID/thread/:threadID/comments', getThread, commentRouter);
+mainRouter.use('/forum/:forumID/thread/:threadID', getThread, threadSpecificRouter);
 
 module.exports = mainRouter;
