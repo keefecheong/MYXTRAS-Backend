@@ -3,9 +3,11 @@
 // initialize router
 const express = require('express');
 const mainRouter = express.Router();
+const dailyCheckInRouter = require('./dailyCheckInRouter.js');
 
 // nested routers
 const { getMissions } = require('../../controllers/gamification/gamificationController.js')
+
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
@@ -17,5 +19,6 @@ mainRouter.use(validateUserHTTP);
 
 // mount various routes
 mainRouter.use('/missions', getUser, getMissions);
+mainRouter.use('/daily-checkin', getUser, dailyCheckInRouter);
 
 module.exports = mainRouter;
