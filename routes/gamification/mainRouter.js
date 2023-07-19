@@ -13,12 +13,13 @@ const { getMissions } = require('../../controllers/gamification/gamificationCont
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
 const { getUser } = require('../../middleware/users/getRequestedUserMiddleware.js');
 
+const { getGameData} = require('../../middleware/gamification/getGamificationDataMiddleware.js');
 
 // validate user for all routes
 mainRouter.use(validateUserHTTP);
 
 // mount various routes
-mainRouter.use('/missions', getUser, getMissions);
-mainRouter.use('/daily-checkin', getUser, dailyCheckInRouter);
+mainRouter.use('/missions', getGameData, getMissions);
+mainRouter.use('/daily-checkin', getGameData, dailyCheckInRouter);
 
 module.exports = mainRouter;
