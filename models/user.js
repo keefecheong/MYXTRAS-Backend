@@ -103,6 +103,13 @@ const userSchema = new mongoose.Schema({
     daily_missions:{
         type: [String],
         default: []
+    },
+    last_checkin_date: {
+        type: Date,
+    },
+    checkin_count: {
+        type: Number,
+        default: 0
     }
 });
 

@@ -102,6 +102,30 @@ async function assignDailyMissions() {
       console.error('Error resetting daily missions:', error);
     }
   };
+async function resetDailyMissions() {
+    try {
+      const users = await User.find({});
+      const missions = ['Like 5 threads', 'Follow a new user', 'Create a new blog', 'Say something nice', 'Share a blog to a friend',
+      'Start a new thread discussion', 'Share your socials', 'Find a love']
+      users.forEach(async (user) => {
+        // Clear existing assigned missions
+        user.daily_missions = [];
+  
+        // Get 4 random missions from the available missions
+        const randomMissions = getRandomElements(missions, 4);
+  
+        // Assign the daily missions to the user (update!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+        user.daily_missions = randomMissions;
+  
+        // Save the user with updated daily missions
+        await user.save();
+      });
+  
+      console.log('Daily missions reset successfully');
+    } catch (error) {
+      console.error('Error resetting daily missions:', error);
+    }
+  };
 
   const checkDateAndReset = () => {
     // Get the current date
@@ -118,8 +142,8 @@ async function assignDailyMissions() {
   // Initialize the lastDate to the current date
   checkDateAndReset.lastDate = new Date().getDate();
   
-  // Set the interval to check the date every 1 day (adjust as needed)
-  setInterval(checkDateAndReset, 60); // 1 minute
+  // Checks if new day has occured
+  setInterval(checkDateAndReset, 1000 * 60 * 60); // 1 hr
 
 
 

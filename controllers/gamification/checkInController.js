@@ -1,9 +1,10 @@
 // controller functions to handle user profile related requests
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+
 const missions = require('../../utils/gamification/config.json');
 
-async function getMissions(req, res) {
+async function checkIn(req, res) {
     try{
         const user = req.user;
         const daily_missions = [];
@@ -25,5 +26,5 @@ async function getMissions(req, res) {
 
 
 module.exports = {
-    getMissions
+    checkIn
 }
