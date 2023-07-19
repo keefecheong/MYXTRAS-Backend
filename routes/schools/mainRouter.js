@@ -5,7 +5,7 @@ const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 
 // get school and course details
 mainRouter.get('/', (req, res) => {
-    const schools = require('../../schools.json');
+    const schools = require('../../utils/users/schools.json');
 
     returnGoodReq(res, schools);
 });
