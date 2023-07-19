@@ -175,7 +175,6 @@ async function setupUser(req, res) {
         returnNoContentReq(res);
     }
     catch (error) {
-        console.log(error)
         if (error.code === 11000) {
             // Duplicate username error
             returnBadReq(res, 'Username already exists');

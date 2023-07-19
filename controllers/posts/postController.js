@@ -183,7 +183,6 @@ async function getSavedPosts(req, res) {
         returnGoodReq(res, posts);
     }
     catch (error) {
-        console.log(error)
         returnServerErrorReq(res);
     }
 }

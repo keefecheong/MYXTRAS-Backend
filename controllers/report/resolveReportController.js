@@ -130,7 +130,6 @@ async function reportSuccess(req, res, type, reportTargetId) {
         returnGoodReq(res, { message: 'Report resolved successfully.' });
     }
     catch (error) {
-        console.log(error)
         returnServerErrorReq(res);
     }
 }
