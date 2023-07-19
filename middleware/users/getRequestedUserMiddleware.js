@@ -13,7 +13,6 @@ async function getUser (req, res, next) {
 
     try {
         const userId = req.params.userId;
-
         target = await User.findById(userId).lean().cache({
             key: getUserKey(userId)
         });

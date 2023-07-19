@@ -37,14 +37,14 @@ async function updateCachedUser(updatedValues, userId) {
 
     // increase version key
     const promises = [redisClient.json.numIncrBy(key, '$.__v', 1)];
-
+    
     // add promise for each updated key/value
     for (const updatedKey in updatedValues) {
         if (updatedValues.hasOwnProperty(updatedKey)) {
             promises.push(redisClient.json.set(key, `$.${updatedKey}`, updatedValues[updatedKey]));
         }
     }
-
+    
     // update user
     return await returnPromiseResult(promises);
 }

@@ -106,6 +106,17 @@ const userSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    last_checkin_date: {
+        type: Date,
+    },
+    checkin_count: {
+        type: Number,
+        default: 1
+    },
+    claimed: {
+        type: Boolean,
+        default: false
+    },
     warnings: {
         type: [{
             // include content_link if the reported and removed object is a post

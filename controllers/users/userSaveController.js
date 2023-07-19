@@ -9,7 +9,7 @@ const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
-const schools = require('../../schools.json');
+const schools = require('../../utils/users/schools.json');
 
 const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 

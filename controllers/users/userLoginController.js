@@ -7,6 +7,9 @@ const bcrypt = require('bcryptjs');
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
+
+const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
 // login user
 async function loginUser(req, res) {
@@ -30,7 +33,7 @@ async function loginUser(req, res) {
         if (!bcrypt.compareSync(password, user.password)){
             return returnBadReq(res, 'Invalid email or password');
         }
-    
+        
         // sign jwt and return as cookie
         setJWT(user._id, res);
 
