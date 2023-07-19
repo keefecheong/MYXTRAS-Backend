@@ -109,7 +109,11 @@ const userSchema = new mongoose.Schema({
     },
     checkin_count: {
         type: Number,
-        default: 0
+        default: 1
+    },
+    claimed: {
+        type: Boolean,
+        default: false
     }
 });
 

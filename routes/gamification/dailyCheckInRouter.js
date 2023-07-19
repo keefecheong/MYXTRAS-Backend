@@ -5,11 +5,11 @@ const express = require('express');
 const dailyCheckInRouter = express.Router();
 
 // get controller functions
-const { checkIn } = require('../../controllers/gamification/checkInController.js')
+const { getCheckIn, checkIn} = require('../../controllers/gamification/checkInController.js')
 
 
 // checkin
-dailyCheckInRouter.get('/', checkIn);
-
+dailyCheckInRouter.get('/', getCheckIn);
+dailyCheckInRouter.post('/', checkIn);
 
 module.exports = dailyCheckInRouter;
