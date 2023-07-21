@@ -10,6 +10,8 @@ const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
 const schools = require('../../utils/users/schools.json');
+const tasks = require('../../utils/gamification/config.json');
+
 
 const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
@@ -155,6 +157,7 @@ async function setupUser(req, res) {
         user.course = course;
         user.interests = interests;
         user.is_profile_setup = true;
+        const missions = Object.keys(tasks.missions);
 
         const updatedValues = {
             username: userName,
@@ -163,7 +166,8 @@ async function setupUser(req, res) {
             school,
             course,
             interests,
-            is_profile_setup: true
+            is_profile_setup: true,
+            daily_missions: getRandomElements(missions, 4)
         }
 
         // update cache
@@ -184,7 +188,24 @@ async function setupUser(req, res) {
             returnServerErrorReq(res);
         }
     }
-}
+};
+
+  function getRandomElements(arr, n) {
+    const shuffled = arr.slice();
+    let i = arr.length;
+    const min = i - n;
+    let temp;
+    let index;
+  
+    while (i-- > min) {
+      index = Math.floor((i + 1) * Math.random());
+      temp = shuffled[index];
+      shuffled[index] = shuffled[i];
+      shuffled[i] = temp;
+    }
+  
+    return shuffled.slice(min);
+  }
 
 module.exports = {
     updateUser,
