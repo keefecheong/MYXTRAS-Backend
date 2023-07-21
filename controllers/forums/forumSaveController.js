@@ -1,10 +1,9 @@
 // controller functions for creation and update of forums
 
-const mongoose = require('mongoose');
 const Forum = require('../../models/forum.js');
 
-const { uploadImages, UPLOAD_IMAGE_TYPE_FORUM } = require('../../utils/general/firebaseStorageUpload.js');
-const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
+const { uploadImages, UPLOAD_TYPE_FORUM } = require('../../utils/firebase/firebaseStorageUpload.js');
+const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
@@ -43,12 +42,10 @@ async function createForum(req, res) {
             return returnBadReq(res, 'Input length too long');
         }
 
-        const forumId = new mongoose.Types.ObjectId();
         const creatorId = req.user._id;
 
         // create new forum
         const newForum = new Forum({
-            _id: forumId,
             creator_id: creatorId,
             forum_name: forum_name,
             forum_id: forum_id,
@@ -58,7 +55,7 @@ async function createForum(req, res) {
 
         // upload images
         const imageLinks = [];
-        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, forumId, UPLOAD_IMAGE_TYPE_FORUM);
+        const forumPicUploadSuccessful = await uploadImages(req.files, imageLinks, newForum._id, UPLOAD_TYPE_FORUM);
 
         // if unsuccessful return internal server error
         if (!forumPicUploadSuccessful) {
@@ -81,7 +78,7 @@ async function createForum(req, res) {
         // update database asynchronously if cache is updated successfully, or synchronously otherwise
         await saveDocAsync(newForum, updateCacheResult);
 
-        returnGoodReq(res, { forum_id: forumId });
+        returnGoodReq(res, { forum_id: newForum._id });
     }
     catch (error) {
         returnServerErrorReq(res);
@@ -154,7 +151,7 @@ async function updateForum(req, res) {
         if (req.body.pictureUnchanged != 'true') {
             var newImageLinks = [];
     
-            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, forumId, UPLOAD_IMAGE_TYPE_FORUM);
+            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, forumId, UPLOAD_TYPE_FORUM);
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {
@@ -174,7 +171,7 @@ async function updateForum(req, res) {
         if (req.body.bannerUnchanged != 'true') {
             var newImageLinks = [];
     
-            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, forumId, UPLOAD_IMAGE_TYPE_FORUM);
+            const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, forumId, UPLOAD_TYPE_FORUM);
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {

@@ -2,7 +2,7 @@
 
 const redisClient = require('../redis.js');
 const { getForumKey } = require('./forumCache.js');
-const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
+const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add subscriber to forum in cache
 async function cachedForumAddSubscriber(forumId, userId) {

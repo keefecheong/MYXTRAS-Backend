@@ -2,7 +2,7 @@
 
 const redisClient = require('../redis.js');
 const { getUserKey, USER_EXPIRATION_TIME } = require('./userCache.js');
-const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
+const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add new user to cache
 async function cacheNewUser(user) {

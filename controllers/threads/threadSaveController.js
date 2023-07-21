@@ -1,10 +1,9 @@
 // controller functions for creation and update of threads
 
-const mongoose = require('mongoose');
 const Thread = require('../../models/thread.js');
 
-const { uploadImages, UPLOAD_IMAGE_TYPE_THREAD } = require('../../utils/general/firebaseStorageUpload.js');
-const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
+const { uploadImages, UPLOAD_TYPE_THREAD } = require('../../utils/firebase/firebaseStorageUpload.js');
+const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
 
 const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
@@ -13,7 +12,6 @@ const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
 
-const { getForumThreadKey } = require('../../cache/threads/threadCache.js');
 const { cacheNewThread, updateCachedThread } = require('../../cache/threads/threadUpdateCache.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
@@ -30,13 +28,11 @@ async function createThread(req, res) {
         
         const { title, content, tags } = threadObject;
 
-        const threadId = new mongoose.Types.ObjectId();
         const forumId = req.params.forumID;
         const creatorId = req.user._id;
 
         // create new thread
         const newThread = new Thread({
-            _id: threadId,
             parent_id: forumId,
             creator_id: creatorId,
             title: title,
@@ -48,7 +44,7 @@ async function createThread(req, res) {
         if (req.files.length > 0) {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, threadId, UPLOAD_IMAGE_TYPE_THREAD, forumId);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, newThread._id, UPLOAD_TYPE_THREAD, forumId);
         
             // if upload not successful then delete the new thread
             if (!threadPicUploadSuccessful) {
@@ -136,7 +132,7 @@ async function updateThread(req, res) {
         if (req.body.pictureUnchanged != 'true') {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, thread._id, UPLOAD_IMAGE_TYPE_THREAD, forumId);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, thread._id, UPLOAD_TYPE_THREAD, forumId);
         
             // if upload not successful then return 500 error
             if (!threadPicUploadSuccessful) {

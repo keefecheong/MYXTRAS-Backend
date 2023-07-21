@@ -3,7 +3,7 @@
 const redisClient = require('../redis.js');
 
 const { getUserKey } = require('../users/userCache.js');
-const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
+const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add a saved post to user in cache
 async function cachedUserSavePost(user, entry) {

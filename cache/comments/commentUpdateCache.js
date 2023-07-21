@@ -4,7 +4,7 @@ const redisClient = require('../redis.js');
 const { getPostCommentKey, getThreadCommentKey } = require('./commentCache.js');
 const { getPostIdPath } = require('../posts/postCache.js');
 const { getThreadIdPath } = require('../threads/threadCache.js');
-const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
+const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add a new comment to cache if parent key already exists
 async function cacheNewComment(forPost, jsonComment, parentInCache, parentKey, parentId) {

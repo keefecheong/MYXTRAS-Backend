@@ -4,6 +4,21 @@ const { REPORT_TARGET_TYPES, REPORT_REASONS } = require('./report.js');
 
 const DEFAULT_PROFILE_PIC_LINK = "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg";
 
+// user status
+const USER_STATUS_SUSPENDED = 'Suspended';
+const USER_STATUS_TERMINATED = 'Terminated';
+
+const USER_STATUSES = [USER_STATUS_SUSPENDED, USER_STATUS_TERMINATED];
+
+// messages to return if user is suspended/terminated
+const USER_SUSPENDED_MSG = 'Your account has been suspended, please try again later.';
+const USER_TERMINATED_MSG = 'Your account has been terminated, access denied.';
+
+// array field name to clean up
+const FIELD_SAVED_POSTS = 'saved_posts';
+const FIELD_BLOCKED_USERS = 'blocked_users';
+const FIELD_FOLLOWERS = 'followers';
+
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
@@ -149,6 +164,19 @@ const userSchema = new mongoose.Schema({
             }
         }],
         default: []
+    },
+    status: {
+        status: {
+            type: String,
+            enum: USER_STATUSES
+        },
+        end_time: {
+            type: Date,
+            // specify required if user is suspended
+            required: function() {
+                return this.status.status == USER_STATUS_SUSPENDED;
+            }
+        }
     }
 });
 
@@ -179,7 +207,63 @@ userSchema.pre('save', function(next) {
     next();
 });
 
+// delete given id/ids from the specified array fields if exists
+userSchema.statics.deleteFromArrayField = function(arrayField, id, asJSON) {
+    if (!arrayField || !id) {
+        return;
+    }
+
+    let filter = {};
+    let update = {};
+
+    // set filter and update based on arrayField
+    switch (arrayField) {
+        case FIELD_SAVED_POSTS:
+            filter[`${FIELD_SAVED_POSTS}.post_id`] = { $in: id };
+            update = {
+                $pull: {
+                    saved_posts: { post_id: { $in: id } }
+                }
+            };
+
+            break;
+        
+        case FIELD_BLOCKED_USERS:
+            filter[`${FIELD_BLOCKED_USERS}.user_id`] = id;
+            update = {
+                $pull: {
+                    blocked_users: { user_id: id }
+                }
+            };
+
+            break;
+
+        case FIELD_FOLLOWERS:
+            filter.followers = { $in: [id] };
+            update = {
+                $pull: {
+                    followers: id
+                }
+            };
+            
+            break;
+
+        default:
+            break;
+    }
+
+    return asJSON ? { updateMany: { filter, update } } : this.updateMany(filter, update);
+}
+
 module.exports = {
     User: mongoose.model('User', userSchema),
-    DEFAULT_PROFILE_PIC_LINK
+    DEFAULT_PROFILE_PIC_LINK,
+    USER_STATUS_SUSPENDED,
+    USER_STATUS_TERMINATED,
+    USER_STATUSES,
+    USER_SUSPENDED_MSG,
+    USER_TERMINATED_MSG,
+    FIELD_SAVED_POSTS,
+    FIELD_BLOCKED_USERS,
+    FIELD_FOLLOWERS
 }

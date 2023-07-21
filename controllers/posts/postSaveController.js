@@ -1,10 +1,9 @@
 // controller functions to handle POST and PATCH requests for posts
 
-const mongoose = require('mongoose');
 const Post = require('../../models/post.js');
 
-const { uploadImages, UPLOAD_IMAGE_TYPE_POST } = require('../../utils/general/firebaseStorageUpload.js');
-const { deleteFiles } = require('../../utils/general/firebaseStorageDelete.js');
+const { uploadImages, UPLOAD_TYPE_POST } = require('../../utils/firebase/firebaseStorageUpload.js');
+const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
 
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
@@ -25,12 +24,9 @@ async function createPost(req, res) {
         return returnBadReq(res, 'At least one image is required.');
     }
 
-    // create new ObjectID
-    const postId = new mongoose.Types.ObjectId();
     const creatorId = req.user._id;
 
     const post = new Post({
-        _id: postId,
         creator_id: creatorId,
         content_links: [],
         original_names: req.files.map(image => image.originalname)
@@ -57,7 +53,7 @@ async function createPost(req, res) {
 
     try {
         // upload images and store the links in content_links of the new post
-        const uploadSuccessful = await uploadImages(req.files, post.content_links, postId, UPLOAD_IMAGE_TYPE_POST);
+        const uploadSuccessful = await uploadImages(req.files, post.content_links, post._id, UPLOAD_TYPE_POST);
 
         // if failed to upload images then return error message
         if (!uploadSuccessful) {
@@ -142,7 +138,7 @@ async function updatePost(req, res) {
         if (req.body.noFilesChanged != 'true') {
             var newImageLinks = [];
     
-            const uploadSuccessful = await uploadImages(req.files, newImageLinks, postId, UPLOAD_IMAGE_TYPE_POST);
+            const uploadSuccessful = await uploadImages(req.files, newImageLinks, postId, UPLOAD_TYPE_POST);
     
             // if failed to upload images then send error message
             if (!uploadSuccessful) {

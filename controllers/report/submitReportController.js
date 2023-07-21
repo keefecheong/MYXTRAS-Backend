@@ -1,7 +1,5 @@
 // to create a report
 
-const mongoose = require('mongoose');
-
 const {
     Report,
     REPORT_TARGET_TYPES,
@@ -18,7 +16,7 @@ const {
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
-const { uploadImages, UPLOAD_IMAGE_TYPE_REPORT } = require('../../utils/general/firebaseStorageUpload.js');
+const { uploadImages, UPLOAD_TYPE_REPORT } = require('../../utils/firebase/firebaseStorageUpload.js');
 
 // to create a report
 async function createReport(req, res, type, objectId) {
@@ -53,12 +51,9 @@ async function createReport(req, res, type, objectId) {
             case REPORT_TARGET_TYPE_USER:
                 // if reporting user and image is provided then upload the image and save link
                 if (req.file) {
-                    const reportId = new mongoose.Types.ObjectId();
-                    report._id = reportId;
-
                     // upload image and store the link in report_evidence of the new report
                     const imageLinks = [];
-                    const uploadSuccessful = await uploadImages([req.file], imageLinks, reportId, UPLOAD_IMAGE_TYPE_REPORT);
+                    const uploadSuccessful = await uploadImages([req.file], imageLinks, report._id, UPLOAD_TYPE_REPORT);
 
                     // if failed to upload image then return 500 error
                     if (!uploadSuccessful) {

@@ -7,6 +7,7 @@ const cookie = require('cookie');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const { getUserKey } = require('../../cache/users/userCache.js');
+const suspendUser = require('../../utils/report/suspendUser.js');
 
 // make sure jwt is valid and user is authenticated
 // for http requests
@@ -32,6 +33,14 @@ async function validateUserHTTP(req, res, next, checkAdmin = false) {
         // return 401 error if user not found or user is not admin (if admin check required)
         if (!user || (checkAdmin && !user.is_admin)) {
             return returnUnauthorizedReq(res);
+        }
+
+        // remove suspend if end_time is reached
+        const removedSuspend = await suspendUser(false, user);
+
+        // update user if suspend status is removed
+        if (removedSuspend) {
+            user.status = {};
         }
 
         // Attach the user object to the request for further processing

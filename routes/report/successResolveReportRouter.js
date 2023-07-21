@@ -24,13 +24,22 @@ const {
     REPORT_TARGET_TYPE_THREAD_COMMENT
 } = require('../../models/report.js');
 
+const { USER_STATUS_SUSPENDED, USER_STATUS_TERMINATED } = require('../../models/user.js');
+
 const { PARENT_MODEL_POST, PARENT_MODEL_THREAD } = require('../../models/comment.js');
 
-// warn user
+// suspend user
 successResolveReportRouter.patch(
-    '/user/:userId',
+    '/user/:userId/suspend',
     getUser,
-    (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_USER, req.params.userId)
+    (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_USER, req.params.userId, USER_STATUS_SUSPENDED)
+);
+
+// terminate user
+successResolveReportRouter.patch(
+    '/user/:userId/terminate',
+    getUser,
+    (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_USER, req.params.userId, USER_STATUS_TERMINATED)
 );
 
 // delete post

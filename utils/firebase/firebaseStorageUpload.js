@@ -6,38 +6,18 @@ const { deleteFiles } = require('./firebaseStorageDelete.js');
 
 const firebaseStorage = getStorage();
 
-const UPLOAD_IMAGE_TYPE_POST = 'post';
-const UPLOAD_IMAGE_TYPE_FORUM = 'forum';
-const UPLOAD_IMAGE_TYPE_THREAD = 'thread';
-const UPLOAD_IMAGE_TYPE_USER = 'user';
-const UPLOAD_IMAGE_TYPE_REPORT = 'report';
+const UPLOAD_TYPE_POST = 'posts';
+const UPLOAD_TYPE_FORUM = 'forums';
+const UPLOAD_TYPE_THREAD = 'threads';
+const UPLOAD_TYPE_USER = 'users';
+const UPLOAD_TYPE_REPORT = 'reports';
+const UPLOAD_TYPE_CHAT = 'chats';
 
 // upload image to firebase storage and update image links
 // if uploading fails then delete all the uploaded images (ask user to retry later)
 async function uploadImages(images, imageLinks, objId, type, forumID) {
     for (let i = 0; i < images.length; i++) {
-        let prefix;
-
-        // set prefix based on object type or return false for no matches
-        switch (type) {
-            case UPLOAD_IMAGE_TYPE_POST:
-                prefix = `posts/${objId}`;
-                break;
-            case UPLOAD_IMAGE_TYPE_USER:
-                prefix = `users/${objId}`;
-                break;
-            case UPLOAD_IMAGE_TYPE_FORUM:
-                prefix = `forums/${objId}`;
-                break;
-            case UPLOAD_IMAGE_TYPE_THREAD:
-                prefix = `threads/${forumID}/${objId}`;
-                break;
-            case UPLOAD_IMAGE_TYPE_REPORT: 
-                prefix = `reports/${objId}`;
-                break;
-            default:
-                return false;
-        }
+        let prefix = `${type}/${objId}`;
 
         const image = images[i];
 
@@ -60,7 +40,7 @@ async function uploadImages(images, imageLinks, objId, type, forumID) {
 // upload file to firebase storage and return file link
 // if uploading fails then delete file
 async function uploadFile(buffer, objId, name, type) {
-    const prefix = `chats/${objId}`;
+    const prefix = `${UPLOAD_TYPE_CHAT}/${objId}`;
 
     // upload file
     const uploadResult = await uploadFunction(buffer, prefix, name, type);
@@ -80,11 +60,12 @@ async function uploadFile(buffer, objId, name, type) {
 module.exports = {
     uploadImages,
     uploadFile,
-    UPLOAD_IMAGE_TYPE_POST,
-    UPLOAD_IMAGE_TYPE_FORUM,
-    UPLOAD_IMAGE_TYPE_THREAD,
-    UPLOAD_IMAGE_TYPE_USER,
-    UPLOAD_IMAGE_TYPE_REPORT
+    UPLOAD_TYPE_POST,
+    UPLOAD_TYPE_FORUM,
+    UPLOAD_TYPE_THREAD,
+    UPLOAD_TYPE_USER,
+    UPLOAD_TYPE_REPORT,
+    UPLOAD_TYPE_CHAT
 }
 
 // common function to upload file
