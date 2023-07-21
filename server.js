@@ -48,45 +48,7 @@ db.once('open', () => console.log('Connected to database.'));
 
 const tasks = require('./utils/gamification/config.json');
 const cron = require('node-cron');
-
-
-// - like 5 threads
-// - follow a new user
-// - create a new blog
-// - say something nice (or comment)
-// - share a blog to a friend
-// - Start a new thread discussion
-// - Share your socials
-// - Find a love
-async function assignDailyMissions() {
-    try {
-      const users = await User.find({});
-      const missions = Object.keys(tasks.missions);
-      console.log(missions)
-      users.forEach(async (user) => {
-        const cacheUser = new User(user);
-        cacheUser.isNew = false;
-        const updatedValues = {}
-
-        // Get 4 random missions from the available missions
-        const randomMissions = getRandomElements(missions, 4);
-  
-        // Assign the daily missions to the user
-        updatedValues.daily_missions = randomMissions;
-        // update cache with newly saved user
-        const updateCacheResult = await updateCachedUser(updatedValues, cacheUser._id, true);
-        await saveDocAsync(cacheUser, updateCacheResult);
-      
-      });
-      console.log('Daily missions assigned successfully');
-    } catch (error) {
-      console.error('Error assigning daily missions:', error);
-    }
-  };
-  
-  // Call the function to assign daily missions
-  assignDailyMissions();
-  
+ 
   // Function to reset the daily missions for all users
   async function resetDailyMissions() {
     try {
@@ -112,31 +74,6 @@ async function assignDailyMissions() {
       console.error('Error resetting daily missions:', error);
     }
   };
-
-// async function resetDailyMissions() {
-//     try {
-//       const users = await User.find({});
-//       const missions = Object.keys(tasks.missions);
-
-//       users.forEach(async (user) => {
-//         // Clear existing assigned missions
-//         user.daily_missions = [];
-  
-//         // Get 4 random missions from the available missions
-//         const randomMissions = getRandomElements(missions, 4);
-  
-//         // Assign the daily missions to the user (update!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
-//         user.daily_missions = randomMissions;
-  
-//         // Save the user with updated daily missions
-//         await user.save();
-//       });
-  
-//       console.log('Daily missions reset successfully');
-//     } catch (error) {
-//       console.error('Error resetting daily missions:', error);
-//     }
-//   };
 
   const checkDateAndReset = () => {
     // Get the current date
