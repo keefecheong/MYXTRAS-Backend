@@ -17,7 +17,9 @@ const unblockSchema = new mongoose.Schema({
     },
     unblock_time: {
         type: Date,
-        default: Date.now(),
+        default: function() {
+            return Date.now();
+        },
         immutable: true
     }
 });

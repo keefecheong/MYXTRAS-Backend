@@ -1,10 +1,11 @@
 // functions used in blocking a user
 
-const mongoose = require('mongoose');
 const { User } = require('../../models/user.js');
 const Post = require('../../models/post.js');
+const { Comment, PARENT_MODEL_POST } = require('../../models/comment.js');
 const compareId = require('../../utils/general/compareId.js');
 const { cachedUserAddBlocked } = require('../../cache/users/userBlockCache.js');
+const updateParentCommentCount = require('../comments/updateParentCommentCount.js');
 
 // handle blocking process for one user
 async function handleBlockPerUser(self, targetUserId, isBlocker) {
@@ -32,12 +33,7 @@ async function handleBlockPerUser(self, targetUserId, isBlocker) {
     }
 
     // remove likes by self on the other user's posts
-    const removePostLikes = {
-        updateMany: {
-            filter: { creator_id: targetUserId },
-            update: { $pull: { likes: user._id } }
-        }
-    }
+    const removePostLikes = Post.removeLikesByUser(user._id, targetUserId);
 
     // get list of posts created by self where there are comments by the target user
     // also get number of comments by that user for each post
@@ -46,22 +42,13 @@ async function handleBlockPerUser(self, targetUserId, isBlocker) {
     const postIds = commentsPerPost.map(entry => entry._id);
 
     // delete comments by the target user under posts by created by self
-    const deleteComments = {
-        deleteMany: {
-            filter: { parent_id: { $in: postIds }, creator_id: new mongoose.Types.ObjectId(targetUserId) }
-        }
-    }
+    const deleteComments = Comment.deleteAllSpecified(postIds, targetUserId);
 
     const bulkUpdatePost = [removePostLikes];
 
     // update each post's comment_count for consistency after deleting
     commentsPerPost.forEach(entry => {
-        bulkUpdatePost.push({
-            updateOne: {
-                filter: { _id: entry._id },
-                update: { $inc: { comment_count: -(entry.comment_count) }}
-            }
-        });
+        bulkUpdatePost.push(updateParentCommentCount(PARENT_MODEL_POST, entry._id, false, true, entry.comment_count));
     });
 
     // update cache
@@ -79,7 +66,7 @@ function getAggFunction(selfId, targetUserId) {
                 'comment_count': {
                     '$gt': 0
                 },
-                'creator_id': new mongoose.Types.ObjectId(selfId)
+                'creator_id': selfId
             }
         },
         {
@@ -96,7 +83,7 @@ function getAggFunction(selfId, targetUserId) {
                 'pipeline': [
                     {
                         '$match': {
-                            'creator_id': new mongoose.Types.ObjectId(targetUserId)
+                            'creator_id': targetUserId
                         }
                     },
                     {

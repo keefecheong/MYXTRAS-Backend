@@ -2,7 +2,7 @@
 
 const redisClient = require('../redis.js');
 const { FORUM_LONG_EXPIRATION_TIME, getForumIdPath, getForumKey, getCreatedForumKey } = require('./forumCache.js');
-const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
+const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add new forum to cache and update forum:created entry if exists
 async function cacheNewForum(forum, userDetails) {

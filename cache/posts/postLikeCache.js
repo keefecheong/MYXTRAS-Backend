@@ -2,7 +2,7 @@
 
 const redisClient = require('../redis.js');
 const { getUserPostKey, getPostIdPath } = require('./postCache.js');
-const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
+const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add like to post in cache
 async function cachedPostAddLike(creatorId, postId, userId) {

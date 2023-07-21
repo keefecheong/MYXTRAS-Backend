@@ -11,7 +11,9 @@ const forumSchema = new mongoose.Schema({
     creation_time: {
         type: Date,
         immutable: true,
-        default: Date.now()
+        default: function() {
+            return Date.now();
+        }
     },
     // Ex. NP InfoComm
     forum_name: {
@@ -68,27 +70,42 @@ forumSchema.statics.commonQuery = function (filter, cache, cacheOptions) {
     return query;
 }
 
+// remove user from subscribers list
+forumSchema.statics.removeSubscriber = function(userId) {
+    const filter = {
+        subscribers: {
+            $in: [userId]
+        }
+    };
+
+    const update = {
+        $pull: { subscribers: userId }
+    };
+
+    return { updateMany: { filter, update } };
+}
+
+// delete forums created by a user
+forumSchema.statics.deleteByUser = async function(userId) {
+    // delete forums
+    const deleteForumsPromise = { deleteMany: { filter: { creator_id: userId } } };
+
+    // clean up threads and comments
+    const cleanUpThreads = await Thread.deleteAllSpecified(null, userId, true);
+
+    return { ...cleanUpThreads, deleteForumsPromise };
+}
+
+// to clean up child threads and comments when forum is deleted
+forumSchema.statics.cleanUpOnDeleteForum = async function(forumId) {
+    return await Thread.deleteAllSpecified(forumId);
+}
+
 // on delete automatically clean up threads associated with the forum if any
 forumSchema.post('findOneAndDelete', async function(doc, next) {
-    try {
-        // get all threads under this forum
-        const associatedThreads = await Thread.find({ parent_id: doc._id }, { '_id': 1 });
-    
-        const promises = [];
-    
-        // add promise to delete individual thread to trigger thread middleware to clean up comments as well
-        for (let i = 0; i < associatedThreads.length; i++) {
-            promises.push(Thread.findByIdAndDelete(associatedThreads[i]._id));
-        }
-    
-        // execute all promises
-        Promise.all(promises).catch(error => console.log(error));
+    this.model.cleanUpOnDeleteForum(doc._id).catch(error => console.log(error));
 
-        next();
-    }
-    catch (error) {
-        console.log(error);
-    }
+    next();
 });
 
 module.exports = mongoose.model('Forum', forumSchema);

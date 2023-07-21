@@ -11,10 +11,7 @@ function deleteFiles(fileLinks) {
     for (let i = 0; i < fileLinks.length; i++) {
         let path = decodeURIComponent(fileLinks[i].replace(baseURL, '').split('?')[0]);
         const fileRef = ref(firebaseStorage, path);
-        deleteObject(fileRef)
-            .catch((error) => {
-                console.log(error);
-            });
+        deleteObject(fileRef).catch(error => console.log(error));
     }
 }
 

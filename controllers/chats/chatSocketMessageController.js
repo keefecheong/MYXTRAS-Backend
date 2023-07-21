@@ -5,7 +5,7 @@ const Message = require('../../models/message.js');
 
 const { emitSocketEvent } = require('../../utils/chats/emitSocketEvent.js');
 const { getUserOnline } = require('../../utils/chats/getUserStatus.js');
-const { uploadFile } = require('../../utils/general/firebaseStorageUpload.js');
+const { uploadFile } = require('../../utils/firebase/firebaseStorageUpload.js');
 
 // handle 'send-message' event
 async function handleSendMessage(data, socket, connections) {

@@ -2,7 +2,7 @@
 
 const redisClient = require('../redis.js');
 const { getForumThreadKey, getThreadIdPath } = require('./threadCache.js');
-const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
+const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add dislike to thread in cache
 async function cachedThreadAddDislike(forumId, threadId, userId, threadFromCache) {

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Post = require('./post.js');
+const updateParentCommentCount = require('../utils/comments/updateParentCommentCount.js');
 
 // valid parent_model values
 const PARENT_MODEL_POST = 'Post';
@@ -15,7 +15,9 @@ const commentSchema = new mongoose.Schema({
     creation_time: {
         type: Date,
         immutable: true,
-        default: Date.now()
+        default: function() {
+            return Date.now();
+        }
     },
     content: {
         type: String,
@@ -67,38 +69,39 @@ commentSchema.pre('save', async function (next) {
     if (!this.isNew) {
         return next();
     }
+    
+    updateParentCommentCount(this.parent_model, this.parent_id, true).catch(error => console.log(error));
 
-    try {
-        const parentModel = mongoose.model(this.parent_model);
-
-        parentModel.findByIdAndUpdate(
-            this.parent_id,
-            { $inc: { comment_count: 1 } }
-        ).catch(error => console.log(error));
-
-        next();
-    }
-    catch (error) {
-        console.log(error);
-    }
+    next();
 });
 
 // automatically decrement parent object's comment_count by 1 on delete
 commentSchema.post('findOneAndDelete', async function (doc, next) {
-    try {
-        const parentModel = mongoose.model(doc.parent_model);
+    updateParentCommentCount(doc.parent_model, doc.parent_id, false).catch(error => console.log(error));
 
-        parentModel.findByIdAndUpdate(
-            doc.parent_id,
-            { $inc: { comment_count: -1 } }
-        ).catch(error => console.log(error));
-
-        next();
-    }
-    catch (error) {
-        console.log(error);
-    }
+    next();
 });
+
+// delete all comments 1. under a specified parent, 2. created by a specified user, 3. under a specified parent, created by a specified user
+commentSchema.statics.deleteAllSpecified = function(parentIds, userId, asJSON) {
+    if (parentIds?.length <= 0 && !userId) {
+        return null;
+    }
+
+    let filter = {};
+    
+    // set respective fields if provided
+    if (userId) {
+        filter.creator_id = userId;
+    }
+    
+    if (parentIds?.length > 0) {
+        filter.parent_id = { $in: parentIds };
+    }
+
+    // return JSON object for bulkWrite operation
+    return asJSON ? { deleteMany: { filter } } : this.deleteMany(filter);
+}
 
 module.exports = {
     Comment: mongoose.model('Comment', commentSchema),

@@ -115,7 +115,9 @@ const reportSchema = new mongoose.Schema({
     },
     report_time: {
         type: Date,
-        default: Date.now(),
+        default: function() {
+            return Date.now();
+        },
         immutable: true
     },
     status: {

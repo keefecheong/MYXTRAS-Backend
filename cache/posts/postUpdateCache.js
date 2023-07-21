@@ -2,7 +2,7 @@
 
 const redisClient = require('../redis.js');
 const { getUserPostKey, getPostIdPath } = require('./postCache.js');
-const returnPromiseResult = require('../../utils/cache/returnPromiseResult.js');
+const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add new post to cache if parent key already exists
 async function cacheNewPost(post, userDetails) {
