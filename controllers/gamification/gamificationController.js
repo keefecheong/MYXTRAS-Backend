@@ -17,7 +17,9 @@ async function getMissions(req, res) {
         for (const task of user.daily_missions) {
             daily_missions.push({
                 'title': task,
-                'gem_count': missions.missions[task]
+                'gem_count': missions.missions[task],
+                'claimed': false,
+                'locked': true
               });
         }
 
