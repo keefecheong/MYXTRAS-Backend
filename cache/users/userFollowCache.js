@@ -1,7 +1,7 @@
 // to update cached user when a follower is added/removed
 
 const redisClient = require('../redis.js');
-const { getUserKey, getFollowerKey, getFollowingKey, getFollowingPath } = require('./userCache.js');
+const { getUserKey, getFollowerKey, getFollowingKey, getFollowingPath, getFollowersPath } = require('./userCache.js');
 const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add follower to user in cache
@@ -35,7 +35,7 @@ async function cachedUserAddFollower(targetUserId, followerDetails) {
 }
 
 // to remove follower from user in cache
-async function cachedUserRemoveFollower(targetUserId, followerId, followerIndex) {
+async function cachedUserRemoveFollower(targetUserId, followerId, increaseVersion) {
     if (!redisClient.isReady) {
         return false;
     }
@@ -46,13 +46,16 @@ async function cachedUserRemoveFollower(targetUserId, followerId, followerIndex)
 
     // remove follower's id from target user's followers list
     const promises = [
-        redisClient.json.arrPop(targetUserKey, '$.followers', followerIndex),
-        redisClient.json.numIncrBy(targetUserKey, '$.__v', 1)
+        redisClient.json.del(targetUserKey, getFollowersPath(followerId))
     ];
+
+    if (increaseVersion) {
+        redisClient.json.numIncrBy(targetUserKey, '$.__v', 1)
+    }
 
     // if target user's populated follower cache entry exists then remove follower's details from that list
     if (await redisClient.exists(targetUserFollowerKey)) {
-        promises.push(redisClient.json.arrPop(targetUserFollowerKey, '$', followerIndex));
+        promises.push(redisClient.json.del(targetUserFollowerKey, getFollowingPath(followerId)));
     }
 
     // if follower's following cache entry exists then delete following user's id from that list

@@ -63,7 +63,13 @@ function getForumIdPath(forumId) {
     return `$[?(@._id=="${forumId}")]`;
 }
 
+// to get path for forums subscribed by a user
+function getForumSubscribePath(userId) {
+    return `$.subscribers[?(@=="${userId}")]`;
+}
+
 module.exports = {
+    FORUM_SINGLE_KEY_BASE,
     FORUM_RECOMMENDED_KEY_BASE,
     FORUM_CATEGORIZED_KEY_BASE,
     FORUM_LONG_EXPIRATION_TIME,
@@ -71,5 +77,6 @@ module.exports = {
     getCreatedForumKey,
     getSubscribedForumKey,
     getForumKey,
-    getForumIdPath
+    getForumIdPath,
+    getForumSubscribePath
 }

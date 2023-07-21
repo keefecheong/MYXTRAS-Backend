@@ -40,7 +40,7 @@ module.exports = async function suspendUser(toSuspend, user, endTime) {
 
     // update cache and database
     return await returnPromiseResult([
-        updateCachedUser(updatedValues, targetUser._id),
+        updateCachedUser(updatedValues, targetUser._id, true),
         targetUser.save()
     ]);
 }

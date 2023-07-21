@@ -63,10 +63,30 @@ function getThreadIdPath(threadId) {
     return `$[?(@._id=="${threadId}")]`;
 }
 
+// get path for threads created by a user
+function getThreadByUserPath(userId) {
+    return `$[?(@.creator_id._id=="${userId}")]`;
+}
+
+// get path for likes by a user
+function getThreadLikesPath(userId, specificLike) {
+    const likesPath = `.likes[?(@=="${userId}")]`;
+    return `$[?(@${likesPath})]${specificLike ? likesPath : ''}`;
+}
+
+// get path for dislikes by a user
+function getThreadDislikesPath(userId, specificDislike) {
+    const dislikesPath = `.dislikes[?(@=="${userId}")]`;
+    return `$[?(@${dislikesPath})]${specificDislike ? dislikesPath : ''}`;
+}
+
 module.exports = {
     getThreadFromCache,
     cacheThreads,
     getForumThreadKey,
     getPopularThreadKey,
-    getThreadIdPath
+    getThreadIdPath,
+    getThreadByUserPath,
+    getThreadLikesPath,
+    getThreadDislikesPath
 }

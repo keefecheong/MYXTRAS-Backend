@@ -66,6 +66,7 @@ function getPostLikesPath(userId, specificLike) {
 }
 
 module.exports = {
+    POST_USER_KEY_BASE,
     cachePosts,
     getPostFromCache,
     getUserPostKey,

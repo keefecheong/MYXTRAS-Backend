@@ -4,8 +4,9 @@ const redisClient = require('../redis.js');
 
 const { getForumKey, getCreatedForumKey, getForumIdPath } = require('./forumCache.js');
 const { getForumThreadKey } = require('../threads/threadCache.js');
-const { getThreadCommentKey } = require('../comments/commentCache.js');
 const { deleteAllCachedComments } = require('../comments/commentDeleteCache.js');
+
+const { PARENT_MODEL_THREAD } = require('../../models/comment.js');
 
 // to delete forum entry from cache
 async function deleteCachedForum(forumId, userId) {
@@ -30,7 +31,7 @@ async function deleteCachedForum(forumId, userId) {
         path: '$.*._id'
     });
     
-    promises = promises.concat(threadIds.map(threadId => deleteAllCachedComments(getThreadCommentKey(threadId))));
+    promises = promises.concat(threadIds.map(threadId => deleteAllCachedComments(threadId, PARENT_MODEL_THREAD)));
 
     promises.push(redisClient.json.del(threadKey, '$'));
 

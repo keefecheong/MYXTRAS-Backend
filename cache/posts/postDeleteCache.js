@@ -3,8 +3,8 @@
 const redisClient = require('../redis.js');
 
 const { getUserPostKey, getPostIdPath } = require('./postCache.js');
-const { getPostCommentKey } = require('../../cache/comments/commentCache.js');
 const { deleteAllCachedComments } = require('../../cache/comments/commentDeleteCache.js');
+const { PARENT_MODEL_POST } = require('../../models/comment.js');
 
 // to delete post entry from cache
 function deleteCachedPost(userId, postId) {
@@ -15,7 +15,7 @@ function deleteCachedPost(userId, postId) {
     // remove post entry and associated comments from cache
     return [
         redisClient.json.del(getUserPostKey(userId), getPostIdPath(postId)),
-        deleteAllCachedComments(getPostCommentKey(postId))
+        deleteAllCachedComments(postId, PARENT_MODEL_POST)
     ];
 }
 

@@ -74,7 +74,7 @@ async function assignDailyMissions() {
         // Assign the daily missions to the user
         updatedValues.daily_missions = randomMissions;
         // update cache with newly saved user
-        const updateCacheResult = await updateCachedUser(updatedValues, cacheUser._id);
+        const updateCacheResult = await updateCachedUser(updatedValues, cacheUser._id, true);
         await saveDocAsync(cacheUser, updateCacheResult);
       
       });

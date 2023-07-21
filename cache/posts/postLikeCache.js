@@ -1,7 +1,7 @@
 // to update cached posts when like is added/removed
 
 const redisClient = require('../redis.js');
-const { getUserPostKey, getPostIdPath } = require('./postCache.js');
+const { getUserPostKey, getPostIdPath, getPostLikesPath } = require('./postCache.js');
 const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add like to post in cache
@@ -38,7 +38,18 @@ async function cachedPostRemoveLike(creatorId, postId, likeIndex) {
     return await returnPromiseResult(promises);
 }
 
+// to remove likes from all posts under a root post key in cache
+function cachedPostRemoveLikeByUser(creatorId, ownerId) {
+    if (!redisClient.isReady) {
+        return;
+    }
+
+    const postKey = getUserPostKey(ownerId);
+    return redisClient.json.del(postKey, getPostLikesPath(creatorId, true));
+}
+
 module.exports = {
     cachedPostAddLike,
-    cachedPostRemoveLike
+    cachedPostRemoveLike,
+    cachedPostRemoveLikeByUser
 }

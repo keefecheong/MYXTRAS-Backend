@@ -1,5 +1,6 @@
 // functions used in blocking a user
 
+const mongoose = require('mongoose');
 const { User } = require('../../models/user.js');
 const Post = require('../../models/post.js');
 const { Comment, PARENT_MODEL_POST } = require('../../models/comment.js');
@@ -66,7 +67,7 @@ function getAggFunction(selfId, targetUserId) {
                 'comment_count': {
                     '$gt': 0
                 },
-                'creator_id': selfId
+                'creator_id': new mongoose.Types.ObjectId(selfId)
             }
         },
         {
@@ -83,7 +84,7 @@ function getAggFunction(selfId, targetUserId) {
                 'pipeline': [
                     {
                         '$match': {
-                            'creator_id': targetUserId
+                            'creator_id': new mongoose.Types.ObjectId(targetUserId)
                         }
                     },
                     {

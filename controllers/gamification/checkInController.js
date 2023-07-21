@@ -47,7 +47,7 @@ async function getCheckInData(req, res) {
         console.log('----------------------------------------------------')
         
         // update cache with newly saved user
-        const updateCacheResult = await updateCachedUser(updatedValues, user._id);
+        const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
         await saveDocAsync(user, updateCacheResult);
         console.log(user)
 
@@ -78,7 +78,7 @@ async function checkIn(req, res) {
         updatedValues.claimed = true;
 
         // update cache
-        const updateCacheResult = await updateCachedUser(updatedValues, user._id);
+        const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
         await saveDocAsync(user, updateCacheResult);
 
         returnGoodReq(res);
