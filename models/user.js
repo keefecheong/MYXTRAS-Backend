@@ -160,17 +160,21 @@ const userSchema = new mongoose.Schema({
         default: []
     },
     status: {
-        status: {
-            type: String,
-            enum: USER_STATUSES
-        },
-        end_time: {
-            type: Date,
-            // specify required if user is suspended
-            required: function() {
-                return this.status.status == USER_STATUS_SUSPENDED;
+        type: {
+            _id: false,
+            status: {
+                type: String,
+                enum: USER_STATUSES
+            },
+            end_time: {
+                type: Date,
+                // specify required if user is suspended
+                required: function() {
+                    return this.status?.status == USER_STATUS_SUSPENDED;
+                }
             }
-        }
+        },
+        default: {}
     }
 });
 
