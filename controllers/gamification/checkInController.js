@@ -13,34 +13,45 @@ async function getCheckInData(req, res) {
         const user = new User(req.user);
         user.isNew = false;
         const last_checkin_date = user.last_checkin_date;
-        const current_date = new Date()
-
-        let checkin_count = user.checkin_count;
+        const options = {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          };
+          
+        const formattedDate = last_checkin_date.toLocaleString("en-GB", options);
+        console.log(formattedDate);
         
+        const current_date = new Date()
+        current_date.setHours(0, 0, 0, 0); // Set time to midnight
+        
+        let checkin_count = user.checkin_count;
         let claimed = user.claimed;
+
         const updatedValues = {};
 
         const differenceInMilliseconds = Math.abs(current_date - last_checkin_date);
-        const millisecondsInTwoDays = 2 * 24 * 60 * 60 * 1000;
-
+        const millisecondsInOneDay = 24 * 60 * 60 * 1000;
+        console.log(current_date > last_checkin_date)
         // If last check in surpasses a day, reset counter
-        if (differenceInMilliseconds >= millisecondsInTwoDays && !user.claimed) {
-            updatedValues.checkin_count = 1; // reset checkIn count
+        if (differenceInMilliseconds >= millisecondsInOneDay && !user.claimed) {
+            claimed = false;
+            updatedValues.claimed = claimed;
 
-        // If its a new day, add to counter and reset claimed
-        } else if (differenceInMilliseconds >= millisecondsInTwoDays/2 && user.claimed) {
-            updatedValues.claimed = false
-            updatedValues.checkin_count = user.checkin_count + 1;
-        }
+            checkin_count = 1;
+            updatedValues.checkin_count = checkin_count; // reset checkIn count
         
-        // // Save user to database
-        // const newUser = new User(User.findById(user._id).then(user => {
-        //     user.checkin_count = checkin_count;
-        //     user.claimed = claimed;
-        //     user.save();
-        //     console.log(user, '11111111111111111')
-        // }));
-
+        // If its a new day, add to counter and reset claimed
+        } else if (current_date > last_checkin_date && user.claimed) {
+            claimed = false;
+            updatedValues.claimed = claimed;
+            
+            checkin_count = user.checkin_count + 1;
+            updatedValues.checkin_count = checkin_count;
+        }
         
         // update cache with newly saved user
         const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
