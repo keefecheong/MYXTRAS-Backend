@@ -6,20 +6,21 @@ const returnPromiseResult = require('../general/returnPromiseResult.js');
 module.exports = async function suspendUser(toSuspend, user, endTime) {
     // do nothing if user is currently terminated
     if (user.status?.status == USER_STATUS_TERMINATED) {
-        return false;
+        return { accessGranted: false, terminated: true };
     }
 
+    // checks before removing user's suspended status
     if (!toSuspend) {
-        // if user is not suspended return false
+        // if user is not suspended return access granted
         if (user.status?.status != USER_STATUS_SUSPENDED) {
-            return false;
+            return { accessGranted: true };
         }
 
         const currentEndTime = new Date(user.status.end_time).getTime();
 
         // if end_time is not reached then return false
         if (Date.now() - currentEndTime < 0) {
-            return false;
+            return { accessGranted: false, suspended: true };
         }
     }
 
@@ -39,8 +40,10 @@ module.exports = async function suspendUser(toSuspend, user, endTime) {
     }
 
     // update cache and database
-    return await returnPromiseResult([
+    const updated = await returnPromiseResult([
         updateCachedUser(updatedValues, targetUser._id, true),
         targetUser.save()
     ]);
+
+    return { accessGranted: !toSuspend, updated };
 }

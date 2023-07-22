@@ -12,7 +12,7 @@ const USER_STATUSES = [USER_STATUS_SUSPENDED, USER_STATUS_TERMINATED];
 
 // messages to return if user is suspended/terminated
 const USER_SUSPENDED_MSG = 'Your account has been suspended, please try again later.';
-const USER_TERMINATED_MSG = 'Your account has been terminated, access denied.';
+const USER_TERMINATED_MSG = 'Access denied: Your account has been terminated.';
 
 const userSchema = new mongoose.Schema({
     email: {
