@@ -13,20 +13,22 @@ async function getCheckInData(req, res) {
         const user = new User(req.user);
         user.isNew = false;
         const last_checkin_date = user.last_checkin_date;
-        const options = {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          };
+        // const options = {
+        //     day: "2-digit",
+        //     month: "2-digit",
+        //     year: "numeric",
+        //     hour: "2-digit",
+        //     minute: "2-digit",
+        //     second: "2-digit",
+        //   };
           
-        const formattedDate = last_checkin_date.toLocaleString("en-GB", options);
-        console.log(formattedDate);
+        // const formattedDate = last_checkin_date.toLocaleString("en-GB", options);
+        // console.log(formattedDate);
+        
         
         const current_date = new Date()
-        current_date.setHours(0, 0, 0, 0); // Set time to midnight
+        // Set time to midnight
+        current_date.setHours(0, 0, 0, 0); 
         
         let checkin_count = user.checkin_count;
         let claimed = user.claimed;
@@ -35,7 +37,7 @@ async function getCheckInData(req, res) {
 
         const differenceInMilliseconds = Math.abs(current_date - last_checkin_date);
         const millisecondsInOneDay = 24 * 60 * 60 * 1000;
-        console.log(current_date > last_checkin_date)
+
         // If last check in surpasses a day, reset counter
         if (differenceInMilliseconds >= millisecondsInOneDay && !user.claimed) {
             claimed = false;
@@ -69,7 +71,7 @@ async function getCheckInData(req, res) {
 async function checkIn(req, res) {
     try{
         const user = new User(req.user);
-        user.isNew = false;
+        user.isNew = false;
         
         const current_date = Date.now()
         const checkin_count = user.checkin_count;
