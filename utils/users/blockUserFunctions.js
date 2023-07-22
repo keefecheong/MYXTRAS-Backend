@@ -23,9 +23,6 @@ async function handleBlockPerUser(self, targetUserId, isBlocker) {
         user.blocked_users.push(blockEntry);
     }
 
-    // remove other user's posts from saved_posts
-    user.saved_posts = user.saved_posts.filter(entry => entry.creator_id != targetUserId);
-
     // remove other user from followers list
     const followerIndex = user.followers.findIndex(user_id => compareId(user_id, targetUserId));
 
@@ -34,7 +31,10 @@ async function handleBlockPerUser(self, targetUserId, isBlocker) {
     }
 
     // remove likes by self on the other user's posts
-    const removePostLikes = Post.removeLikesByUser(user._id, targetUserId);
+    const removePostLikes = Post.removePostReactionByUser(user._id, true, targetUserId);
+
+    // remove self from saved_by on other user's posts
+    const removeSave = Post.removePostReactionByUser(user._id, true, targetUserId);
 
     // get list of posts created by self where there are comments by the target user
     // also get number of comments by that user for each post
@@ -45,7 +45,7 @@ async function handleBlockPerUser(self, targetUserId, isBlocker) {
     // delete comments by the target user under posts by created by self
     const deleteComments = Comment.deleteAllSpecified(postIds, targetUserId);
 
-    const bulkUpdatePost = [removePostLikes];
+    const bulkUpdatePost = [removePostLikes, removeSave];
 
     // update each post's comment_count for consistency after deleting
     commentsPerPost.forEach(entry => {

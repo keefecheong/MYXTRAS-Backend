@@ -1,7 +1,7 @@
 // to terminate a user
 
 const mongoose = require('mongoose');
-const { User, USER_STATUS_TERMINATED, FIELD_FOLLOWERS, FIELD_BLOCKED_USERS } = require('../../models/user.js');
+const { User, USER_STATUS_TERMINATED } = require('../../models/user.js');
 const Post = require('../../models/post.js');
 const Forum = require('../../models/forum.js');
 const Thread = require('../../models/thread.js');
@@ -23,23 +23,21 @@ module.exports = async function terminateUser(user) {
 
     targetUser.status = terminatedStatus;
 
-    // clear followers, blocked_users, and saved_posts fields
+    // clear followers and blocked_users fields
     targetUser.followers = [];
     targetUser.blocked_users = [];
-    targetUser.saved_posts = [];
 
     // updatedValues to update user record in cache
     const updatedValues = {
         status: terminatedStatus,
         followers: [],
-        blocked_users: [],
-        saved_posts: []
+        blocked_users: []
     }
 
     // remove targetUser from other users' followers and blocked_users arrays
     const bulkWriteUsers = [
-        User.deleteFromArrayField(FIELD_FOLLOWERS, targetUserId, true),
-        User.deleteFromArrayField(FIELD_BLOCKED_USERS, targetUserId, true)
+        User.deleteFromArrayField(true, targetUserId, true),
+        User.deleteFromArrayField(false, targetUserId, true)
     ];
 
     // delete created posts then store the various promises
@@ -50,7 +48,10 @@ module.exports = async function terminateUser(user) {
     const bulkWriteComments = [deletePosts.updateCommentPromise];
 
     // remove likes by the user on all posts
-    bulkWritePosts.push(Post.removeLikesByUser(targetUserId));
+    bulkWritePosts.push(Post.removePostReactionByUser(targetUserId, true));
+
+    // remove user from saved_by on all posts
+    bulkWritePosts.push(Post.removePostReactionByUser(targetUserId, false));
 
     // remove created forums then store the various promises
     const deleteForums = await Forum.deleteByUser(targetUserId);
@@ -95,6 +96,7 @@ module.exports = async function terminateUser(user) {
     // execute all
     const promises = [
         terminateCachedUser(targetUserId, updatedValues, commentsPerParent),
+        targetUser.save(),
         User.bulkWrite(bulkWriteUsers),
         Post.bulkWrite(bulkWritePosts),
         Forum.bulkWrite(bulkWriteForums),

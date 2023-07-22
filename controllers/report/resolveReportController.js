@@ -114,6 +114,8 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
                 promises.push(deletePostUtil(req.params.userId, req.params.postId, res.postFromCache));
                 creatorId = res.post.creator_id._id;
 
+                warning.content_link = res.post.content_links[0];
+
                 break;
 
             // delete forum

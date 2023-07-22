@@ -3,13 +3,14 @@
 const redisClient = require('../redis.js');
 const compareId = require('../../utils/general/compareId.js');
 
-const { USER_SINGLE_KEY_BASE, getFollowerKey, getFollowingKey, getSavedPostPath, getUserIdFromKey } = require('./userCache.js');
+const { USER_SINGLE_KEY_BASE, getFollowerKey, getFollowingKey, getUserIdFromKey } = require('./userCache.js');
 const { cachedUserRemoveFollower } = require('./userFollowCache.js');
 const { updateCachedUser } = require('./userUpdateCache.js');
 const { cachedUserRemoveBlocked } = require('./userBlockCache.js');
 const { POST_USER_KEY_BASE } = require('../posts/postCache.js');
 const { deleteCachedPost } = require('../posts/postDeleteCache.js');
 const { cachedPostRemoveLikeByUser } = require('../posts/postLikeCache.js');
+const { cachedPostRemoveSaveByUser } = require('../posts/postSaveCache.js');
 const { FORUM_SINGLE_KEY_BASE } = require('../forums/forumCache.js');
 const { deleteCachedForum } = require('../forums/forumDeleteCache.js');
 const { cachedForumRemoveSubscriber } = require('../forums/forumSubscribeCache.js');
@@ -23,7 +24,7 @@ async function terminateCachedUser(userId, updatedValues, commentsPerParent) {
         return;
     }
 
-    // set terminated status and clear followers, blocked_users, and saved_posts for target user
+    // set terminated status and clear followers and blocked_users for target user
     // delete target user's following and followers entry
     const promises = [
         ...(await updateCachedUser(updatedValues, userId, false)),
@@ -32,13 +33,11 @@ async function terminateCachedUser(userId, updatedValues, commentsPerParent) {
     ];
 
     // delete target user from other users' blocked_users and followers list
-    // remove posts by target user from other users' saved_posts list
     for await (const key of redisClient.scanIterator({ MATCH: `${USER_SINGLE_KEY_BASE}:*` })) {
         const targetUserId = getUserIdFromKey(key);
 
         promises.push(cachedUserRemoveBlocked(userId, targetUserId, false));
         promises.push(cachedUserRemoveFollower(targetUserId, userId, false));
-        promises.push(redisClient.json.del(key, getSavedPostPath(userId)));
     }
 
     // delete all created posts and child comments
@@ -55,6 +54,9 @@ async function terminateCachedUser(userId, updatedValues, commentsPerParent) {
         else {
             // remove likes by terminated user on other users' posts
             promises.push(cachedPostRemoveLikeByUser(userId, targetUserId));
+
+            // remove terminated user from saved_by list on other users' posts
+            promises.push(cachedPostRemoveSaveByUser(userId, targetUserId));
         }
     }
 

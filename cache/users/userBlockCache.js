@@ -1,10 +1,11 @@
 // to update cache when user blocks another user
 
 const redisClient = require('../redis.js');
-const { getUserKey, getBlockedPath, getSavedPostPath } = require('./userCache.js');
+const { getUserKey, getBlockedPath } = require('./userCache.js');
 const { cachedUserRemoveFollower } = require('./userFollowCache.js');
 const { getUserPostKey } = require('../posts/postCache.js');
 const { cachedPostRemoveLikeByUser } = require('../posts/postLikeCache.js');
+const { cachedPostRemoveSaveByUser } = require('../posts/postSaveCache.js');
 const { deleteAllCachedComments, updateCachedParentCommentCount } = require('../comments/commentDeleteCache.js');
 const { PARENT_MODEL_POST } = require('../../models/comment.js');
 
@@ -23,21 +24,19 @@ function cachedUserAddBlocked(selfId, isBlocker, blockEntry, commentsPerPost, fo
         promises.push(redisClient.json.arrAppend(selfKey, '$.blocked_users', blockEntry));
     }
 
-    // remove saved posts by the target user
-    promises.push(redisClient.json.del(selfKey, getSavedPostPath(targetUserId)));
-
     // unfollow target user
     if (followerIndex != -1) {
         cachedUserRemoveFollower(targetUserId, selfId, true);
     }
 
-    // remove likes by target user on self's posts
+    // remove likes and save by target user on self's posts
     const userPostKey = getUserPostKey(selfId);
 
     const userPostKeyExists = redisClient.exists(userPostKey);
     
     if (userPostKeyExists) {
         promises.push(cachedPostRemoveLikeByUser(targetUserId, selfId));
+        promises.push(cachedPostRemoveSaveByUser(targetUserId, selfId));
     }
 
     // delete comments by target user on self's posts

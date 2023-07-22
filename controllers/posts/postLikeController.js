@@ -27,7 +27,7 @@ async function postLike(req, res) {
     }
 
     // check if the specified post is liked by the user
-    const likeExists = post.likes.find(creator_id => creator_id == userId);
+    const likeExists = post.likes.find(creator_id => compareId(creator_id, userId));
     
     // if the user has not liked the post, continue to add the like
     // otherwise, return 400 error

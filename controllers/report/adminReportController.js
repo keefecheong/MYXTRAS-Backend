@@ -5,10 +5,12 @@ const { Report, REPORT_STATUS_SUBMITTED } = require('../../models/report.js');
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
+const getAggFunction = require('../../utils/report/getAggFunction.js');
+
 // to get all pending reports
 async function getPendingReports(req, res) {
     try {
-        const reports = await Report.find({ status: REPORT_STATUS_SUBMITTED }).lean();
+        const reports = await Report.aggregate(getAggFunction());
 
         returnGoodReq(res, reports);
     }

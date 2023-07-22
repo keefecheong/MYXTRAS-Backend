@@ -13,7 +13,6 @@ const { getUserKey } = require('../../cache/users/userCache.js');
 // return current user profile
 // user retrieved with authMiddleware
 function getUser(req, res) {
-    delete req.user.saved_posts;
     delete req.user.blocked_users;
 
     returnGoodReq(res, req.user);
@@ -40,7 +39,6 @@ async function getRequestedUser(req, res) {
         const blockedByUser = !viewSelf && user.blocked_users.some(entry => compareId(entry.user_id, requestingUser._id));
         const blockingUser = !viewSelf && requestingUser.blocked_users.some(entry => compareId(entry.user_id, user._id));
 
-        delete user.saved_posts;
         delete user.blocked_users;
     
         // return information about requesting user to update follower list on frontend immediately

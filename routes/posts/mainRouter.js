@@ -19,6 +19,7 @@ mainRouter.use(validateUserHTTP);
 // handle post requests
 mainRouter.use('/', postRouter);
 
+// to perform actions on specific posts
 mainRouter.use('/user/:userId/post/:postId', getPost, postSpecificRouter);
 
 module.exports = mainRouter;

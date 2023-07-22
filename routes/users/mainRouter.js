@@ -7,7 +7,6 @@ const mainRouter = express.Router();
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
 const { getUser } = require('../../middleware/users/getRequestedUserMiddleware.js');
-const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
 
 // nested routers
 const userLoginRouter = require('./userLoginRouter.js');
@@ -15,7 +14,6 @@ const userProfileRouter = require('./userProfileRouter.js');
 const userCookieRouter = require('./userCookieRouter.js');
 const userVerifyRouter = require('./userVerifyRouter.js');
 const userRegisterRouter = require('./userRegisterRouter.js');
-const userSavePostRouter = require('./userSavePostRouter.js');
 const userSpecificRouter = require('./userSpecificRouter.js');
 
 // mount various routes
@@ -33,9 +31,6 @@ mainRouter.use('/cookie', validateUserHTTP, userCookieRouter);
 
 // handle verification requests
 mainRouter.use('/verify', express.json(), userVerifyRouter);
-
-// handle save post requests
-mainRouter.use('/save/user/:userId/post/:postId', validateUserHTTP, getPost, userSavePostRouter);
 
 // handle requests for specific user
 mainRouter.use('/:userId', validateUserHTTP, getUser, userSpecificRouter);

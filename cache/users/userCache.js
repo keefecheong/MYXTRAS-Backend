@@ -101,10 +101,6 @@ function getBlockedPath(userId) {
     return `$.blocked_users[?(@.user_id=="${userId}")]`;
 }
 
-function getSavedPostPath(userId) {
-    return `$.saved_posts[?(@.creator_id=="${userId}")]`;
-}
-
 function getFollowersPath(userId) {
     return `$.followers[?(@=="${userId}")]`;
 }
@@ -119,7 +115,6 @@ module.exports = {
     getFollowingKey,
     getFollowingPath,
     getBlockedPath,
-    getSavedPostPath,
     getFollowersPath,
     getUserIdFromKey
 }

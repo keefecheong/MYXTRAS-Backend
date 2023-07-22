@@ -4,15 +4,15 @@ const express = require('express');
 const successResolveReportRouter = express.Router({ mergeParams: true });
 
 // get middleware
-const { getUser } = require('../../middleware/users/getRequestedUserMiddleware.js');
-const { getPost } = require('../../middleware/posts/getPostMiddleware.js');
-const { getForum } = require('../../middleware/forums/getForumMiddleware.js');
-const { getThread } = require('../../middleware/threads/getThreadMiddleware.js');
-const { getComment } = require('../../middleware/comments/getCommentMiddleware.js');
-const { getMessage } = require('../../middleware/messages/getMessageMiddleware.js');
+const { getUser } = require('../../../middleware/users/getRequestedUserMiddleware.js');
+const { getPost } = require('../../../middleware/posts/getPostMiddleware.js');
+const { getForum } = require('../../../middleware/forums/getForumMiddleware.js');
+const { getThread } = require('../../../middleware/threads/getThreadMiddleware.js');
+const { getComment } = require('../../../middleware/comments/getCommentMiddleware.js');
+const { getMessage } = require('../../../middleware/messages/getMessageMiddleware.js');
 
 // get controller functions
-const { reportSuccess } = require('../../controllers/report/resolveReportController.js');
+const { reportSuccess } = require('../../../controllers/report/resolveReportController.js');
 
 const {
     REPORT_TARGET_TYPE_USER,
@@ -22,11 +22,11 @@ const {
     REPORT_TARGET_TYPE_MESSAGE,
     REPORT_TARGET_TYPE_POST_COMMENT,
     REPORT_TARGET_TYPE_THREAD_COMMENT
-} = require('../../models/report.js');
+} = require('../../../models/report.js');
 
-const { USER_STATUS_SUSPENDED, USER_STATUS_TERMINATED } = require('../../models/user.js');
+const { USER_STATUS_SUSPENDED, USER_STATUS_TERMINATED } = require('../../../models/user.js');
 
-const { PARENT_MODEL_POST, PARENT_MODEL_THREAD } = require('../../models/comment.js');
+const { PARENT_MODEL_POST, PARENT_MODEL_THREAD } = require('../../../models/comment.js');
 
 // suspend user
 successResolveReportRouter.patch(
