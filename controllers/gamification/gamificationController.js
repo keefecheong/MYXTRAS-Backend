@@ -13,16 +13,15 @@ async function getMissions(req, res) {
     try{
         const user = req.user;
         const daily_missions = [];
-        
         for (const task of user.daily_missions) {
             daily_missions.push({
-                'title': task,
-                'gem_count': missions.missions[task],
-                'claimed': false,
-                'locked': true
+                'title': task.title,
+                'gem_count': missions.missions[task.title],
+                'claimed': task.claimed,
+                'locked': task.locked
               });
         }
-
+        console.log(daily_missions)
         returnGoodReq(res, daily_missions);
         
 

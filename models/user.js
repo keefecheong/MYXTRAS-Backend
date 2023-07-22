@@ -118,7 +118,20 @@ const userSchema = new mongoose.Schema({
         default: 0
     },
     daily_missions:{
-        type: [String],
+        type: [{
+            title:{
+                type: String,
+                required: true
+            },
+            claimed:{
+                type: Boolean,
+                default: false
+            },
+            locked:{
+                type: Boolean,
+                default: true
+            }
+        }],
         default: []
     },
     last_checkin_date: {

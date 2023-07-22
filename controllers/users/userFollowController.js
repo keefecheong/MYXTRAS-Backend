@@ -16,7 +16,11 @@ const { cachedUserAddFollower, cachedUserRemoveFollower } = require('../../cache
 // to follow the user
 async function followUser(req, res) {
     var self = req.user;
+    self.isNew = false;
     var targetUser = res.user;
+    const tasks = self.daily_missions;
+    console.log(tasks)
+    console.log('-------------------------------')
 
     // if either user has blocked the other user then prevent following
     const blocked = checkBlocked(self._id, self.blocked_users, targetUser._id, targetUser.blocked_users);
@@ -40,6 +44,20 @@ async function followUser(req, res) {
 
     targetUser.followers.push(self._id);
 
+    // if (tasks.includes('Follow a new user')){
+    //     console.log(1)
+    // }
+
+    const updatedValues = {};
+    const targetTaskTitle = 'Follow a new user';
+
+    const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
+    if (targetTaskIndex !== -1){
+        tasks[targetTaskIndex].locked = false;
+        console.log(tasks)
+        updatedValues.daily_missions = tasks;
+    }
+
     const followerDetails = {
         _id: self._id,
         username: self.username,
@@ -52,6 +70,9 @@ async function followUser(req, res) {
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(targetUser, updateCacheResult);
+
+        const updateFollowResult = await updateCachedUser(updatedValues, self._id);
+        await saveDocAsync(self, updateFollowResult);
         
         returnCreatedReq(res);
     }

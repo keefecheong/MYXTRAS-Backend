@@ -158,6 +158,10 @@ async function setupUser(req, res) {
         user.interests = interests;
         user.is_profile_setup = true;
         const missions = Object.keys(tasks.missions);
+        const daily_tasks = getRandomElements(missions, 4)
+        const dailyMissions = daily_tasks.map((item) => {
+            return {'title': item, 'claimed': false, 'locked': true}
+        })
 
         const updatedValues = {
             username: userName,
@@ -167,7 +171,7 @@ async function setupUser(req, res) {
             course,
             interests,
             is_profile_setup: true,
-            daily_missions: getRandomElements(missions, 4)
+            daily_missions: dailyMissions
         }
 
         // update cache
