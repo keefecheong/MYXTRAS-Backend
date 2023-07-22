@@ -4,8 +4,9 @@ const returnNotFoundReq = require('../../utils/general/returnNotFoundReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
 
-async function getGameData(req, res, next, type) {
+async function getGameData(req, res, next) {
     let target = null;
+    console.log('hello')
     console.log("!1111")
     try {
         const user_id = req.user._id;
@@ -13,7 +14,6 @@ async function getGameData(req, res, next, type) {
         
         target = await Gamification.findOne({user_id: user_id}).lean();
         console.log(target)
-        console.log('111111111')
         // if target is still null means the comment does not exist, return 404 error
         if (!target) {
             return returnNotFoundReq(res);
