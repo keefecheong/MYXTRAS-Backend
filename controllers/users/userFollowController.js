@@ -6,6 +6,7 @@ const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
@@ -15,12 +16,10 @@ const { cachedUserAddFollower, cachedUserRemoveFollower } = require('../../cache
 
 // to follow the user
 async function followUser(req, res) {
-    var self = req.user;
+    const self = new User(req.user);
     self.isNew = false;
     var targetUser = res.user;
     const tasks = self.daily_missions;
-    console.log(tasks)
-    console.log('-------------------------------')
 
     // if either user has blocked the other user then prevent following
     const blocked = checkBlocked(self._id, self.blocked_users, targetUser._id, targetUser.blocked_users);
@@ -54,7 +53,6 @@ async function followUser(req, res) {
     const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
     if (targetTaskIndex !== -1){
         tasks[targetTaskIndex].locked = false;
-        console.log(tasks)
         updatedValues.daily_missions = tasks;
     }
 
@@ -67,16 +65,17 @@ async function followUser(req, res) {
     try {
         // update cache
         const updateCacheResult = await cachedUserAddFollower(targetUser._id, followerDetails);
-
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(targetUser, updateCacheResult);
 
-        const updateFollowResult = await updateCachedUser(updatedValues, self._id);
-        await saveDocAsync(self, updateFollowResult);
-        
+        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(self, updateCacheResult2);
+
         returnCreatedReq(res);
     }
     catch (error) {
+        console.log(error)
         returnServerErrorReq(res);
     }
 }

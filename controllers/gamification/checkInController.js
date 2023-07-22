@@ -38,6 +38,10 @@ async function getCheckInData(req, res) {
         const differenceInMilliseconds = Math.abs(current_date - last_checkin_date);
         const millisecondsInOneDay = 24 * 60 * 60 * 1000;
 
+        // Reset counter if last day
+        if (checkin_count == 7) {
+            updatedValues.checkin_count = 1;
+        }
         // If last check in surpasses a day, reset counter
         if (differenceInMilliseconds >= millisecondsInOneDay && !user.claimed) {
             claimed = false;
@@ -64,8 +68,7 @@ async function getCheckInData(req, res) {
 
     }
     catch (error) {
-        console.log(error)
-        returnServerErrorReq(res, );
+        returnServerErrorReq(res);
     }
 }
 async function checkIn(req, res) {
@@ -76,10 +79,6 @@ async function checkIn(req, res) {
         const current_date = Date.now()
         const checkin_count = user.checkin_count;
         const updatedValues = {};
-
-        if (checkin_count == 7) {
-            updatedValues.checkin_count = 1;
-        }
 
         updatedValues.gems = user.gems + rewards[checkin_count - 1];
         updatedValues.last_checkin_date = current_date;
