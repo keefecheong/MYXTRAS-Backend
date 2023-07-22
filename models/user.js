@@ -12,12 +12,7 @@ const USER_STATUSES = [USER_STATUS_SUSPENDED, USER_STATUS_TERMINATED];
 
 // messages to return if user is suspended/terminated
 const USER_SUSPENDED_MSG = 'Your account has been suspended, please try again later.';
-const USER_TERMINATED_MSG = 'Your account has been terminated, access denied.';
-
-// array field name to clean up
-const FIELD_SAVED_POSTS = 'saved_posts';
-const FIELD_BLOCKED_USERS = 'blocked_users';
-const FIELD_FOLLOWERS = 'followers';
+const USER_TERMINATED_MSG = 'Access denied: Your account has been terminated.';
 
 const userSchema = new mongoose.Schema({
     email: {
@@ -63,20 +58,6 @@ const userSchema = new mongoose.Schema({
         type: [{
             type: mongoose.SchemaTypes.ObjectId,
             ref: 'User'
-        }],
-        default: []
-    },
-    saved_posts: {
-        type: [{
-            post_id: {
-                type: mongoose.SchemaTypes.ObjectId,
-                ref: 'Post'
-            },
-            // to easily remove saved posts when user is blocked
-            creator_id: {
-                type: mongoose.SchemaTypes.ObjectId,
-                ref: 'User'
-            }
         }],
         default: []
     },
@@ -221,48 +202,26 @@ userSchema.pre('save', function(next) {
 });
 
 // delete given id/ids from the specified array fields if exists
-userSchema.statics.deleteFromArrayField = function(arrayField, id, asJSON) {
-    if (!arrayField || !id) {
-        return;
-    }
-
+userSchema.statics.deleteFromArrayField = function(forFollowers, userId, asJSON) {
     let filter = {};
     let update = {};
 
-    // set filter and update based on arrayField
-    switch (arrayField) {
-        case FIELD_SAVED_POSTS:
-            filter[`${FIELD_SAVED_POSTS}.post_id`] = { $in: id };
-            update = {
-                $pull: {
-                    saved_posts: { post_id: { $in: id } }
-                }
-            };
-
-            break;
-        
-        case FIELD_BLOCKED_USERS:
-            filter[`${FIELD_BLOCKED_USERS}.user_id`] = id;
-            update = {
-                $pull: {
-                    blocked_users: { user_id: id }
-                }
-            };
-
-            break;
-
-        case FIELD_FOLLOWERS:
-            filter.followers = { $in: [id] };
-            update = {
-                $pull: {
-                    followers: id
-                }
-            };
-            
-            break;
-
-        default:
-            break;
+    // set filter and update
+    if (forFollowers) {
+        filter['blocked_users.user_id'] = userId;
+        update = {
+            $pull: {
+                blocked_users: { user_id: userId }
+            }
+        };
+    }
+    else {
+        filter.followers = { $in: [userId] };
+        update = {
+            $pull: {
+                followers: userId
+            }
+        };
     }
 
     return asJSON ? { updateMany: { filter, update } } : this.updateMany(filter, update);
@@ -276,7 +235,4 @@ module.exports = {
     USER_STATUSES,
     USER_SUSPENDED_MSG,
     USER_TERMINATED_MSG,
-    FIELD_SAVED_POSTS,
-    FIELD_BLOCKED_USERS,
-    FIELD_FOLLOWERS
 }

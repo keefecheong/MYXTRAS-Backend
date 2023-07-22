@@ -19,7 +19,7 @@ const { getGameData} = require('../../middleware/gamification/getGamificationDat
 mainRouter.use(validateUserHTTP);
 
 // mount various routes
-mainRouter.use('/missions', getGameData, getMissions);
-mainRouter.use('/daily-checkin', getGameData, dailyCheckInRouter);
+mainRouter.use('/missions', getMissions);
+mainRouter.use('/daily-checkin', dailyCheckInRouter);
 
 module.exports = mainRouter;

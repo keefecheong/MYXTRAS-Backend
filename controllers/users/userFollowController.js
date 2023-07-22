@@ -103,7 +103,7 @@ async function unfollowUser(req, res) {
 
     try {
         // update cache
-        const updateCacheResult = await cachedUserRemoveFollower(targetUser._id, selfId, followerIndex);
+        const updateCacheResult = await cachedUserRemoveFollower(targetUser._id, selfId, true);
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(targetUser, updateCacheResult);

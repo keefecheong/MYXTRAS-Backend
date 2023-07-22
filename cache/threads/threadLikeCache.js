@@ -1,7 +1,7 @@
 // to update cached thread when like is added/removed
 
 const redisClient = require('../redis.js');
-const { getForumThreadKey, getThreadIdPath } = require('./threadCache.js');
+const { getForumThreadKey, getThreadIdPath, getThreadLikesPath } = require('./threadCache.js');
 const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add like to thread in cache
@@ -38,7 +38,18 @@ async function cachedThreadRemoveLike(forumId, threadId, likeIndex, threadFromCa
     return await returnPromiseResult(promises);
 }
 
+// to remove like by user from all threads under a forum
+function cachedThreadRemoveLikeByUser(forumId, userId) {
+    if (!redisClient.isReady) {
+        return;
+    }
+
+    const forumThreadKey = getForumThreadKey(forumId);
+    return redisClient.json.del(forumThreadKey, getThreadLikesPath(userId, true));
+}
+
 module.exports = {
     cachedThreadAddLike,
-    cachedThreadRemoveLike
+    cachedThreadRemoveLike,
+    cachedThreadRemoveLikeByUser
 }

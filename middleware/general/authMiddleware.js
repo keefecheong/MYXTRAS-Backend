@@ -1,20 +1,23 @@
 // middleware to make sure user is authenticated
 
-const { User } = require('../../models/user.js');
+const { User, USER_TERMINATED_MSG, USER_SUSPENDED_MSG } = require('../../models/user.js');
 const jwt = require('jsonwebtoken');
 const cookie = require('cookie');
 
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
+const returnForbiddenReq = require('../../utils/general/returnForbiddenReq.js');
 const { getUserKey } = require('../../cache/users/userCache.js');
 const suspendUser = require('../../utils/report/suspendUser.js');
+const clearJWTCookie = require('../../utils/general/clearJWTCookie.js');
+const { JWT_COOKIE_KEY } = require('../../utils/users/setJWT.js');
 
 // make sure jwt is valid and user is authenticated
 // for http requests
 async function validateUserHTTP(req, res, next, checkAdmin = false) {
     try {
         // Get the JWT token from the cookie
-        const token = req.cookies.authapi;
+        const token = req.cookies[JWT_COOKIE_KEY];
 
         // return 401 error if there is no authapi cookie
         if (!token) {
@@ -36,10 +39,19 @@ async function validateUserHTTP(req, res, next, checkAdmin = false) {
         }
 
         // remove suspend if end_time is reached
-        const removedSuspend = await suspendUser(false, user);
+        const checkUserStatus = await suspendUser(false, user);
+
+        // if accessGranted is false means user is terminated or suspended
+        // clear jwt cookie and return 403
+        if (!checkUserStatus.accessGranted) {
+            const message = checkUserStatus.terminated ? USER_TERMINATED_MSG : USER_SUSPENDED_MSG;
+
+            clearJWTCookie(res);
+            return returnForbiddenReq(res, message);
+        }
 
         // update user if suspend status is removed
-        if (removedSuspend) {
+        if (checkUserStatus.updated) {
             user.status = {};
         }
 
@@ -68,7 +80,7 @@ async function validateUserSocket(socket, next) {
         }
 
         // disconnect socket if there is no authapi cookie
-        const token = cookie.parse(cookies.toString()).authapi;
+        const token = cookie.parse(cookies.toString())[JWT_COOKIE_KEY];
         if (!token) {
             socket.disconnect(true);
             socket.emit('unauthorized', { message: 'Unauthorized' });

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { User, FIELD_SAVED_POSTS } = require('./user.js');
+const { User } = require('./user.js');
 const { Comment } = require('./comment.js');
 const { deleteFiles } = require('../utils/firebase/firebaseStorageDelete.js');
 
@@ -32,6 +32,13 @@ const postSchema = new mongoose.Schema({
         }
     },
     likes: {
+        type: [{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'User'
+        }],
+        default: []
+    },
+    saved_by: {
         type: [{
             type: mongoose.SchemaTypes.ObjectId,
             ref: 'User'
@@ -89,35 +96,45 @@ postSchema.statics.deleteByUser = async function(userId) {
     
     // promise to delete all posts created by the specified userId
     const deletePostsPromise = { deleteMany: { filter } };
-    const updateUserPromises = [];
     const updateCommentPromise = Comment.deleteAllSpecified(null, userId, true);
     
     const posts = await this.find(filter, { _id: 1, content_links: 1 });
 
     // get promises to clean up for each post deleted
     posts.forEach(post => {
-        const promises = this.cleanUpOnDeletePost(post._id, post.content_links, true);
-
-        updateUserPromises.push(promises[1]);
+        this.cleanUpOnDeletePost(post._id, post.content_links, true);
     });
 
     return { deletePostsPromise, updateUserPromises, updateCommentPromise };
 }
 
 // remove all likes by the specified userId
-postSchema.statics.removeLikesByUser = function(userId, creatorId) {
-    const filter = {
-        likes: {
-            $in: [userId]
-        }
-    }
+postSchema.statics.removePostReactionByUser = function(userId, forLikes, creatorId) {
+    let filter;
+    let update;
 
     if (creatorId) {
         filter.creator_id = creatorId;
     }
 
-    const update = {
-        $pull: { likes: userId }
+    // set filter and update
+    if (forLikes) {
+        filter = {
+            likes: { $in: [userId] }
+        };
+
+        update = {
+            $pull: { likes: userId }
+        };
+    }
+    else {
+        filter = {
+            saved_by: { $in: [userId] }
+        };
+        
+        update = {
+            $pull: { saved_by: userId }
+        };
     }
 
     // return JSON object for bulkWrite operation
@@ -129,18 +146,13 @@ postSchema.statics.cleanUpOnDeletePost = function(postId, contentLinks, asJSON) 
     // delete associated images
     deleteFiles(contentLinks);
 
-    const promises = [
-        Comment.deleteAllSpecified([postId], null, asJSON),
-        User.deleteFromArrayField(FIELD_SAVED_POSTS, [postId], asJSON)
-    ]
-
-    // delete comments and remove from users' saved_posts
-    return asJSON ? promises : Promise.all(promises);
+    // delete comments
+    return Comment.deleteAllSpecified([postId], null, asJSON);
 }
 
 // automatically clean up files and comments associated with the post on delete
 postSchema.post('findOneAndDelete', async function(doc, next) {
-    this.model.cleanUpOnDeletePost(doc._id, doc.content_links, true).catch(error => console.log(error));
+    this.model.cleanUpOnDeletePost(doc._id, doc.content_links, false).catch(error => console.log(error));
 
     next();
 });

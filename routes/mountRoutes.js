@@ -7,8 +7,8 @@ const threadRouter = require('./threads/mainRouter.js');
 const searchRouter = require('./search/mainRouter.js');
 const chatRouter = require('./chats/mainRouter.js');
 const reportRouter = require('./report/mainRouter.js');
+const adminRouter = require('./admin/mainRouter.js');
 const gamificationRouter = require('./gamification/mainRouter.js');
-
 
 module.exports = function(app) {
     app.use('/api/users', usersRouter);
@@ -19,5 +19,6 @@ module.exports = function(app) {
     app.use('/api/search', searchRouter);
     app.use('/api/chats', chatRouter);
     app.use('/api/report', reportRouter);
+    app.use('/api/admin', adminRouter);
     app.use('/api/gamification', gamificationRouter);
 }

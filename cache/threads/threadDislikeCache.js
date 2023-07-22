@@ -1,7 +1,7 @@
 // to update cached thread when dislike is added/removed
 
 const redisClient = require('../redis.js');
-const { getForumThreadKey, getThreadIdPath } = require('./threadCache.js');
+const { getForumThreadKey, getThreadIdPath, getThreadDislikesPath } = require('./threadCache.js');
 const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
 // to add dislike to thread in cache
@@ -38,7 +38,18 @@ async function cachedThreadRemoveDislike(forumId, threadId, dislikeIndex, thread
     return await returnPromiseResult(promises);
 }
 
+// to remove dislike by a user from all threads under a forum
+function cachedThreadRemoveDislikeByUser(forumId, userId) {
+    if (!redisClient.isReady) {
+        return;
+    }
+
+    const forumThreadKey = getForumThreadKey(forumId);
+    return redisClient.json.del(forumThreadKey, getThreadDislikesPath(userId));
+}
+
 module.exports = {
     cachedThreadAddDislike,
-    cachedThreadRemoveDislike
+    cachedThreadRemoveDislike,
+    cachedThreadRemoveDislikeByUser
 }

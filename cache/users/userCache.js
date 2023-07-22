@@ -87,6 +87,11 @@ function getFollowingKey(userId) {
     return `${USER_FOLLOWING_KEY_BASE}:${userId}`;
 }
 
+// get userId from user key
+function getUserIdFromKey(key) {
+    return key.split(':')[2];
+}
+
 // to get path by user id
 function getFollowingPath(userId) {
     return `$[?(@._id=="${userId}")]`;
@@ -96,11 +101,12 @@ function getBlockedPath(userId) {
     return `$.blocked_users[?(@.user_id=="${userId}")]`;
 }
 
-function getSavedPostPath(userId) {
-    return `$.saved_posts[?(@.creator_id=="${userId}")]`;
+function getFollowersPath(userId) {
+    return `$.followers[?(@=="${userId}")]`;
 }
 
 module.exports = {
+    USER_SINGLE_KEY_BASE,
     USER_EXPIRATION_TIME,
     getUserFromCache,
     cacheUser,
@@ -109,5 +115,6 @@ module.exports = {
     getFollowingKey,
     getFollowingPath,
     getBlockedPath,
-    getSavedPostPath
+    getFollowersPath,
+    getUserIdFromKey
 }

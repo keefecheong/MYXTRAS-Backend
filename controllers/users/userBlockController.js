@@ -107,7 +107,7 @@ async function unblockUser(req, res) {
         const promises = [
             unblock.save(),
             self.save(),
-            cachedUserRemoveBlocked(self._id, targetUser._id),
+            cachedUserRemoveBlocked(self._id, targetUser._id, true),
             cacheUnblock(unblock)
         ].flat();
 

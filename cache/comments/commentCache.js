@@ -50,7 +50,7 @@ function getCommentIdPath(commentId) {
 
 // to get path for comments by a user
 function getCommentByUserPath(userId) {
-    return `$[?(@.creator_id=="${userId}")]`;
+    return `$[?(@.creator_id._id=="${userId}")]`;
 }
 
 module.exports = {

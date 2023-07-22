@@ -1,11 +1,11 @@
-// to update cached posts when like is added/removed
+// to update cached post when saved/unsaved
 
 const redisClient = require('../redis.js');
-const { getUserPostKey, getPostIdPath, getPostLikesPath } = require('./postCache.js');
+const { getUserPostKey, getPostIdPath, getPostSavesPath } = require('./postCache.js');
 const returnPromiseResult = require('../../utils/general/returnPromiseResult.js');
 
-// to add like to post in cache
-async function cachedPostAddLike(creatorId, postId, userId) {
+// to add user to saved_by
+async function cachedPostAddSave(creatorId, postId, userId) {
     if (!redisClient.isReady) {
         return false;
     }
@@ -14,15 +14,15 @@ async function cachedPostAddLike(creatorId, postId, userId) {
     const postPath = getPostIdPath(postId);
 
     const promises = [
-        redisClient.json.arrAppend(postKey, `${postPath}.likes`, userId),
+        redisClient.json.arrAppend(postKey, `${postPath}.saved_by`, userId),
         redisClient.json.numIncrBy(postKey, `${postPath}.__v`, 1)
     ];
 
     return await returnPromiseResult(promises);
 }
 
-// to remove like from post in cache
-async function cachedPostRemoveLike(creatorId, postId, likeIndex) {
+// to remove user from saved_by
+async function cachedPostRemoveSave(creatorId, postId, saveIndex) {
     if (!redisClient.isReady) {
         return false;
     }
@@ -31,25 +31,25 @@ async function cachedPostRemoveLike(creatorId, postId, likeIndex) {
     const postPath = getPostIdPath(postId);
 
     const promises = [
-        redisClient.json.arrPop(postKey, `${postPath}.likes`, likeIndex),
+        redisClient.json.arrPop(postKey, `${postPath}.saved_by`, saveIndex),
         redisClient.json.numIncrBy(postKey, `${postPath}.__v`, 1)
     ];
 
     return await returnPromiseResult(promises);
 }
 
-// to remove likes from all posts under a root post key in cache
-function cachedPostRemoveLikeByUser(creatorId, ownerId) {
+// to remove user from saved_by of all posts under a root post key in cache
+function cachedPostRemoveSaveByUser(creatorId, ownerId) {
     if (!redisClient.isReady) {
         return;
     }
 
     const postKey = getUserPostKey(ownerId);
-    return redisClient.json.del(postKey, getPostLikesPath(creatorId, true));
+    return redisClient.json.del(postKey, getPostSavesPath(creatorId, true));
 }
 
 module.exports = {
-    cachedPostAddLike,
-    cachedPostRemoveLike,
-    cachedPostRemoveLikeByUser
+    cachedPostAddSave,
+    cachedPostRemoveSave,
+    cachedPostRemoveSaveByUser
 }

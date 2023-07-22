@@ -12,7 +12,6 @@ async function getThread(req, res, next) {
     const forumId = req.params.forumID;
     const threadId = req.params.threadID;
     let target = null;
-    
     try {
         // attempt to get thread from cache
         const result = await getThreadFromCache(forumId, threadId);

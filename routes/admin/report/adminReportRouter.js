@@ -3,7 +3,7 @@
 const express = require('express');
 const adminReportRouter = express.Router();
 
-const { getPendingReports, getReviewedReports } = require('../../controllers/report/adminReportController.js');
+const { getPendingReports, getReviewedReports } = require('../../../controllers/report/adminReportController.js');
 
 // to get pending reports
 adminReportRouter.get('/pending', getPendingReports);

@@ -1,28 +1,22 @@
-// main router to consolidate routes for reporting function
+// main router to consolidate routes for reporting function for normal users
 
 const express = require('express');
 const mainRouter = express.Router();
 
 // nested routers
 const userReportRouter = require('./userReportRouter.js');
-const adminReportRouter = require('./adminReportRouter.js');
 const submitReportRouter = require('./submitReportRouter.js');
-const resolveReportRouter = require('./resolveReportRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware');
 
+mainRouter.use(validateUserHTTP);
+
 // mount various routes
 // to get report status for users
-mainRouter.use('/user', validateUserHTTP, userReportRouter);
-
-// to get reports for admins
-mainRouter.use('/admin', (req, res, next) => validateUserHTTP(req, res, next, true), adminReportRouter);
+mainRouter.use('/user', userReportRouter);
 
 // to submit reports
-mainRouter.use('/submit', express.json(), validateUserHTTP, submitReportRouter);
-
-// to resolve reports
-mainRouter.use('/resolve', express.json(), (req, res, next) => validateUserHTTP(req, res, next, true), resolveReportRouter);
+mainRouter.use('/submit', express.json(), submitReportRouter);
 
 module.exports = mainRouter;

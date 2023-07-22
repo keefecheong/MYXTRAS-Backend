@@ -5,10 +5,11 @@ const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnForbiddenReq = require('../../utils/general/returnForbiddenReq.js');
+const clearJWTCookie = require('../../utils/general/clearJWTCookie.js');
 
 // check if cookie is valid
 // authMiddleware used to check cookie
-// return 204 if user in jwt is valid (invalid cookies handled in middleware)
+// return 200 if user in jwt is valid (invalid cookies handled in middleware)
 function verifyCookie(req, res) {
     const user = req.user;
 
@@ -30,7 +31,7 @@ function verifyCookie(req, res) {
 
 // clear jwt cookie and return 204
 function clearCookie(req, res) {
-    res.clearCookie('authapi');
+    clearJWTCookie(res);
     returnNoContentReq(res);
 }
 

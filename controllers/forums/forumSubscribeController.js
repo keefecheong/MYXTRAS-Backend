@@ -63,7 +63,7 @@ async function unsubscribeFromForum(req, res) {
         forum.subscribers.splice(subscriberIndex, 1);
 
         // update cached forum
-        const updateCacheResult = await cachedForumRemoveSubscriber(forum._id, subscriberIndex);
+        const updateCacheResult = await cachedForumRemoveSubscriber(forum._id, userId, true);
 
         // save forum asynchronously if cache is updated successfully, and synchronously otherwise
         await saveDocAsync(forum, updateCacheResult);

@@ -10,11 +10,7 @@ const UNBLOCK_SINGLE_KEY_BASE = 'unblock';
 
 // to store an entry from database to cache
 function cacheUnblock(unblock) {
-    if (!redisClient.isReady) {
-        return;
-    }
-
-    if (!unblock) {
+    if (!redisClient.isReady || !unblock) {
         return;
     }
 

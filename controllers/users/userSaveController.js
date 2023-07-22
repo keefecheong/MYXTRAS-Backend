@@ -80,7 +80,7 @@ async function updateUser(req, res) {
         }
 
         // update cache
-        const updateCacheResult = await updateCachedUser(updatedValues, user._id);
+        const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(user, updateCacheResult);
@@ -175,7 +175,7 @@ async function setupUser(req, res) {
         }
 
         // update cache
-        const updateCachedResult = await updateCachedUser(updatedValues, user._id);
+        const updateCachedResult = await updateCachedUser(updatedValues, user._id, true);
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(user, updateCachedResult);

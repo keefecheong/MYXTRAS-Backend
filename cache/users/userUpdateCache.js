@@ -28,7 +28,7 @@ async function cacheNewUser(user) {
 }
 
 // to update user data in cache
-async function updateCachedUser(updatedValues, userId) {
+async function updateCachedUser(updatedValues, userId, increaseVersion) {
     if (!redisClient.isReady) {
         return false;
     }
@@ -36,7 +36,7 @@ async function updateCachedUser(updatedValues, userId) {
     const key = getUserKey(userId);
 
     // increase version key
-    const promises = [redisClient.json.numIncrBy(key, '$.__v', 1)];
+    const promises = increaseVersion ? [redisClient.json.numIncrBy(key, '$.__v', 1)] : [];
     
     // add promise for each updated key/value
     for (const updatedKey in updatedValues) {
@@ -46,7 +46,7 @@ async function updateCachedUser(updatedValues, userId) {
     }
     
     // update user
-    return await returnPromiseResult(promises);
+    return increaseVersion ? await returnPromiseResult(promises) : promises;
 }
 
 module.exports = {

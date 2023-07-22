@@ -62,14 +62,22 @@ function getPostIdPath(postId) {
 // get path for likes by a user
 function getPostLikesPath(userId, specificLike) {
     const likesPath = `.likes[?(@=="${userId}")]`;
-    return `$[?(@${likesPath})]${specificLike ? likesPath : ''}`;
+    return `$[?(@${likesPath})]${ specificLike ? likesPath : '' }`;
+}
+
+// get path for saved_by
+function getPostSavesPath(userId, specificSave) {
+    const savesPath = `.saved_by[?(@=="${userId}")]`;
+    return `$[?(@${savesPath})]${ specificSave ? savesPath : '' }`;
 }
 
 module.exports = {
+    POST_USER_KEY_BASE,
     cachePosts,
     getPostFromCache,
     getUserPostKey,
     getPopularPostKey,
     getPostIdPath,
-    getPostLikesPath
+    getPostLikesPath,
+    getPostSavesPath
 }
