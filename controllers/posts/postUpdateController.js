@@ -1,6 +1,7 @@
 // controller functions to handle POST and PATCH requests for posts
 
 const Post = require('../../models/post.js');
+const { User } = require('../../models/user.js');
 
 const { uploadImages, UPLOAD_TYPE_POST } = require('../../utils/firebase/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
@@ -9,6 +10,7 @@ const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
 const { cacheNewPost, updateCachedPost } = require('../../cache/posts/postUpdateCache.js');
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
@@ -23,8 +25,11 @@ async function createPost(req, res) {
     if (req.files.length <= 0) {
         return returnBadReq(res, 'At least one image is required.');
     }
-
+    
     const creatorId = req.user._id;
+    const self = new User(req.user);
+    self.isNew = false;
+    const tasks = self.daily_missions;
 
     const post = new Post({
         creator_id: creatorId,
@@ -60,6 +65,15 @@ async function createPost(req, res) {
             return returnServerErrorReq(res);
         }
 
+        const updatedValues = {};
+        const targetTaskTitle = 'Create a new blog';
+
+        const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
+        if (targetTaskIndex !== -1){
+            tasks[targetTaskIndex].locked = false;
+            updatedValues.daily_missions = tasks;
+        }
+
         const userDetails = {
             _id: creatorId,
             username: req.user.username,
@@ -72,6 +86,10 @@ async function createPost(req, res) {
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(post, updateCacheResult);
+
+        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(self, updateCacheResult2);
 
         returnGoodReq(res, { message: 'Post created.' });
     }
