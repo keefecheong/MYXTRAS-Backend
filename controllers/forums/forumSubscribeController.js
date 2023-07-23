@@ -29,9 +29,16 @@ async function subscribeToForum(req, res) {
 
         // update forum subscriber list
         forum.subscribers.push(userId);
+
+        const jsonForum = {
+            _id: forum._id,
+            forum_name: forum.forum_name,
+            forum_id: forum.forum_id,
+            forum_pic_link: forum.forum_pic_link
+        }
         
         // update cached forum
-        const updateCacheResult = await cachedForumAddSubscriber(forum._id, userId);
+        const updateCacheResult = await cachedForumAddSubscriber(jsonForum, userId);
 
         // save forum asynchronously if cache is updated successfully, and synchronously otherwise
         await saveDocAsync(forum, updateCacheResult);

@@ -22,7 +22,7 @@ const FORUM_RECOMMENDED_KEY_BASE = 'forum:recommended';
 const FORUM_CATEGORIZED_KEY_BASE = 'forum:categorized';
 
 // expiration times for forum cache
-// short expiry for potentially quickly changing data (based on subscribe) - (cache not updated)
+// short expiry for potentially quickly changing data - (cache not updated)
 const FORUM_SHORT_EXPIRATION_TIME = 60;
 
 // long expiry for data updated in cache
@@ -30,12 +30,13 @@ const FORUM_LONG_EXPIRATION_TIME = 60 * 60;
 
 // to add forums from database to cache
 function cacheForums(forums, key) {
-    // check if cache entry is for storing created forums or for a single forum
+    // check if cache entry is for storing created/subscribed forums or for a single forum
     const forCreated = key.startsWith(FORUM_CREATED_KEY_BASE);
+    const forSubscribed = key.startsWith(FORUM_SUBSCRIBED_KEY_BASE);
     const forSingle = key.startsWith(FORUM_SINGLE_KEY_BASE);
 
     // determine expiration time
-    const expiry = (forCreated || forSingle) ? FORUM_LONG_EXPIRATION_TIME : FORUM_SHORT_EXPIRATION_TIME;
+    const expiry = (forCreated || forSingle || forSubscribed) ? FORUM_LONG_EXPIRATION_TIME : FORUM_SHORT_EXPIRATION_TIME;
 
     const promises = [
         redisClient.json.set(key, '$', forums),
@@ -64,7 +65,7 @@ function getForumIdPath(forumId) {
 }
 
 // to get path for forums subscribed by a user
-function getForumSubscribePath(userId) {
+function getForumSubscriberPath(userId) {
     return `$.subscribers[?(@=="${userId}")]`;
 }
 
@@ -78,5 +79,5 @@ module.exports = {
     getSubscribedForumKey,
     getForumKey,
     getForumIdPath,
-    getForumSubscribePath
+    getForumSubscriberPath
 }
