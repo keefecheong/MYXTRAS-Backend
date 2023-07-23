@@ -1,6 +1,10 @@
-const User = require('../../models/user.js');
+const {User} = require('../../models/user.js');
 const tasks = require('./config.json');
 const cron = require('node-cron');
+
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
+
+const saveDocAsync = require('../cache/saveDocAsync.js');
 
 function getRandomElements(arr, n) {
     const shuffled = arr.slice();
@@ -25,18 +29,25 @@ async function resetDailyMissions() {
         const users = await User.find({});
         const missions = Object.keys(tasks.missions);
 
-        users.forEach(async (user) => {
+        users.forEach(async (targetUser) => {
+            const user = new User(targetUser);
+            user.isNew = false;
+            const updatedValues = {};
             // Clear existing assigned missions
             user.daily_missions = [];
 
             // Get 4 random missions from the available missions
-            const randomMissions = getRandomElements(missions, 4);
+            const daily_tasks = getRandomElements(missions, 4)
 
-            // Assign the daily missions to the user (update!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
-            user.daily_missions = randomMissions;
+            const dailyMissions = daily_tasks.map((item) => {
+            return {'title': item, 'claimed': false, 'locked': true}
+            })
+            updatedValues.daily_missions = dailyMissions;
+            // update cache
+            const updateCachedResult = await updateCachedUser(updatedValues, user._id, true);
 
-            // Save the user with updated daily missions
-            await user.save();
+            // update database asynchronously if cache is updated successfully and synchronously otherwise
+            await saveDocAsync(user, updateCachedResult);
         });
 
         console.log('Daily missions reset successfully');
