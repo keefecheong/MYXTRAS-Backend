@@ -69,6 +69,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    admin_updated_by: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'User'
+    },
     blocked_users: {
         type: [{
             user_id: {

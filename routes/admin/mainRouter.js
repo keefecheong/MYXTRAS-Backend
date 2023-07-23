@@ -5,9 +5,11 @@ const mainRouter = express.Router();
 
 // nested routers
 const reportRouter = require('./report/mainRouter.js');
+const manageAdminRouter = require('./manageAdminRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware');
+const { getUser } = require('../../middleware/users/getRequestedUserMiddleware.js');
 
 // validate admin for all routes
 mainRouter.use((req, res, next) => validateUserHTTP(req, res, next, true));
@@ -15,5 +17,8 @@ mainRouter.use((req, res, next) => validateUserHTTP(req, res, next, true));
 // mount various routes
 // for report function
 mainRouter.use('/report', reportRouter);
+
+// to manage admins
+mainRouter.use('/manage/:userId', getUser, manageAdminRouter);
 
 module.exports = mainRouter;
