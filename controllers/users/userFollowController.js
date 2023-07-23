@@ -75,7 +75,6 @@ async function followUser(req, res) {
         returnCreatedReq(res);
     }
     catch (error) {
-        console.log(error)
         returnServerErrorReq(res);
     }
 }
