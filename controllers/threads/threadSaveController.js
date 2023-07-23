@@ -1,6 +1,7 @@
 // controller functions for creation and update of threads
 
 const Thread = require('../../models/thread.js');
+const { User } = require('../../models/user.js');
 
 const { uploadImages, UPLOAD_TYPE_THREAD } = require('../../utils/firebase/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
@@ -13,6 +14,7 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.j
 const compareId = require('../../utils/general/compareId.js');
 
 const { cacheNewThread, updateCachedThread } = require('../../cache/threads/threadUpdateCache.js');
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
 // create new thread
@@ -30,6 +32,9 @@ async function createThread(req, res) {
 
         const forumId = req.params.forumID;
         const creatorId = req.user._id;
+        const self = new User(req.user);
+        self.isNew = false;
+        const tasks = self.daily_missions;
 
         // create new thread
         const newThread = new Thread({
@@ -39,6 +44,9 @@ async function createThread(req, res) {
             content: content,
             tags: tags
         });
+
+        const updatedValues = {};
+        const targetTaskTitle = 'Start a new thread discussion';
 
         // save images if provided
         if (req.files.length > 0) {
@@ -52,6 +60,12 @@ async function createThread(req, res) {
             }
 
             newThread.content_link = newImageLinks[0];
+        }
+
+        const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
+        if (targetTaskIndex !== -1){
+            tasks[targetTaskIndex].locked = false;
+            updatedValues.daily_missions = tasks;
         }
 
         const userDetails = {
@@ -72,6 +86,10 @@ async function createThread(req, res) {
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(newThread, updateCacheResult);
+
+        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(self, updateCacheResult2);
 
         returnCreatedReq(res);
     }

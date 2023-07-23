@@ -1,6 +1,7 @@
 // controller functions to handle actions for comments under posts
 
 const { Comment, PARENT_MODEL_POST } = require('../../models/comment.js');
+const { User } = require('../../models/user.js');
 
 const { checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 const compareId = require('../../utils/general/compareId.js');
@@ -16,6 +17,7 @@ const checkBlocked = require('../../utils/users/checkBlocked.js');
 const { getUserPostKey } = require('../../cache/posts/postCache.js');
 const { getPostCommentKey } = require('../../cache/comments/commentCache.js');
 const { cacheNewComment } = require('../../cache/comments/commentUpdateCache.js');
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 const deleteCommentUtil = require('../../utils/comments/deleteComment.js');
 
 // retrieve all comments for a post
@@ -50,7 +52,9 @@ async function getComments(req, res) {
 async function postComment(req, res) {
     const post = res.post;
     const creator = req.user;
-
+    const self = new User(req.user);
+    self.isNew = false;
+    const tasks = self.daily_missions;
     // check if comments are enabled on the requested post
     // if enabled, continue to create comment
     // otherwise return 400 error
@@ -74,6 +78,9 @@ async function postComment(req, res) {
         parent_model: PARENT_MODEL_POST
     });
 
+    const updatedValues = {};
+    const targetTaskTitle = 'Create a comment';
+
     try {
         const userDetails = {
             _id: creator._id,
@@ -87,12 +94,22 @@ async function postComment(req, res) {
         delete jsonComment.parent_id;
         delete jsonComment.parent_model;
 
+        const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
+        if (targetTaskIndex !== -1){
+            tasks[targetTaskIndex].locked = false;
+            updatedValues.daily_missions = tasks;
+        }
+
         // store new comment in cache if key exists or update database otherwise
         const updateCacheResult = await cacheNewComment(true, jsonComment, res.postFromCache, getUserPostKey(post.creator_id._id), post._id);
 
         await saveDocAsync(comment, updateCacheResult);
 
         jsonComment.isOwner = true;
+
+        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(self, updateCacheResult2);
 
         returnGoodReq(res, { message: 'Comment created.', comment: jsonComment });
     }
