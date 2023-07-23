@@ -1,6 +1,7 @@
 // controller functions related to thread comments
 
 const { Comment, PARENT_MODEL_THREAD } = require('../../models/comment.js');
+const { User } = require('../../models/user.js');
 
 const { checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
 const compareId = require('../../utils/general/compareId.js');
@@ -14,6 +15,7 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.j
 const { getForumThreadKey } = require('../../cache/threads/threadCache.js');
 const { getThreadCommentKey } = require('../../cache/comments/commentCache.js');
 const { cacheNewComment } = require('../../cache/comments/commentUpdateCache.js');
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 const deleteCommentUtil = require('../../utils/comments/deleteComment.js');
 
 // get all comments for a thread
@@ -47,6 +49,9 @@ async function createComment(req, res) {
 
     const creator = req.user;
     const thread = res.thread;
+    const self = new User(req.user);
+    self.isNew = false;
+    const tasks = self.daily_missions;
 
     const comment = new Comment({
         creator_id: creator._id,
@@ -55,6 +60,9 @@ async function createComment(req, res) {
         parent_id: thread._id,
         parent_model: PARENT_MODEL_THREAD
     });
+
+    const updatedValues = {};
+    const targetTaskTitle = 'Create a comment';
     
     try {
         const userDetails = {
@@ -69,6 +77,12 @@ async function createComment(req, res) {
         delete jsonComment.parent_id;
         delete jsonComment.parent_model;
 
+        const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
+        if (targetTaskIndex !== -1){
+            tasks[targetTaskIndex].locked = false;
+            updatedValues.daily_missions = tasks;
+        }
+
         // store new comment in cache if key exists or update database otherwise
         const updateCacheResult = await cacheNewComment(false, jsonComment, res.threadFromCache, getForumThreadKey(thread.parent_id._id), thread._id);
 
@@ -76,6 +90,10 @@ async function createComment(req, res) {
         await saveDocAsync(comment, updateCacheResult);
 
         jsonComment.isOwner = true;
+
+        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(self, updateCacheResult2);
 
         returnGoodReq(res, { message: 'Comment created.', comment: jsonComment });
     }

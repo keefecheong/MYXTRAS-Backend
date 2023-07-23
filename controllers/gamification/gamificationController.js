@@ -19,7 +19,8 @@ async function getMissions(req, res) {
                 'gem_count': missions.missions[task.title],
                 'claimed': task.claimed,
                 'locked': task.locked
-              });
+            });
+            
         }
         console.log(daily_missions)
         returnGoodReq(res, daily_missions);
