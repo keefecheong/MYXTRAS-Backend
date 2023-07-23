@@ -3,7 +3,8 @@
         "Follow a new user": 50, 
         "Create a new blog": 50, 
         "Create a comment": 50,
-        "Start a new thread discussion": 50
+        "Start a new thread discussion": 50,
+        "Like 5 threads (5)": 100
     }
     
 }

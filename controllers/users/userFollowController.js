@@ -6,13 +6,13 @@ const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
-const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 const checkBlocked = require('../../utils/users/checkBlocked.js');
 
 const { cachedUserAddFollower, cachedUserRemoveFollower } = require('../../cache/users/userFollowCache.js');
+const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
 // to follow the user
 async function followUser(req, res) {
