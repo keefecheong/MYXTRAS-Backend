@@ -4,10 +4,7 @@
 const express = require('express');
 const mainRouter = express.Router();
 const dailyCheckInRouter = require('./dailyCheckInRouter.js');
-
-// nested routers
-const { getMissions } = require('../../controllers/gamification/gamificationController.js')
-
+const missionRouter = require('./missionRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/general/authMiddleware.js');
@@ -19,7 +16,7 @@ const { getGameData} = require('../../middleware/gamification/getGamificationDat
 mainRouter.use(validateUserHTTP);
 
 // mount various routes
-mainRouter.use('/missions', getMissions);
+mainRouter.use('/missions', missionRouter);
 mainRouter.use('/daily-checkin', dailyCheckInRouter);
 
 module.exports = mainRouter;

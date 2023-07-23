@@ -55,18 +55,29 @@ const cron = require('node-cron');
       const users = await User.find({});
       const missions = Object.keys(tasks.missions);
 
-      users.forEach(async (user) => {
+      users.forEach(async (targetUser) => {
         // Clear existing assigned missions
+        const user = new User(targetUser);
+        user.isNew = false;
+        const updatedValues = {};
+
         user.daily_missions = [];
   
         // Get 4 random missions from the available missions
-        const randomMissions = getRandomElements(missions, 4);
+        const daily_tasks = getRandomElements(missions, 4)
+
+        const dailyMissions = daily_tasks.map((item) => {
+          return {'title': item, 'claimed': false, 'locked': true}
+        })
   
         // Assign the daily missions to the user (update!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
-        user.daily_missions = randomMissions;
+        updatedValues.daily_missions = dailyMissions;
   
-        // Save the user with updated daily missions
-        await user.save();
+        // update cache
+        const updateCachedResult = await updateCachedUser(updatedValues, user._id, true);
+
+        // update database asynchronously if cache is updated successfully and synchronously otherwise
+        await saveDocAsync(user, updateCachedResult);
       });
   
       console.log('Daily missions reset successfully');

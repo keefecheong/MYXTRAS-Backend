@@ -37,7 +37,7 @@ async function addLikeThread(req, res) {
 
     const updatedValues = {};
     const targetTaskTitle = 'Like 5 threads';
-    const targetTaskIndex = tasks.findIndex(task => task.title.substring(0, task.title.indexOf('(')).trim() === targetTaskTitle);
+    const targetTaskIndex = tasks.findIndex(task => task.title.substring(0, task.title.startsWith(targetTaskTitle)));
     if (targetTaskIndex !== -1){
         var actualTaskTitle = tasks[targetTaskIndex].title;
         const openParenthesisIndex = actualTaskTitle.indexOf('(');
