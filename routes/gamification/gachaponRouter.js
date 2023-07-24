@@ -9,6 +9,6 @@ const { getGemsAndPets, rollGacha} = require('../../controllers/gamification/gac
 
 // checkin
 gachaponRouter.get('/', getGemsAndPets);
-gachaponRouter.post('/', rollGacha);
+gachaponRouter.post('/:numOfRolls', rollGacha);
 
 module.exports = gachaponRouter;

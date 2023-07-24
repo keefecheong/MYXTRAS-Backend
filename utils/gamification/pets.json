@@ -1,0 +1,12 @@
+[
+    { "name": "Pet 1", "rarity": "common", "png": "pet1.png" },
+    { "name": "Pet 2", "rarity": "common", "png": "pet2.png" },
+    { "name": "Pet 3", "rarity": "common", "png": "pet3.png" },
+    { "name": "Pet 4", "rarity": "common", "png": "pet4.png" },
+    { "name": "Pet 5", "rarity": "common", "png": "pet5.png" },
+    { "name": "Pet 6", "rarity": "rare", "png": "pet6.png" },
+    { "name": "Pet 7", "rarity": "rare", "png": "pet7.png" },
+    { "name": "Pet 8", "rarity": "rare", "png": "pet8.png" },
+    { "name": "Pet 9", "rarity": "ultra rare", "png": "pet9.png" },
+    { "name": "Pet 10", "rarity": "ultra rare", "png": "pet10.png" }
+  ]
