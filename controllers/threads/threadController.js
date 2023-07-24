@@ -69,7 +69,6 @@ async function getExploreThreads(req, res) {
         });
 
         threads = checkThreadAttributesAll(threads, req.user._id);
-
         returnGoodReq(res, threads);
     }
     catch (error) {

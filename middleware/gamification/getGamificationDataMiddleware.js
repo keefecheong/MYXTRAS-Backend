@@ -10,7 +10,6 @@ async function getGameData(req, res, next) {
     console.log("!1111")
     try {
         const user_id = req.user._id;
-        console.log(req.user)
         
         target = await Gamification.findOne({user_id: user_id}).lean();
         console.log(target)

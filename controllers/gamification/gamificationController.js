@@ -34,7 +34,6 @@ async function getMissions(req, res) {
                 });
             }
         }
-        console.log(user.gems)
         returnGoodReq(res, daily_missions);
         
 
