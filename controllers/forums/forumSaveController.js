@@ -11,6 +11,7 @@ const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+
 const moderateText = require('../../utils/admin/moderateText.js');
 const moderateImage = require('../../utils/admin/moderateImage.js');
 
@@ -75,8 +76,7 @@ async function createForum(req, res) {
         }
 
         // moderate text and images
-        moderateText(forum_name + ' ' + forum_desc);
-
+        moderateText(forum_id + ' ' + forum_name + ' ' + forum_desc);
         for (images in imageLinks) {
             moderateImage(imageLinks[images]);
         }
@@ -133,25 +133,35 @@ async function updateForum(req, res) {
 
         const updatedValues = {};
 
+        let textEdited = false;
+
         // update fields and add to updatedValues if changed
         if (forum_name != forum.forum_name) {
             forum.forum_name = forum_name;
             updatedValues.forum_name = forum_name;
+            textEdited = true;
         }
         
         if (forum_id != forum.forum_id) {
             forum.forum_id = forum_id;
             updatedValues.forum_id = forum_id;
+            textEdited = true;
         }
         
         if (forum_desc != forum.forum_desc) {
             forum.forum_desc = forum_desc;
             updatedValues.forum_desc = forum_desc;
+            textEdited = true;
         }
         
         if (tags != forum.tags) {
             forum.tags = tags;
             updatedValues.tags = tags;
+        }
+
+        // moderate text if updated any fields
+        if (textEdited) {
+            moderateText(forum_id + ' ' + forum_name + ' ' + forum_desc);
         }
 
         let index = 0;
@@ -173,6 +183,8 @@ async function updateForum(req, res) {
             forum.forum_pic_link = newImageLinks[0];
             updatedValues.forum_pic_link = newImageLinks[0];
 
+            // moderate image
+            moderateImage(newImageLinks[0]);
             index += 1;
         }
 
@@ -192,6 +204,9 @@ async function updateForum(req, res) {
     
             forum.banner_link = newImageLinks[0];
             updatedValues.banner_link = newImageLinks[0];
+
+            // moderate image
+            moderateImage(newImageLinks[0]);
         }
 
         // update cache entry

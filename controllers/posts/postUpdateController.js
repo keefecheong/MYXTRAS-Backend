@@ -17,6 +17,9 @@ const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
+const moderateText = require('../../utils/admin/moderateText.js');
+const moderateImage = require('../../utils/admin/moderateImage.js');
+
 // create a post
 async function createPost(req, res) {
     // check if images are provided in the body
@@ -81,6 +84,12 @@ async function createPost(req, res) {
             blocked_users: req.user.blocked_users
         }
 
+        // moderate text and images
+        moderateText(post.caption);
+        for (images in post.content_links) {
+            moderateImage(post.content_links[images]);
+        }
+
         // upload to cache if key exists
         const updateCacheResult = await cacheNewPost(post, userDetails);
 
@@ -134,6 +143,9 @@ async function updatePost(req, res) {
     if (req.body.caption && req.body.caption != post.caption) {
         post.caption = req.body.caption;
         updatedValues.caption = req.body.caption;
+
+        // moderate text
+        moderateText(post.caption);
     }
 
     if (req.body.location && req.body.location != post.location) {
@@ -173,6 +185,11 @@ async function updatePost(req, res) {
 
             updatedValues.content_links = newImageLinks;
             updatedValues.original_names = newOriginalNames;
+
+            // moderate images
+            for (images in post.content_links) {
+                moderateImage(post.content_links[images]);
+            }
         }
 
         // update last modified time
