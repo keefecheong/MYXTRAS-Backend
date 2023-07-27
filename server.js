@@ -29,7 +29,7 @@ db.once('open', () => console.log('Connected to database.'));
 // initialize gamification
 require('./utils/gamification/init.js');
 
-// initialize cache
+// initialize cache             
 require('./cache/init.js');
 
 // initialize Firebase (for storing files/images)
