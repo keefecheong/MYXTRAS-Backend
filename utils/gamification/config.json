@@ -4,7 +4,8 @@
         "Create a new blog": 50, 
         "Create a comment": 50,
         "Start a new thread discussion": 50,
-        "Like 5 threads (5)": 100
+        "Like 5 threads (5)": 100,
+        "Message a friend": 50
     }
     
 }

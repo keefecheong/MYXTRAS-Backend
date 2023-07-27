@@ -66,8 +66,7 @@ async function checkIn(req, res) {
         // update cache
         const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
         await saveDocAsync(user, updateCacheResult);
-        console.log(user)
-
+        
         returnGoodReq(res);
 
     }
