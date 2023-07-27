@@ -32,6 +32,7 @@ async function createThread(req, res) {
 
         const forumId = req.params.forumID;
         const creatorId = req.user._id;
+        
         const self = new User(req.user);
         self.isNew = false;
         const tasks = self.daily_missions;
@@ -87,9 +88,9 @@ async function createThread(req, res) {
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(newThread, updateCacheResult);
 
-        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
+        const updateUserCacheResult = await updateCachedUser(updatedValues, self._id, true);
         // update database asynchronously if cache is updated successfully and synchronously otherwise
-        await saveDocAsync(self, updateCacheResult2);
+        await saveDocAsync(self, updateUserCacheResult);
 
         returnCreatedReq(res);
     }
