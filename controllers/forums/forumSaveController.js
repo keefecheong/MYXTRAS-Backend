@@ -11,6 +11,8 @@ const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+const moderateText = require('../../utils/admin/moderateText.js');
+const moderateImage = require('../../utils/admin/moderateImage.js');
 
 const { cacheNewForum, updateCachedForum } = require('../../cache/forums/forumUpdateCache.js');
 
@@ -70,6 +72,13 @@ async function createForum(req, res) {
             _id: creatorId,
             username: req.user.username,
             profile_pic_link: req.user.profile_pic_link
+        }
+
+        // moderate text and images
+        moderateText(forum_name + ' ' + forum_desc);
+
+        for (images in imageLinks) {
+            moderateImage(imageLinks[images]);
         }
 
         // update cache
