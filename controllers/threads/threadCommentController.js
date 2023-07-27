@@ -18,6 +18,8 @@ const { cacheNewComment } = require('../../cache/comments/commentUpdateCache.js'
 const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 const deleteCommentUtil = require('../../utils/comments/deleteComment.js');
 
+const moderateText = require('../../utils/admin/moderateText.js');
+
 // get all comments for a thread
 async function getThreadComments(req, res) {
     try {
@@ -82,6 +84,9 @@ async function createComment(req, res) {
             tasks[targetTaskIndex].locked = false;
             updatedValues.daily_missions = tasks;
         }
+
+        // moderate text
+        moderateText(comment.content);
 
         // store new comment in cache if key exists or update database otherwise
         const updateCacheResult = await cacheNewComment(false, jsonComment, res.threadFromCache, getForumThreadKey(thread.parent_id._id), thread._id);
