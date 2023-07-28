@@ -17,6 +17,9 @@ const { cacheNewThread, updateCachedThread } = require('../../cache/threads/thre
 const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
+const moderateText = require('../../utils/admin/moderateText.js');
+const moderateImage = require('../../utils/admin/moderateImage.js');
+
 // create new thread
 async function createThread(req, res) {
     // check if request body is empty
@@ -32,6 +35,7 @@ async function createThread(req, res) {
 
         const forumId = req.params.forumID;
         const creatorId = req.user._id;
+        
         const self = new User(req.user);
         self.isNew = false;
         const tasks = self.daily_missions;
@@ -60,6 +64,9 @@ async function createThread(req, res) {
             }
 
             newThread.content_link = newImageLinks[0];
+            
+            // moderate image
+            moderateImage(newImageLinks[0]);
         }
 
         const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
@@ -81,15 +88,18 @@ async function createThread(req, res) {
             forum_pic_link: res.forum.forum_pic_link
         }
 
+        //moderate text
+        moderateText(title + ' ' + content);
+
         // update cache if key exists
         const updateCacheResult = await cacheNewThread(newThread, userDetails, forumDetails);
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(newThread, updateCacheResult);
 
-        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
+        const updateUserCacheResult = await updateCachedUser(updatedValues, self._id, true);
         // update database asynchronously if cache is updated successfully and synchronously otherwise
-        await saveDocAsync(self, updateCacheResult2);
+        await saveDocAsync(self, updateUserCacheResult);
 
         returnCreatedReq(res);
     }
@@ -110,7 +120,7 @@ async function updateThread(req, res) {
     // if provided, continue to update thread
     // otherwise return 400 error
     if (req.files.length <= 0 && req.body.pictureUnchanged != 'true') {
-        return returnBadReq(res, 'An image is required.');
+        return returnBadReq(res, 'No changes detected.');
     }
 
     // check if the creator of the thread is the requesting user
@@ -128,20 +138,29 @@ async function updateThread(req, res) {
 
         const updatedValues = {};
 
+        let textEdited = false;
+
         // update fields and add to updatedValues if changed
         if (title != thread.title) {
             thread.title = title;
             updatedValues.title = title;
+            textEdited = true;
         }
         
         if (content != thread.content) {
             thread.content = content;
             updatedValues.content = content;
+            textEdited = true;
         }
         
         if (tags != thread.tags) {
             thread.tags = tags;
             updatedValues.tags = tags;
+        }
+
+        if (textEdited) {
+            // moderate text
+            moderateText(title + ' ' + content);
         }
 
         const forumId = thread.parent_id._id;
@@ -162,6 +181,9 @@ async function updateThread(req, res) {
 
             thread.content_link = newImageLinks[0];
             updatedValues.content_link = newImageLinks[0];
+
+            // moderate image
+            moderateImage(newImageLinks[0]);
         }
 
         // update cache entry if thread is in cache

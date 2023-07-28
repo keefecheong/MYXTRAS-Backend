@@ -43,6 +43,7 @@ async function resetDailyMissions() {
             return {'title': item, 'claimed': false, 'locked': true}
             })
             updatedValues.daily_missions = dailyMissions;
+            
             // update cache
             const updateCachedResult = await updateCachedUser(updatedValues, user._id, true);
 
@@ -67,12 +68,11 @@ const checkDateAndReset = () => {
         checkDateAndReset.lastDate = currentDate.getDate();
     }
 };
-
 // Initialize the lastDate to the current date
 checkDateAndReset.lastDate = new Date().getDate();
 
 // Checks if new day has occured
-// setInterval(checkDateAndReset, 1000 * 60 * 60); // 1 hr
+//setInterval(checkDateAndReset, 1000 * 60 * 60); // 1 hr
 
 cron.schedule('0 0 * * *', async () => {
     checkDateAndReset();
