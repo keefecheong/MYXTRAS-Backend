@@ -10,6 +10,7 @@ const { getForum } = require('../../../middleware/forums/getForumMiddleware.js')
 const { getThread } = require('../../../middleware/threads/getThreadMiddleware.js');
 const { getComment } = require('../../../middleware/comments/getCommentMiddleware.js');
 const { getMessage } = require('../../../middleware/messages/getMessageMiddleware.js');
+const { getReport } = require('../../../middleware/report/getReportMiddleware.js');
 
 // get controller functions
 const { reportSuccess } = require('../../../controllers/report/resolveReportController.js');
@@ -32,6 +33,7 @@ const { PARENT_MODEL_POST, PARENT_MODEL_THREAD } = require('../../../models/comm
 successResolveReportRouter.patch(
     '/user/:userId/suspend',
     getUser,
+    (req, res, next) => getReport(req, res, next, req.params.userId),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_USER, req.params.userId, USER_STATUS_SUSPENDED)
 );
 
@@ -39,6 +41,7 @@ successResolveReportRouter.patch(
 successResolveReportRouter.patch(
     '/user/:userId/terminate',
     getUser,
+    (req, res, next) => getReport(req, res, next, req.params.userId),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_USER, req.params.userId, USER_STATUS_TERMINATED)
 );
 
@@ -46,6 +49,7 @@ successResolveReportRouter.patch(
 successResolveReportRouter.patch(
     '/user/:userId/post/:postId',
     getPost,
+    (req, res, next) => getReport(req, res, next, req.params.postId),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_POST, req.params.postId)
 );
 
@@ -53,6 +57,7 @@ successResolveReportRouter.patch(
 successResolveReportRouter.patch(
     '/forum/:forumID',
     getForum,
+    (req, res, next) => getReport(req, res, next, req.params.forumID),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_FORUM, req.params.forumID)
 );
 
@@ -60,6 +65,7 @@ successResolveReportRouter.patch(
 successResolveReportRouter.patch(
     '/forum/:forumID/thread/:threadID',
     getThread,
+    (req, res, next) => getReport(req, res, next, req.params.threadID),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_THREAD, req.params.threadID)
 );
 
@@ -68,6 +74,7 @@ successResolveReportRouter.patch(
     '/user/:userId/post/:postId/comment/:commentId',
     getPost,
     (req, res, next) => getComment(req, res, next, PARENT_MODEL_POST),
+    (req, res, next) => getReport(req, res, next, req.params.commentId),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_POST_COMMENT, req.params.commentId)
 );
 
@@ -75,6 +82,7 @@ successResolveReportRouter.patch(
     '/forum/:forumID/thread/:threadID/comment/:commentId',
     getThread,
     (req, res, next) => getComment(req, res, next, PARENT_MODEL_THREAD),
+    (req, res, next) => getReport(req, res, next, req.params.commentId),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_THREAD_COMMENT, req.params.commentId)
 );
 
@@ -82,6 +90,7 @@ successResolveReportRouter.patch(
 successResolveReportRouter.patch(
     '/message/:messageId',
     getMessage,
+    (req, res, next) => getReport(req, res, next, req.params.messageId),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_MESSAGE, req.params.messageId)
 );
 

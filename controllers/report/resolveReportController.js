@@ -52,6 +52,8 @@ async function reportFailed(req, res) {
 // delete associated object
 async function reportSuccess(req, res, type, reportTargetId, userAction) {
     try {
+        const adminId = req.user._id;
+
         // return 400 error if provided reason is invalid
         if (!REPORT_REASONS.includes(req.body?.reason)) {
             return returnBadReq(res, 'Invalid report reason');
@@ -82,37 +84,32 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
             object_id: reportTargetId,
             object_type: (type == REPORT_TARGET_TYPE_POST_COMMENT || type == REPORT_TARGET_TYPE_THREAD_COMMENT) ? REPORT_TARGET_TYPE_COMMENT : type,
             reason: req.body.reason,
-            review_time: now
+            review_time: now,
+            reviewer_id: adminId
         }
 
         // as default always issue warning to user and resolve report
         const promises = [
-            Report.resolveReport(reportTargetId, REPORT_STATUS_SUCCESS, req.user._id, now)
+            Report.resolveReport(reportTargetId, REPORT_STATUS_SUCCESS, adminId, now)
         ];
 
-        let creatorId;
-
         // resolve report and perform necessary action
-        // also get the creator of the reported object
         switch (type) {
             // suspend or terminate user based on userAction
             case REPORT_TARGET_TYPE_USER:
                 if (userAction == USER_STATUS_SUSPENDED) {
                     const endTime = now + parseInt(req.body.duration);
-                    promises.push(suspendUser(true, res.user, endTime));
+                    promises.push(suspendUser(true, res.user, endTime, adminId));
                 }
                 else {
-                    promises.push(terminateUser(res.user));
+                    promises.push(terminateUser(res.user, adminId));
                 }
-
-                creatorId = req.params.userId;
 
                 break;
 
             // delete post
             case REPORT_TARGET_TYPE_POST:
                 promises.push(deletePostUtil(req.params.userId, req.params.postId, res.postFromCache));
-                creatorId = res.post.creator_id._id;
 
                 warning.content_link = res.post.content_links[0];
 
@@ -121,35 +118,30 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
             // delete forum
             case REPORT_TARGET_TYPE_FORUM:
                 promises.push(deleteForumUtil(req.params.forumID, req.params.userId));
-                creatorId = res.forum.creator_id._id;
 
                 break;
 
             // delete thread
             case REPORT_TARGET_TYPE_THREAD:
                 promises.push(deleteThreadUtil(req.params.forumID, req.params.threadID, res.threadFromCache));
-                creatorId = res.thread.creator_id._id;
 
                 break;
 
             // delete comment
             case REPORT_TARGET_TYPE_POST_COMMENT:
                 promises.push(deleteCommentUtil(true, req.params.commentId, res.commentFromCache, res.postFromCache, getUserPostKey(req.params.userId), req.params.postId));
-                creatorId = res.comment.creator_id._id;
 
                 break;
 
             // delete comment
             case REPORT_TARGET_TYPE_THREAD_COMMENT:
                 promises.push(deleteCommentUtil(false, req.params.commentId, res.commentFromCache, res.threadFromCache, getForumThreadKey(req.params.forumID), req.params.threadID));
-                creatorId = res.comment.creator_id._id;
 
                 break;
 
             // delete message
             case REPORT_TARGET_TYPE_MESSAGE:
                 promises.push(deleteMessageUtil(req.params.messageId));
-                creatorId = res.message.creator_id;
 
                 break;
 
@@ -157,7 +149,7 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
                 break;
         }
 
-        promises.push(warnUser(creatorId, warning));
+        promises.push(warnUser(res.report.report_target_owner, warning));
 
         await Promise.all(promises);
 

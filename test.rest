@@ -168,8 +168,8 @@ get http://127.0.0.1:8081/api/users/cookie/remove
 
 ###
 
-GET http://127.0.0.1:8081/api/users/profile/self
-Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTNjYjU2Y2M3Y2JhZDcwZDI3NiIsImlhdCI6MTY4ODk2Mjg1NX0.sQtHZzIb1kD-OU6HsHrOs79U39SQfQRYB18aF_U-pS4
+GET http://127.0.0.1:8081/api/admin/manage
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTdiYjU2Y2M3Y2JhZDcwZDI5NiIsImlhdCI6MTY4OTMyNzU0N30.GxQw24Q5kmE6C0rcnR_-CLH0n6epNF6iHTG_AVprcyk
 
 ###
 

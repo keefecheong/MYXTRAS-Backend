@@ -1,6 +1,6 @@
 // controller functions to promote/demote users to/from admins
 
-const User = require('../../models/user.js');
+const { User } = require('../../models/user.js');
 const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
 const compareId = require('../../utils/general/compareId.js');
@@ -22,6 +22,10 @@ async function promoteAdmin(req, res) {
     // check if user is already an admin
     if (user.is_admin) {
         return returnBadReq(res, 'User is already an admin.');
+    }
+
+    if (user.status?.status) {
+        return returnBadReq(res, 'Cannot promote user while suspended or terminated');
     }
 
     try {

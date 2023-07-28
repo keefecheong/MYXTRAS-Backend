@@ -6,9 +6,11 @@ const {
     REPORT_TARGET_TYPE_USER,
     REPORT_TARGET_TYPE_POST,
     REPORT_TARGET_TYPE_POST_COMMENT,
+    REPORT_TARGET_TYPE_FORUM,
     REPORT_TARGET_TYPE_THREAD,
     REPORT_TARGET_TYPE_THREAD_COMMENT,
     REPORT_TARGET_TYPE_COMMENT,
+    REPORT_TARGET_TYPE_MESSAGE,
     REPORT_REASONS,
     REPORT_MESSAGE_SUBMITTED,
 } = require('../../models/report.js');
@@ -63,10 +65,13 @@ async function createReport(req, res, type, objectId) {
                     report.report_evidence = imageLinks[0];
                 }
 
+                report.report_target_owner = res.user._id;
+
                 break;
 
             case REPORT_TARGET_TYPE_POST:
                 report.meta.creator_id = req.params.userId;
+                report.report_target_owner = res.post.creator_id._id;
 
                 break;
             
@@ -76,11 +81,18 @@ async function createReport(req, res, type, objectId) {
                 report.meta.comment_parent_type = REPORT_TARGET_TYPE_POST;
 
                 report.report_target_type = REPORT_TARGET_TYPE_COMMENT;
+                report.report_target_owner = res.comment.creator_id._id;
+
+                break;
+
+            case REPORT_TARGET_TYPE_FORUM:
+                report.report_target_owner = res.forum.creator_id._id;
 
                 break;
 
             case REPORT_TARGET_TYPE_THREAD:
                 report.meta.forum_id = req.params.forumID;
+                report.report_target_owner = res.thread.creator_id._id;
 
                 break;
 
@@ -90,6 +102,13 @@ async function createReport(req, res, type, objectId) {
                 report.meta.comment_parent_type = REPORT_TARGET_TYPE_THREAD;
 
                 report.report_target_type = REPORT_TARGET_TYPE_COMMENT;
+                report.report_target_owner = res.comment.creator_id._id;
+
+                break;
+
+            case REPORT_TARGET_TYPE_MESSAGE:
+                report.meta.chat_id = res.message.chat_id;
+                report.report_target_owner = res.message.creator_id._id;
 
                 break;
 

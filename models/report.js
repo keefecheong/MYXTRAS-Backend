@@ -67,28 +67,44 @@ const reportSchema = new mongoose.Schema({
         required: true,
         immutable: true
     },
+    report_target_owner: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'User',
+        required: true,
+        immutable: true
+    },
     // metadata for the report_target object
     meta: {
+        // for posts/post comments - id of the creator of the post
         creator_id: {
             type: mongoose.SchemaTypes.ObjectId,
             immutable: true
         },
+        // for post comments - id of the parent post
         post_id: {
             type: mongoose.SchemaTypes.ObjectId,
             immutable: true
         },
+        // for threads/thread comments id of the parent forum
         forum_id: {
             type: mongoose.SchemaTypes.ObjectId,
             immutable: true
         },
+        // for thread comments - id of the parent thread
         thread_id: {
             type: mongoose.SchemaTypes.ObjectId,
             immutable: true
         },
+        // for comments - type of parent
         comment_parent_type: {
             type: String,
             immutable: true,
             enum: [REPORT_TARGET_TYPE_POST, REPORT_TARGET_TYPE_THREAD]
+        },
+        // for messages - chat id of parent
+        chat_id: {
+            type: mongoose.SchemaTypes.ObjectId,
+            immutable: true
         }
     },
     report_target_type: {

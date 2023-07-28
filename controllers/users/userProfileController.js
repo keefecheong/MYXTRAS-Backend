@@ -6,8 +6,6 @@ const compareId = require('../../utils/general/compareId.js');
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
-const checkBlocked = require('../../utils/users/checkBlocked.js');
-
 const { getUserKey } = require('../../cache/users/userCache.js');
 
 // return current user profile
@@ -55,7 +53,26 @@ async function getRequestedUser(req, res) {
     }
 }
 
+// get all users
+async function getAllUsers(req, res) {
+    try {
+        const users = await User
+            .find()
+            .populate({
+                path: 'status.performed_by warnings.reviewer_id',
+                select: 'username'
+            })
+            .lean();
+
+        returnGoodReq(res, users);
+    }
+    catch (error) {
+        returnServerErrorReq(res);
+    }
+}
+
 module.exports = {
     getUser,
-    getRequestedUser
+    getRequestedUser,
+    getAllUsers
 }

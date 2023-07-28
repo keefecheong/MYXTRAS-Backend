@@ -1,6 +1,6 @@
 // to get all reports
 
-const { Report, REPORT_STATUS_SUBMITTED } = require('../../models/report.js');
+const { Report } = require('../../models/report.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
@@ -10,7 +10,7 @@ const getAggFunction = require('../../utils/report/getAggFunction.js');
 // to get all pending reports
 async function getPendingReports(req, res) {
     try {
-        const reports = await Report.aggregate(getAggFunction());
+        const reports = await Report.aggregate(getAggFunction(true));
 
         returnGoodReq(res, reports);
     }
@@ -22,7 +22,31 @@ async function getPendingReports(req, res) {
 // to get all reviewed reports
 async function getReviewedReports(req, res) {
     try {
-        const reports = await Report.find({ status: { $ne: REPORT_STATUS_SUBMITTED } }).lean();
+        const reports = await Report.aggregate(getAggFunction(false));
+
+        returnGoodReq(res, reports);
+    }
+    catch (error) {
+        returnServerErrorReq(res);
+    }
+}
+
+// to get reports submitted by a user
+async function getReportsByUser(req, res) {
+    try {
+        const reports = await Report.find({ reporter_id: req.params.userId }).lean();
+
+        returnGoodReq(res, reports);
+    }
+    catch (error) {
+        returnServerErrorReq(res);
+    }
+}
+
+// get reports submitted against a user's content
+async function getReportForUser(req, res) {
+    try {
+        const reports = await Report.find({ report_target_owner: req.params.userId }).lean();
 
         returnGoodReq(res, reports);
     }
@@ -33,5 +57,7 @@ async function getReviewedReports(req, res) {
 
 module.exports = {
     getPendingReports,
-    getReviewedReports
+    getReviewedReports,
+    getReportsByUser,
+    getReportForUser
 }

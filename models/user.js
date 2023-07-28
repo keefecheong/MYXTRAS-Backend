@@ -132,6 +132,7 @@ const userSchema = new mongoose.Schema({
     },
     warnings: {
         type: [{
+            _id: false,
             // include content_link if the reported and removed object is a post
             content_link: {
                 type: String,
@@ -159,6 +160,12 @@ const userSchema = new mongoose.Schema({
                 type: Date,
                 required: true,
                 immutable: true
+            },
+            reviewer_id: {
+                type: mongoose.SchemaTypes.ObjectId,
+                ref: 'User',
+                required: true,
+                immutable: true
             }
         }],
         default: []
@@ -176,6 +183,10 @@ const userSchema = new mongoose.Schema({
                 required: function() {
                     return this.status?.status == USER_STATUS_SUSPENDED;
                 }
+            },
+            performed_by: {
+                type: mongoose.SchemaTypes.ObjectId,
+                ref: 'User'
             }
         },
         default: {}

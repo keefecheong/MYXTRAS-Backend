@@ -1,11 +1,13 @@
 // controller functions to get chat messages
 
 const Chat = require('../../models/chat.js');
+const Message = require('../../models/message.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
-const retrieveMessages = require('../../utils/chats/retrieveMessages.js');
+const { retrieveMessages, formatMessages } = require('../../utils/chats/retrieveMessages.js');
+const getAggFunction = require('../../utils/chats/getAggFunction.js');
 
 // get stored messages for the specifically requested chat
 async function getChatMessages(req, res) {
@@ -71,8 +73,25 @@ async function getPreviousMessages(req, res) {
     }
 }
 
+// get messages for admin panel reports
+async function getReportMessages(req, res) {
+    const agg = getAggFunction(req.params.messageId);
+
+    try {
+        var messages = await Message.aggregate(agg);
+        messages = formatMessages(messages[0].messages, req.params.userId);
+
+        returnGoodReq(res, messages);
+    }
+    catch (error) {
+        console.log(error)
+        returnServerErrorReq(res);
+    }
+}
+
 module.exports = {
     getChatMessages,
     getLatestMessages,
-    getPreviousMessages
+    getPreviousMessages,
+    getReportMessages
 }

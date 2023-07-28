@@ -8,11 +8,25 @@ function formatMessages(messages, userId) {
     messages.forEach(message => {
         // set is_sender based on creator_id and requesting user id
         message.is_sender = compareId(message.creator_id, userId);
+
+        const replyMessageIsArray = Array.isArray(message.reply_message);
+
+        if (replyMessageIsArray && message.reply_message.length == 0) {
+            delete message.reply_message;
+        }
         
         if (message.reply_message) {
+            if (replyMessageIsArray) {
+                message.reply_message = message.reply_message[0];
+            }
+
             message.reply_message.is_sender = compareId(message.reply_message.creator_id, userId);
 
             delete message.reply_message.creator_id;
+            delete message.reply_message.last_modified_time;
+            delete message.reply_message.creation_time;
+            delete message.reply_message.chat_id;
+            delete message.reply_message.__v;
         }
 
         // remove unneeded fields
@@ -32,7 +46,7 @@ function formatMessages(messages, userId) {
 }
 
 // common function to get messages with given filter and limit, format messages and return in chronological order
-module.exports = async function retrieveMessages(filter, limit, userId) {
+async function retrieveMessages(filter, limit, userId) {
     const messages = await Message
         .find(filter)
         .sort({ creation_time: -1 })
@@ -41,4 +55,9 @@ module.exports = async function retrieveMessages(filter, limit, userId) {
         .lean();
 
     return formatMessages(messages, userId).reverse();
+}
+
+module.exports = {
+    retrieveMessages,
+    formatMessages
 }

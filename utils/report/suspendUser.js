@@ -3,7 +3,7 @@ const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 const returnPromiseResult = require('../general/returnPromiseResult.js');
 
 // to suspend/remove suspend of a user and update cache and database
-module.exports = async function suspendUser(toSuspend, user, endTime) {
+module.exports = async function suspendUser(toSuspend, user, endTime, adminId) {
     // do nothing if user is currently terminated
     if (user.status?.status == USER_STATUS_TERMINATED) {
         return { accessGranted: false, terminated: true };
@@ -30,7 +30,8 @@ module.exports = async function suspendUser(toSuspend, user, endTime) {
     // set suspended status or remove suspended status
     const newStatus = toSuspend ? {
         status: USER_STATUS_SUSPENDED,
-        end_time: new Date(endTime)
+        end_time: new Date(endTime),
+        performed_by: adminId
     } : {};
 
     targetUser.status = newStatus;

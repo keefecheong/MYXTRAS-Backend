@@ -10,7 +10,7 @@ const Chat = require('../../models/chat.js');
 const updateParentCommentCount = require('../comments/updateParentCommentCount.js');
 const { terminateCachedUser } = require('../../cache/users/userTerminateCache.js');
 
-module.exports = async function terminateUser(user) {
+module.exports = async function terminateUser(user, adminId) {
     const targetUser = new User(user);
     targetUser.isNew = false;
 
@@ -18,7 +18,8 @@ module.exports = async function terminateUser(user) {
 
     // set terminated status
     const terminatedStatus = {
-        status: USER_STATUS_TERMINATED
+        status: USER_STATUS_TERMINATED,
+        performed_by: adminId
     };
 
     targetUser.status = terminatedStatus;
