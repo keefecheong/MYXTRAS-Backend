@@ -18,16 +18,29 @@ async function getGemsAndPets(req, res) {
     }
 }
 async function rollGacha(req, res) {
-    const numOfRolls = req.params.numOfRolls
+    const user = new User(req.user);
+    user.isNew = false;
+    const rolledPets = [];
+    const updatedValues = {};
+    updatedValues.pets = user.pets;
+    const numOfRolls = req.params.numOfRolls;
+
+    // deduct gems from user
+    if (user.gems < numOfRolls*160){
+        res.status(500).json({ message: 'Not enough gems' })
+        return;
+        
+    } else {
+        user.gems -= numOfRolls*160;
+        updatedValues.gems = user.gems;
+    }
+    
     // Set the probabilities for each rarity
     const ultraRareProbability = 0.05; // 5%
     const rareProbability = 0.1; // 10%
-    const rolledPets = [];
-    const savedPets = [];
     try{
         for (let i = 1; i <= numOfRolls; i++){
             const random = Math.random();
-        
             // Determine the rarity of the pet
             let rarity;
             if (random < ultraRareProbability) {
@@ -44,36 +57,36 @@ async function rollGacha(req, res) {
             // Randomly choose a pet from the available ones
             const randomPetIndex = Math.floor(Math.random() * availablePets.length);
             const chosenPet = availablePets[randomPetIndex];
-            rolledPets.push(chosenPet)
+            
+            
+            // Check if pet exists in user inventory
+            const exists = user.pets.some((pet) => {
+                return (
+                  pet.name === chosenPet.name
+                );
+              });
 
-            for (pet in req.user.pets) {
-                if (pet.name = chosenPet.name) {
-
-                }
+            if (!exists) {
+                //Create a new copy of chosenPet to remove it from memory ref
+                const newChosenPet = { ...chosenPet, new: true };
+                newChosenPet.new = true
+                rolledPets.push(newChosenPet)
+                updatedValues.pets.push(chosenPet)
+            } else {
+                const newChosenPet = { ...chosenPet, new: true };
+                newChosenPet.new = false
+                rolledPets.push(newChosenPet)
             }
         }
-        
+        console.log(rolledPets)
+        // update cache
+        const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
+        await saveDocAsync(user, updateCacheResult);
 
-        // const user = new User(req.user);
-        // user.isNew = false;
-        
-        // const current_date = Date.now()
-        // const checkin_count = user.checkin_count;
-        // const updatedValues = {};
-
-        // updatedValues.gems = user.gems + rewards[checkin_count - 1];
-        // updatedValues.last_checkin_date = current_date;
-        // updatedValues.claimed = true;
-
-        // // update cache
-        // const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
-        // await saveDocAsync(user, updateCacheResult);
-
-        returnGoodReq(res);
+        returnGoodReq(res, rolledPets);
 
     }
     catch (error) {
-        console.log(error)
         returnServerErrorReq(res);
     }
 }
