@@ -78,7 +78,6 @@ async function rollGacha(req, res) {
                 rolledPets.push(newChosenPet)
             }
         }
-        console.log(rolledPets)
         // update cache
         const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
         await saveDocAsync(user, updateCacheResult);
