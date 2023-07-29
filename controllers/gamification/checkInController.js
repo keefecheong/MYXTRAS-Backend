@@ -27,11 +27,14 @@ async function getCheckInData(req, res) {
         if (differenceInMilliseconds >= millisecondsInOneDay && !user.claimed || user.checkin_count == 7) {
            
             updatedValues.claimed = false;
+            user.claimed = false;
             updatedValues.checkin_count = 1; // reset checkIn count
+            user.checkin_count = 1;
         
         // If its a new day, add to counter and reset claimed
         } else if (current_date > last_checkin_date && user.claimed) {
             updatedValues.claimed = false;
+            user.claimed = false;
             user.checkin_count = user.checkin_count + 1;
             updatedValues.checkin_count = user.checkin_count;
         }

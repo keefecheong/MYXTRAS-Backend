@@ -119,6 +119,10 @@ const userSchema = new mongoose.Schema({
         }],
         default: []
     },
+    pets:{
+        type: [Object],
+        default: []
+    },
     last_checkin_date: {
         type: Date,
     },

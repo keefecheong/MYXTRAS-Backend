@@ -22,7 +22,8 @@ async function rollGacha(req, res) {
     // Set the probabilities for each rarity
     const ultraRareProbability = 0.05; // 5%
     const rareProbability = 0.1; // 10%
-
+    const rolledPets = [];
+    const savedPets = [];
     try{
         for (let i = 1; i <= numOfRolls; i++){
             const random = Math.random();
@@ -43,6 +44,13 @@ async function rollGacha(req, res) {
             // Randomly choose a pet from the available ones
             const randomPetIndex = Math.floor(Math.random() * availablePets.length);
             const chosenPet = availablePets[randomPetIndex];
+            rolledPets.push(chosenPet)
+
+            for (pet in req.user.pets) {
+                if (pet.name = chosenPet.name) {
+
+                }
+            }
         }
         
 
