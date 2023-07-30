@@ -60,6 +60,15 @@ const REPORT_STATUSES = [
 
 const REPORT_MESSAGE_SUBMITTED = 'Report submitted successfully, please wait for the review by our moderation team.';
 
+// valid reporter subject
+const REPORTER_SUBJECT_AI = 'AI';
+const REPORTER_SUBJECT_USER = 'User';
+
+const REPORTER_SUBJECTS = [
+    REPORTER_SUBJECT_AI,
+    REPORTER_SUBJECT_USER
+];
+
 const reportSchema = new mongoose.Schema({
     report_target: {
         type: mongoose.SchemaTypes.ObjectId,
@@ -116,16 +125,30 @@ const reportSchema = new mongoose.Schema({
     report_reason: {
         type: String,
         required: true,
-        immutable: true,
-        enum: REPORT_REASONS
+        immutable: true
     },
     report_evidence: {
         type: String,
         immutable: true
     },
-    reporter_id: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'User',
+    reporter: {
+        type: {
+            _id: false,
+            // specify whether the report is created by a user or AI
+            subject: {
+                type: String,
+                required: true,
+                enum: REPORTER_SUBJECTS
+            },
+            // specify the user id of the reporter if created by a user
+            id: {
+                type: mongoose.SchemaTypes.ObjectId,
+                ref: 'User',
+                required: function() {
+                    return this.subject == REPORTER_SUBJECT_USER;
+                }
+            }
+        },
         required: true,
         immutable: true
     },
@@ -217,5 +240,7 @@ module.exports = {
     REPORT_STATUS_SUCCESS,
     REPORT_STATUS_FAILED,
     REPORT_REASONS,
-    REPORT_MESSAGE_SUBMITTED
+    REPORT_MESSAGE_SUBMITTED,
+    REPORTER_SUBJECT_AI,
+    REPORTER_SUBJECT_USER
 }

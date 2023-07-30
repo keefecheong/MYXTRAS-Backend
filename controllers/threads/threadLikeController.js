@@ -19,9 +19,11 @@ async function addLikeThread(req, res) {
     const userId = req.user._id;
 
     const likeExists = res.thread.likes.some(user_id => compareId(user_id, userId));
+
     const self = new User(req.user)
     self.isNew = false;
     const tasks = self.daily_missions;
+
     // if the user has not liked the thread, continue to add the like
     // otherwise, return 400 error
     if (likeExists) {
@@ -38,6 +40,7 @@ async function addLikeThread(req, res) {
     const updatedValues = {};
     const targetTaskTitle = 'Like 5 threads';
     const targetTaskIndex = tasks.findIndex(task => task.title.substring(0, task.title.startsWith(targetTaskTitle)));
+
     if (targetTaskIndex !== -1){
         var actualTaskTitle = tasks[targetTaskIndex].title;
         const openParenthesisIndex = actualTaskTitle.indexOf('(');
@@ -72,7 +75,6 @@ async function addLikeThread(req, res) {
         await saveDocAsync(thread, updateCacheResult);
 
         const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
-        // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(self, updateCacheResult2);
 
         returnCreatedReq(res);

@@ -2,6 +2,7 @@
 
 const Post = require('../../models/post.js');
 const { User } = require('../../models/user.js');
+const { REPORT_TARGET_TYPE_POST } = require('../../models/report.js');
 
 const { uploadImages, UPLOAD_TYPE_POST } = require('../../utils/firebase/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
@@ -10,15 +11,17 @@ const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
 const { cacheNewPost, updateCachedPost } = require('../../cache/posts/postUpdateCache.js');
-const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 
-const moderateText = require('../../utils/admin/moderateText.js');
-const moderateImage = require('../../utils/admin/moderateImage.js');
+const updateUserTasks = require('../../utils/gamification/updateUserTasks.js');
+
+const moderateText = require('../../utils/admin/moderation/moderateText.js');
+const moderateImage = require('../../utils/admin/moderation/moderateImage.js');
+const { createReportAfterModeration } = require('../../utils/report/createReport.js');
 
 // create a post
 async function createPost(req, res) {
@@ -32,7 +35,6 @@ async function createPost(req, res) {
     const creatorId = req.user._id;
     const self = new User(req.user);
     self.isNew = false;
-    const tasks = self.daily_missions;
 
     const post = new Post({
         creator_id: creatorId,
@@ -68,37 +70,28 @@ async function createPost(req, res) {
             return returnServerErrorReq(res);
         }
 
-        const updatedValues = {};
-        const targetTaskTitle = 'Create a new blog';
-
-        const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
-        if (targetTaskIndex !== -1){
-            tasks[targetTaskIndex].locked = false;
-            updatedValues.daily_missions = tasks;
-        }
-
         const userDetails = {
             _id: creatorId,
-            username: req.user.username,
-            profile_pic_link: req.user.profile_pic_link,
-            blocked_users: req.user.blocked_users
+            username: self.username,
+            profile_pic_link: self.profile_pic_link,
+            blocked_users: self.blocked_users
         }
 
         // moderate text and images
-        moderateText(post.caption);
-        for (images in post.content_links) {
-            moderateImage(post.content_links[images]);
-        }
+        const moderationPromises = post.content_links.map(link => moderateImage(link));
+        moderationPromises.push(moderateText(post.caption));
+        
+        // create report if any content is inappropriate
+        createReportAfterModeration(moderationPromises, post._id, REPORT_TARGET_TYPE_POST, creatorId, { creatorId });
 
         // upload to cache if key exists
-        const updateCacheResult = await cacheNewPost(post, userDetails);
+        const updateCachedPostResult = await cacheNewPost(post, userDetails);
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
-        await saveDocAsync(post, updateCacheResult);
+        await saveDocAsync(post, updateCachedPostResult);
 
-        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
-        // update database asynchronously if cache is updated successfully and synchronously otherwise
-        await saveDocAsync(self, updateCacheResult2);
+        // update user tasks
+        await updateUserTasks(self, 'Create a new blog');
 
         returnGoodReq(res, { message: 'Post created.' });
     }
@@ -143,9 +136,6 @@ async function updatePost(req, res) {
     if (req.body.caption && req.body.caption != post.caption) {
         post.caption = req.body.caption;
         updatedValues.caption = req.body.caption;
-
-        // moderate text
-        moderateText(post.caption);
     }
 
     if (req.body.location && req.body.location != post.location) {
@@ -185,11 +175,6 @@ async function updatePost(req, res) {
 
             updatedValues.content_links = newImageLinks;
             updatedValues.original_names = newOriginalNames;
-
-            // moderate images
-            for (images in post.content_links) {
-                moderateImage(post.content_links[images]);
-            }
         }
 
         // update last modified time
@@ -197,6 +182,12 @@ async function updatePost(req, res) {
 
         post.last_modified_time = newLastModifiedTime;
         updatedValues.last_modified_time = newLastModifiedTime;
+
+        // moderate caption and images if changed
+        const moderationPromises = updatedValues?.content_links?.map(link => moderateImage(link)) || [];
+        moderationPromises.push(moderateText(updatedValues?.caption));
+
+        createReportAfterModeration(moderationPromises, postId, REPORT_TARGET_TYPE_POST, userId, { creatorId: userId });
         
         // update cache entry if post is in cache
         const updateCacheResult = await updateCachedPost(updatedValues, userId, postId, res.postFromCache);

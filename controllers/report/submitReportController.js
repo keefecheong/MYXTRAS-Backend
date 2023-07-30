@@ -1,27 +1,23 @@
-// to create a report
+// to submit a report
 
 const {
     Report,
     REPORT_TARGET_TYPES,
-    REPORT_TARGET_TYPE_USER,
-    REPORT_TARGET_TYPE_POST,
     REPORT_TARGET_TYPE_POST_COMMENT,
-    REPORT_TARGET_TYPE_FORUM,
-    REPORT_TARGET_TYPE_THREAD,
     REPORT_TARGET_TYPE_THREAD_COMMENT,
-    REPORT_TARGET_TYPE_COMMENT,
-    REPORT_TARGET_TYPE_MESSAGE,
     REPORT_REASONS,
     REPORT_MESSAGE_SUBMITTED,
+    REPORT_STATUS_SUBMITTED,
 } = require('../../models/report.js');
+
+const createReport = require('../../utils/report/createReport.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
-const { uploadImages, UPLOAD_TYPE_REPORT } = require('../../utils/firebase/firebaseStorageUpload.js');
 
-// to create a report
-async function createReport(req, res, type, objectId) {
+// to submit a report
+async function submitReport(req, res, type, objectId, reportTargetOwner) {
     const validReportTypes = [REPORT_TARGET_TYPE_POST_COMMENT, REPORT_TARGET_TYPE_THREAD_COMMENT].concat(REPORT_TARGET_TYPES);
 
     // return 400 error if provided type is not a valid type
@@ -35,88 +31,33 @@ async function createReport(req, res, type, objectId) {
     }
 
     try {
-        // check if a report by the same user exists for the same target object and return 400 error if so
-        const reportExists = await Report.findOne({ report_target: objectId, reporter_id: req.user._id });
-        if (reportExists) {
-            return returnBadReq(res, 'You have already submitted a report.')
-        }
-
-        const report = new Report({
+        // check if a pending report by the same user exists for the same target object and return 400 error if so
+        const reportExists = await Report.findOne({
             report_target: objectId,
-            report_target_type: type,
-            report_reason: req.body.reason,
-            reporter_id: req.user._id
+            reporter_id: req.user._id,
+            status: REPORT_STATUS_SUBMITTED
         });
 
-        // set additional information based on report target type
-        switch (type) {
-            case REPORT_TARGET_TYPE_USER:
-                // if reporting user and image is provided then upload the image and save link
-                if (req.file) {
-                    // upload image and store the link in report_evidence of the new report
-                    const imageLinks = [];
-                    const uploadSuccessful = await uploadImages([req.file], imageLinks, report._id, UPLOAD_TYPE_REPORT);
-
-                    // if failed to upload image then return 500 error
-                    if (!uploadSuccessful) {
-                        return returnServerErrorReq(res);
-                    }
-
-                    report.report_evidence = imageLinks[0];
-                }
-
-                report.report_target_owner = res.user._id;
-
-                break;
-
-            case REPORT_TARGET_TYPE_POST:
-                report.meta.creator_id = req.params.userId;
-                report.report_target_owner = res.post.creator_id._id;
-
-                break;
-            
-            case REPORT_TARGET_TYPE_POST_COMMENT:
-                report.meta.creator_id = req.params.userId;
-                report.meta.post_id = req.params.postId;
-                report.meta.comment_parent_type = REPORT_TARGET_TYPE_POST;
-
-                report.report_target_type = REPORT_TARGET_TYPE_COMMENT;
-                report.report_target_owner = res.comment.creator_id._id;
-
-                break;
-
-            case REPORT_TARGET_TYPE_FORUM:
-                report.report_target_owner = res.forum.creator_id._id;
-
-                break;
-
-            case REPORT_TARGET_TYPE_THREAD:
-                report.meta.forum_id = req.params.forumID;
-                report.report_target_owner = res.thread.creator_id._id;
-
-                break;
-
-            case REPORT_TARGET_TYPE_THREAD_COMMENT:
-                report.meta.forum_id = req.params.forumID;
-                report.meta.thread_id = req.params.threadID;
-                report.meta.comment_parent_type = REPORT_TARGET_TYPE_THREAD;
-
-                report.report_target_type = REPORT_TARGET_TYPE_COMMENT;
-                report.report_target_owner = res.comment.creator_id._id;
-
-                break;
-
-            case REPORT_TARGET_TYPE_MESSAGE:
-                report.meta.chat_id = res.message.chat_id;
-                report.report_target_owner = res.message.creator_id._id;
-
-                break;
-
-            default:
-                break;
+        if (reportExists) {
+            return returnBadReq(res, 'You have already submitted a report.');
         }
 
-        await report.save();
+        // create and save report
+        await createReport(
+            objectId,
+            type,
+            reportTargetOwner,
+            req.body.reason,
+            {
+                creatorId: req.params.userId,
+                postId: req.params.postId,
+                forumId: req.params.forumID,
+                threadId: req.params.threadID,
+                chatId: res.message?.chat_id,
+            },
+            req.user._id,
+            req.file
+        ).then(report => report.save());
 
         returnGoodReq(res, { message: REPORT_MESSAGE_SUBMITTED });
     }
@@ -126,5 +67,5 @@ async function createReport(req, res, type, objectId) {
 }
 
 module.exports = {
-    createReport
+    submitReport
 }
