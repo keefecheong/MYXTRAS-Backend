@@ -137,8 +137,12 @@ const userSchema = new mongoose.Schema({
     warnings: {
         type: [{
             _id: false,
-            // include content_link if the reported and removed object is a post
-            content_link: {
+            // include file name if the reported and removed object is a post or message with file
+            file_name: {
+                type: String,
+                immutable: true
+            },
+            content: {
                 type: String,
                 immutable: true
             },
@@ -153,6 +157,10 @@ const userSchema = new mongoose.Schema({
                 required: true,
                 immutable: true,
                 enum: REPORT_TARGET_TYPES
+            },
+            object_creation_time: {
+                type: Date,
+                immutable: true
             },
             reason: {
                 type: String,
@@ -170,6 +178,10 @@ const userSchema = new mongoose.Schema({
                 ref: 'User',
                 required: true,
                 immutable: true
+            },
+            acknowledged: {
+                type: Boolean,
+                default: false
             }
         }],
         default: []

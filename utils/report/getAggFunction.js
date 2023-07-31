@@ -84,11 +84,13 @@ module.exports = function getAggFunction(pending) {
                 'report_target': 1,
                 'count': 1,
                 'report_target_type': 1,
-                'report_target_owner': 1,
-                'report_target_owner_username': {
-                    '$arrayElemAt': [
-                        '$owner.username', 0
-                    ]
+                'report_target_owner': {
+                    '_id': '$report_target_owner',
+                    'username': {
+                        '$arrayElemAt': [
+                            '$owner.username', 0
+                        ]
+                    }
                 },
                 'report_time': 1,
                 'reporter': {
@@ -99,11 +101,13 @@ module.exports = function getAggFunction(pending) {
                 'report_reasons': 1,
                 'report_evidence': 1,
                 'review_time': 1,
-                'reviewer_id': 1,
-                'reviewer_username': {
-                    '$arrayElemAt': [
-                        '$reviewer.username', 0
-                    ]
+                'reviewer_id': {
+                    '_id': '$reviewer_id',
+                    'username': {
+                        '$arrayElemAt': [
+                            '$reviewer.username', 0
+                        ]
+                    }
                 },
                 'status': 1
             }

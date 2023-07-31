@@ -8,7 +8,7 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq')
 // to get submitted reports
 async function getSubmittedReports(req, res) {
     try {
-        const reports = await Report.find({ reporter_id: req.user._id }).lean();
+        const reports = await Report.commonQuery({ 'reporter.id': req.user._id });
 
         returnGoodReq(res, reports);
     }

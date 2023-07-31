@@ -193,6 +193,19 @@ reportSchema.statics.resolveReport = function(objectId, newStatus, reviewerId, r
     });
 }
 
+// populate username of various user fields
+reportSchema.query.getUsers = function() {
+    return this.populate({
+        path: 'reporter.id reviewer_id report_target_owner',
+        select: 'username'
+    });
+}
+
+// common function to retrieve reports for/by a user
+reportSchema.statics.commonQuery = function(filter) {
+    return this.find(filter).getUsers().lean();
+}
+
 // virtual property to craft message for report outcome
 reportSchema.virtual('report_message').get(function() {
     // append report_target_type
