@@ -80,7 +80,7 @@ checkDateAndReset.lastDate = new Date().getDate();
 // Checks if new day has occured
 //setInterval(checkDateAndReset, 1000 * 60 * 60); // 1 hr
 
-cron.schedule('*/5 * * * *', async () => {
+cron.schedule('59 23 * * *', async () => {
     checkDateAndReset();
     await resetDailyMissions();
 });
