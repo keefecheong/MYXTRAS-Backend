@@ -10,7 +10,10 @@ const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 async function getGemsAndPets(req, res) {
     try{
         const gems = req.user.gems;
-        returnGoodReq(res, gems);
+        const pets = req.user.pets;
+
+        const data = {gems: gems, pets: pets}
+        returnGoodReq(res, data);
 
     }
     catch (error) {
@@ -24,7 +27,6 @@ async function rollGacha(req, res) {
     const updatedValues = {};
     updatedValues.pets = user.pets;
     const numOfRolls = req.params.numOfRolls;
-
     // deduct gems from user
     if (user.gems < numOfRolls*160){
         res.status(500).json({ message: 'Not enough gems' })
@@ -78,7 +80,6 @@ async function rollGacha(req, res) {
                 rolledPets.push(newChosenPet)
             }
         }
-        console.log(rolledPets)
         // update cache
         const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
         await saveDocAsync(user, updateCacheResult);

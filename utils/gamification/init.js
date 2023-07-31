@@ -40,9 +40,15 @@ async function resetDailyMissions() {
             const daily_tasks = getRandomElements(missions, 4)
 
             const dailyMissions = daily_tasks.map((item) => {
-            return {'title': item, 'claimed': false, 'locked': true}
+                return {'title': item, 'claimed': false, 'locked': true}
             })
+
+            const allClaimed = {'claimed': false, 'locked': true}
+
+
             updatedValues.daily_missions = dailyMissions;
+            updatedValues.allClaimed = allClaimed;
+
             
             // update cache
             const updateCachedResult = await updateCachedUser(updatedValues, user._id, true);
@@ -74,7 +80,7 @@ checkDateAndReset.lastDate = new Date().getDate();
 // Checks if new day has occured
 //setInterval(checkDateAndReset, 1000 * 60 * 60); // 1 hr
 
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('59 23 * * *', async () => {
     checkDateAndReset();
     await resetDailyMissions();
 });
