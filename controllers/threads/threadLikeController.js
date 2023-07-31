@@ -52,7 +52,6 @@ async function addLikeThread(req, res) {
             if (parsedNumber <= 5 && parsedNumber > 0){
                 // Decrement the parsed number by 1
                 const decrementedNumber = parsedNumber - 1;
-                console.log(decrementedNumber);
 
                 // Update the actual task title with the decremented number
                 const updatedTaskTitle = actualTaskTitle.replace(`(${parsedNumber})`, `(${decrementedNumber})`);

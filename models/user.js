@@ -134,6 +134,20 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    allClaimed:{
+        type: {
+            claimed:{
+                type: Boolean,
+            },
+            locked:{
+                type: Boolean,
+            }
+        },
+        default:{
+            claimed: false,
+            locked: true
+        }
+    },
     warnings: {
         type: [{
             _id: false,
