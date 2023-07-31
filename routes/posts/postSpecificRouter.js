@@ -1,7 +1,7 @@
 // handle routes for individual posts
 
 const express = require('express');
-const postSpecificRouter = express.Router();
+const postSpecificRouter = express.Router({ mergeParams: true });
 
 // get nested routers
 const postLikeRouter = require('./postLikeRouter.js');

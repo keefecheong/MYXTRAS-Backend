@@ -1,6 +1,7 @@
 // controller functions for creation and update of forums
 
 const Forum = require('../../models/forum.js');
+const { REPORT_TARGET_TYPE_FORUM } = require('../../models/report.js');
 
 const { uploadImages, UPLOAD_TYPE_FORUM } = require('../../utils/firebase/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
@@ -12,8 +13,9 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.j
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
-const moderateText = require('../../utils/admin/moderateText.js');
-const moderateImage = require('../../utils/admin/moderateImage.js');
+const moderateText = require('../../utils/admin/moderation/moderateText.js');
+const moderateImage = require('../../utils/admin/moderation/moderateImage.js');
+const { createReportAfterModeration } = require('../../utils/report/createReport.js');
 
 const { cacheNewForum, updateCachedForum } = require('../../cache/forums/forumUpdateCache.js');
 
@@ -37,7 +39,7 @@ async function createForum(req, res) {
         const existingForum = await Forum.find({ forum_id: forum_id });
         
         if (!existingForum){
-            return returnBadReq(res, 'ForumID already exists');
+            return returnBadReq(res, 'Forum ID already exists');
         }
 
         // field length validation
@@ -76,10 +78,10 @@ async function createForum(req, res) {
         }
 
         // moderate text and images
-        moderateText(forum_id + ' ' + forum_name + ' ' + forum_desc);
-        for (images in imageLinks) {
-            moderateImage(imageLinks[images]);
-        }
+        const moderationPromises = imageLinks.map(link => moderateImage(link));
+        moderationPromises.push(moderateText(forum_id + ' ' + forum_name + ' ' + forum_desc));
+        
+        createReportAfterModeration(moderationPromises, newForum._id, REPORT_TARGET_TYPE_FORUM, creatorId);
 
         // update cache
         const updateCacheResult = await cacheNewForum(newForum, userDetails);
@@ -133,25 +135,20 @@ async function updateForum(req, res) {
 
         const updatedValues = {};
 
-        let textEdited = false;
-
         // update fields and add to updatedValues if changed
         if (forum_name != forum.forum_name) {
             forum.forum_name = forum_name;
             updatedValues.forum_name = forum_name;
-            textEdited = true;
         }
         
         if (forum_id != forum.forum_id) {
             forum.forum_id = forum_id;
             updatedValues.forum_id = forum_id;
-            textEdited = true;
         }
         
         if (forum_desc != forum.forum_desc) {
             forum.forum_desc = forum_desc;
             updatedValues.forum_desc = forum_desc;
-            textEdited = true;
         }
         
         if (tags != forum.tags) {
@@ -159,17 +156,11 @@ async function updateForum(req, res) {
             updatedValues.tags = tags;
         }
 
-        // moderate text if updated any fields
-        if (textEdited) {
-            moderateText(forum_id + ' ' + forum_name + ' ' + forum_desc);
-        }
-
         let index = 0;
+        const newImageLinks = [];
 
         // upload new forum picture if exists
         if (req.body.pictureUnchanged != 'true') {
-            var newImageLinks = [];
-    
             const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, forumId, UPLOAD_TYPE_FORUM);
     
             // if failed to upload images then send error message
@@ -180,18 +171,15 @@ async function updateForum(req, res) {
             // otherwise delete old picture and update forum_pic_link
             deleteFiles([forum.forum_pic_link]);
     
-            forum.forum_pic_link = newImageLinks[0];
-            updatedValues.forum_pic_link = newImageLinks[0];
+            forum.forum_pic_link = newImageLinks[index];
+            updatedValues.forum_pic_link = newImageLinks[index];
 
             // moderate image
-            moderateImage(newImageLinks[0]);
             index += 1;
         }
 
         // upload new forum banner if exists
         if (req.body.bannerUnchanged != 'true') {
-            var newImageLinks = [];
-    
             const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, forumId, UPLOAD_TYPE_FORUM);
     
             // if failed to upload images then send error message
@@ -202,12 +190,15 @@ async function updateForum(req, res) {
             // otherwise delete old picture and update banner_link
             deleteFiles([forum.banner_link]);
     
-            forum.banner_link = newImageLinks[0];
-            updatedValues.banner_link = newImageLinks[0];
-
-            // moderate image
-            moderateImage(newImageLinks[0]);
+            forum.banner_link = newImageLinks[index];
+            updatedValues.banner_link = newImageLinks[index];
         }
+
+        // moderate text and images if changed
+        const moderationPromises = newImageLinks.map(link => moderateImage(link));
+        moderationPromises.push(moderateText(`${updatedValues?.forum_id} ${updatedValues?.forum_name} ${updatedValues?.forum_desc}`));
+
+        createReportAfterModeration(moderationPromises, forumId, REPORT_TARGET_TYPE_FORUM, userId);
 
         // update cache entry
         const updateCacheResult = await updateCachedForum(updatedValues, forumId, userId);

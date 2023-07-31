@@ -1,7 +1,7 @@
 // controller functions for creation and update of threads
 
-const Thread = require('../../models/thread.js');
 const { User } = require('../../models/user.js');
+const Thread = require('../../models/thread.js');
 
 const { uploadImages, UPLOAD_TYPE_THREAD } = require('../../utils/firebase/firebaseStorageUpload.js');
 const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
@@ -14,11 +14,14 @@ const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.j
 const compareId = require('../../utils/general/compareId.js');
 
 const { cacheNewThread, updateCachedThread } = require('../../cache/threads/threadUpdateCache.js');
-const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 
-const moderateText = require('../../utils/admin/moderateText.js');
-const moderateImage = require('../../utils/admin/moderateImage.js');
+const updateUserTasks = require('../../utils/gamification/updateUserTasks.js');
+
+const moderateText = require('../../utils/admin/moderation/moderateText.js');
+const moderateImage = require('../../utils/admin/moderation/moderateImage.js');
+const { createReportAfterModeration } = require('../../utils/report/createReport.js');
+const { REPORT_TARGET_TYPE_THREAD } = require('../../models/report.js');
 
 // create new thread
 async function createThread(req, res) {
@@ -38,7 +41,6 @@ async function createThread(req, res) {
         
         const self = new User(req.user);
         self.isNew = false;
-        const tasks = self.daily_missions;
 
         // create new thread
         const newThread = new Thread({
@@ -48,9 +50,6 @@ async function createThread(req, res) {
             content: content,
             tags: tags
         });
-
-        const updatedValues = {};
-        const targetTaskTitle = 'Start a new thread discussion';
 
         // save images if provided
         if (req.files.length > 0) {
@@ -64,15 +63,6 @@ async function createThread(req, res) {
             }
 
             newThread.content_link = newImageLinks[0];
-            
-            // moderate image
-            moderateImage(newImageLinks[0]);
-        }
-
-        const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
-        if (targetTaskIndex !== -1){
-            tasks[targetTaskIndex].locked = false;
-            updatedValues.daily_missions = tasks;
         }
 
         const userDetails = {
@@ -88,8 +78,10 @@ async function createThread(req, res) {
             forum_pic_link: res.forum.forum_pic_link
         }
 
-        //moderate text
-        moderateText(title + ' ' + content);
+        // moderate text and images
+        const moderationPromises = [moderateImage(newThread.content_link), moderateText(title + ' ' + content)];
+
+        createReportAfterModeration(moderationPromises, newThread._id, REPORT_TARGET_TYPE_THREAD, creatorId, { forumId });
 
         // update cache if key exists
         const updateCacheResult = await cacheNewThread(newThread, userDetails, forumDetails);
@@ -97,9 +89,8 @@ async function createThread(req, res) {
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(newThread, updateCacheResult);
 
-        const updateUserCacheResult = await updateCachedUser(updatedValues, self._id, true);
-        // update database asynchronously if cache is updated successfully and synchronously otherwise
-        await saveDocAsync(self, updateUserCacheResult);
+        // update user tasks
+        updateUserTasks(self, 'Start a new thread discussion');
 
         returnCreatedReq(res);
     }
@@ -136,21 +127,21 @@ async function updateThread(req, res) {
         const thread = new Thread(res.thread);
         thread.isNew = false;
 
-        const updatedValues = {};
+        const creatorId = thread.creator_id._id;
+        const forumId = thread.parent_id._id;
+        const threadId = thread._id;
 
-        let textEdited = false;
+        const updatedValues = {};
 
         // update fields and add to updatedValues if changed
         if (title != thread.title) {
             thread.title = title;
             updatedValues.title = title;
-            textEdited = true;
         }
         
         if (content != thread.content) {
             thread.content = content;
             updatedValues.content = content;
-            textEdited = true;
         }
         
         if (tags != thread.tags) {
@@ -158,18 +149,11 @@ async function updateThread(req, res) {
             updatedValues.tags = tags;
         }
 
-        if (textEdited) {
-            // moderate text
-            moderateText(title + ' ' + content);
-        }
-
-        const forumId = thread.parent_id._id;
-
         // save image if changed
         if (req.body.pictureUnchanged != 'true') {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, thread._id, UPLOAD_TYPE_THREAD, forumId);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, threadId, UPLOAD_TYPE_THREAD, forumId);
         
             // if upload not successful then return 500 error
             if (!threadPicUploadSuccessful) {
@@ -181,13 +165,15 @@ async function updateThread(req, res) {
 
             thread.content_link = newImageLinks[0];
             updatedValues.content_link = newImageLinks[0];
-
-            // moderate image
-            moderateImage(newImageLinks[0]);
         }
 
+        // moderate text and images if changed
+        const moderationPromises = [moderateImage(updatedValues?.content_link), moderateText(`${updatedValues?.title} ${updatedValues?.content}`)];
+
+        createReportAfterModeration(moderationPromises, threadId, REPORT_TARGET_TYPE_THREAD, creatorId, { forumId });
+
         // update cache entry if thread is in cache
-        const updateCacheResult = await updateCachedThread(updatedValues, forumId, thread._id, res.threadFromCache);
+        const updateCacheResult = await updateCachedThread(updatedValues, forumId, threadId, res.threadFromCache);
 
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(thread, updateCacheResult);

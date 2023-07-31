@@ -47,8 +47,11 @@ module.exports = function getAggFunction(pending) {
                 'status': {
                     '$first': '$status'
                 },
+                'reporter_subject': {
+                    '$addToSet': '$reporter.subject'
+                },
                 'reporter_id': {
-                    '$first': '$reporter_id'
+                    '$first': '$reporter.id'
                 }
             }
         },
@@ -88,7 +91,10 @@ module.exports = function getAggFunction(pending) {
                     ]
                 },
                 'report_time': 1,
-                'reporter_id': 1,
+                'reporter': {
+                    'subject': '$reporter_subject',
+                    'id': '$reporter_id'
+                },
                 'meta': 1,
                 'report_reasons': 1,
                 'report_evidence': 1,

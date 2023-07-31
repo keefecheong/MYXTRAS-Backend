@@ -13,13 +13,12 @@ const checkBlocked = require('../../utils/users/checkBlocked.js');
 
 const { cachedUserAddFollower, cachedUserRemoveFollower } = require('../../cache/users/userFollowCache.js');
 const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
+const updateUserTasks = require('../../utils/gamification/updateUserTasks.js');
 
 // to follow the user
 async function followUser(req, res) {
-    const self = new User(req.user);
-    self.isNew = false;
+    var self = req.user;
     var targetUser = res.user;
-    const tasks = self.daily_missions;
 
     // if either user has blocked the other user then prevent following
     const blocked = checkBlocked(self._id, self.blocked_users, targetUser._id, targetUser.blocked_users);
@@ -37,24 +36,14 @@ async function followUser(req, res) {
         return returnBadReq(res, 'You have already followed this user.');
     }
 
+    self = new User(self);
+    self.isNew = false;
+
     // update followers list
     targetUser = new User(targetUser);
     targetUser.isNew = false;
 
     targetUser.followers.push(self._id);
-
-    // if (tasks.includes('Follow a new user')){
-    //     console.log(1)
-    // }
-
-    const updatedValues = {};
-    const targetTaskTitle = 'Follow a new user';
-
-    const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
-    if (targetTaskIndex !== -1){
-        tasks[targetTaskIndex].locked = false;
-        updatedValues.daily_missions = tasks;
-    }
 
     const followerDetails = {
         _id: self._id,
@@ -65,12 +54,12 @@ async function followUser(req, res) {
     try {
         // update cache
         const updateCacheResult = await cachedUserAddFollower(targetUser._id, followerDetails);
+        
         // update database asynchronously if cache is updated successfully and synchronously otherwise
         await saveDocAsync(targetUser, updateCacheResult);
 
-        const updateCacheResult2 = await updateCachedUser(updatedValues, self._id, true);
-        // update database asynchronously if cache is updated successfully and synchronously otherwise
-        await saveDocAsync(self, updateCacheResult2);
+        // update user tasks
+        updateUserTasks(self, 'Follow a new user');
 
         returnCreatedReq(res);
     }
