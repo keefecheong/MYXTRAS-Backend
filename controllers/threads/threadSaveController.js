@@ -1,6 +1,5 @@
 // controller functions for creation and update of threads
 
-const { User } = require('../../models/user.js');
 const Thread = require('../../models/thread.js');
 
 const { uploadImages, UPLOAD_TYPE_THREAD } = require('../../utils/firebase/firebaseStorageUpload.js');
@@ -37,10 +36,9 @@ async function createThread(req, res) {
         const { title, content, tags } = threadObject;
 
         const forumId = req.params.forumID;
+
+        const creator = req.user;
         const creatorId = req.user._id;
-        
-        const self = new User(req.user);
-        self.isNew = false;
 
         // create new thread
         const newThread = new Thread({
@@ -67,8 +65,8 @@ async function createThread(req, res) {
 
         const userDetails = {
             _id: creatorId,
-            username: req.user.username,
-            profile_pic_link: req.user.profile_pic_link
+            username: creator.username,
+            profile_pic_link: creator.profile_pic_link
         }
 
         const forumDetails = {
@@ -90,7 +88,7 @@ async function createThread(req, res) {
         await saveDocAsync(newThread, updateCacheResult);
 
         // update user tasks
-        updateUserTasks(self, 'Start a new thread discussion');
+        updateUserTasks(creator, 'Start a new thread discussion');
 
         returnCreatedReq(res);
     }

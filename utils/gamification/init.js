@@ -32,23 +32,23 @@ async function resetDailyMissions() {
         users.forEach(async (targetUser) => {
             const user = new User(targetUser);
             user.isNew = false;
-            const updatedValues = {};
+
             // Clear existing assigned missions
             user.daily_missions = [];
 
             // Get 4 random missions from the available missions
-            const daily_tasks = getRandomElements(missions, 4)
+            const daily_tasks = getRandomElements(missions, 4);
 
             const dailyMissions = daily_tasks.map((item) => {
                 return {'title': item, 'claimed': false, 'locked': true}
-            })
+            });
 
-            const allClaimed = {'claimed': false, 'locked': true}
+            const allClaimed = {'claimed': false, 'locked': true};
 
-
-            updatedValues.daily_missions = dailyMissions;
-            updatedValues.allClaimed = allClaimed;
-
+            const updatedValues = {
+                daily_missions: dailyMissions,
+                allClaimed
+            }
             
             // update cache
             const updateCachedResult = await updateCachedUser(updatedValues, user._id, true);

@@ -37,14 +37,7 @@ function deleteAllCachedComments(parentId, parentModel, creatorId) {
         return [];
     }
 
-    let key;
-
-    if (parentModel == PARENT_MODEL_POST) {
-        key = getPostCommentKey(parentId);
-    }
-    else {
-        key = getThreadCommentKey(parentId);
-    }
+    const key = parentModel == PARENT_MODEL_POST ? getPostCommentKey(parentId) : getThreadCommentKey(parentId);
 
     let path = '$';
 

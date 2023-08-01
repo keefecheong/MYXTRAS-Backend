@@ -116,7 +116,8 @@ async function validateUserSocket(socket, next) {
             _id: user._id,
             username: user.username,
             profile_pic_link: user.profile_pic_link,
-            blocked_users: user.blocked_users.map(entry =>  entry.user_id.toString())
+            blocked_users: user.blocked_users.map(entry =>  entry.user_id.toString()),
+            daily_missions: user.daily_missions
         };
 
         next();

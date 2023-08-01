@@ -1,6 +1,5 @@
 // controller functions to handle actions for comments under posts
 
-const { User } = require('../../models/user.js');
 const { Comment, PARENT_MODEL_POST } = require('../../models/comment.js');
 const { REPORT_TARGET_TYPE_POST_COMMENT } = require('../../models/report.js');
 
@@ -59,7 +58,7 @@ async function postComment(req, res) {
     const postCreatorId = post.creator_id._id;
     const postId = post._id;
 
-    var creator = req.user;
+    const creator = req.user;
     const creatorId = creator._id;
 
     // check if comments are enabled on the requested post
@@ -75,9 +74,6 @@ async function postComment(req, res) {
     if (!req.body.content) {
         return returnBadReq(res, 'Comment content is required.');
     }
-
-    creator = new User(creator);
-    creator.isNew = false;
 
     // create new comment
     const comment = new Comment({
