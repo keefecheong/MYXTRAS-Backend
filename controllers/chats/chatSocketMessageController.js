@@ -2,13 +2,12 @@
 
 const Chat = require('../../models/chat.js');
 const Message = require('../../models/message.js');
-const { User } = require('../../models/user.js');
 
 const { emitSocketEvent } = require('../../utils/chats/emitSocketEvent.js');
 const { getUserOnline } = require('../../utils/chats/getUserStatus.js');
 const { uploadFile } = require('../../utils/firebase/firebaseStorageUpload.js');
-const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
-const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
+
+const updateUserTasks = require('../../utils/gamification/updateUserTasks.js');
 
 // handle 'send-message' event
 async function handleSendMessage(data, socket, connections) {
@@ -110,21 +109,8 @@ async function handleSendMessage(data, socket, connections) {
 
         newMessage.save();
     });
-    const socketUser = await User.findById(socket.user._id)
-    const self = new User(socketUser);
-    self.isNew = false;
-    const tasks = self.daily_missions;
-    const updatedValues = {};
 
-    const targetTaskTitle = "Message a friend"
-    const targetTaskIndex = tasks.findIndex(task => task.title === targetTaskTitle);
-    if (targetTaskIndex !== -1){
-        tasks[targetTaskIndex].locked = false;
-        updatedValues.daily_missions = tasks;
-    }
-    const updateUserCacheResult = await updateCachedUser(updatedValues, self._id, true);
-    // update database asynchronously if cache is updated successfully and synchronously otherwise
-    await saveDocAsync(self, updateUserCacheResult);
+    updateUserTasks(socket.user, 'Message a friend');
 }
 
 // to receive file chunks and upload the file to firebase storage

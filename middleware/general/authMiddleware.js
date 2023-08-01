@@ -7,8 +7,11 @@ const cookie = require('cookie');
 const returnUnauthorizedReq = require('../../utils/general/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/general/returnServerErrorReq.js');
 const returnForbiddenReq = require('../../utils/general/returnForbiddenReq.js');
+
 const { getUserKey } = require('../../cache/users/userCache.js');
 const suspendUser = require('../../utils/report/suspendUser.js');
+const acknowledgeWarning = require('../../utils/report/acknowledgeWarning.js');
+
 const clearJWTCookie = require('../../utils/general/clearJWTCookie.js');
 const { JWT_COOKIE_KEY } = require('../../utils/users/setJWT.js');
 
@@ -58,11 +61,14 @@ async function validateUserHTTP(req, res, next, checkAdmin = false) {
         // Attach the user object to the request for further processing
         req.user = user;
 
+        // acknowledge warnings
+        acknowledgeWarning(user);
+
         next();
     }
     // Handle token verification or database errors
     catch (error) {
-        return returnServerErrorReq(res);
+        returnServerErrorReq(res);
     }
 }
 
@@ -110,7 +116,8 @@ async function validateUserSocket(socket, next) {
             _id: user._id,
             username: user.username,
             profile_pic_link: user.profile_pic_link,
-            blocked_users: user.blocked_users.map(entry =>  entry.user_id.toString())
+            blocked_users: user.blocked_users.map(entry =>  entry.user_id.toString()),
+            daily_missions: user.daily_missions
         };
 
         next();

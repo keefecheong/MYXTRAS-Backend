@@ -104,7 +104,7 @@ async function createReport(
 // to create a report automatically after executing moderation functions if inappropriate content is detected
 function createReportAfterModeration(moderationPromises, reportTarget, reportTargetType, reportTargetOwner, meta) {
     // use promise.all if more than 1 promise and run promise alone otherwise
-    const promise = moderationPromises.isArray() ? 
+    const promise = Array.isArray(moderationPromises) ? 
         (moderationPromises.length > 1 ? Promise.all(moderationPromises) : moderationPromises[0]) :
         moderationPromises;
     

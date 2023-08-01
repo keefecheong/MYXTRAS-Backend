@@ -12,23 +12,23 @@ const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 const checkBlocked = require('../../utils/users/checkBlocked.js');
 
 const { cachedUserAddFollower, cachedUserRemoveFollower } = require('../../cache/users/userFollowCache.js');
-const { updateCachedUser } = require('../../cache/users/userUpdateCache.js');
 const updateUserTasks = require('../../utils/gamification/updateUserTasks.js');
 
 // to follow the user
 async function followUser(req, res) {
-    var self = req.user;
+    const self = req.user;
+    const selfId = self._id;
     var targetUser = res.user;
 
     // if either user has blocked the other user then prevent following
-    const blocked = checkBlocked(self._id, self.blocked_users, targetUser._id, targetUser.blocked_users);
+    const blocked = checkBlocked(selfId, self.blocked_users, targetUser._id, targetUser.blocked_users);
 
     if (blocked) {
         return returnBadReq(res, 'Could not follow this user.');
     }
 
     // check if the requesting user is following the specified user
-    const following = targetUser.followers.some(follower_id => compareId(follower_id, self._id));
+    const following = targetUser.followers.some(follower_id => compareId(follower_id, selfId));
 
     // if the requesting user has not followed the requested user, continue to follow the user
     // otherwise return 400 error
@@ -36,17 +36,14 @@ async function followUser(req, res) {
         return returnBadReq(res, 'You have already followed this user.');
     }
 
-    self = new User(self);
-    self.isNew = false;
-
     // update followers list
     targetUser = new User(targetUser);
     targetUser.isNew = false;
 
-    targetUser.followers.push(self._id);
+    targetUser.followers.push(selfId);
 
     const followerDetails = {
-        _id: self._id,
+        _id: selfId,
         username: self.username,
         profile_pic_link: self.profile_pic_link
     }

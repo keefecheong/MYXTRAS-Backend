@@ -11,7 +11,9 @@ const { getThreadFromCache } = require('../../cache/threads/threadCache.js');
 async function getThread(req, res, next) {
     const forumId = req.params.forumID;
     const threadId = req.params.threadID;
+    
     let target = null;
+
     try {
         // attempt to get thread from cache
         const result = await getThreadFromCache(forumId, threadId);
@@ -26,7 +28,7 @@ async function getThread(req, res, next) {
         }
         else {
             // if thread is not found in cache then try to retrieve from database
-            target = await Thread.findById(threadId).lean();
+            target = await Thread.findOne({ _id: threadId, parent_id: forumId }).lean();
         }
         
         // if target is still null means that the thread does not exist, return 404 error

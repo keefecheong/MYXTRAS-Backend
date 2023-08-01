@@ -94,6 +94,7 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
         ];
 
         // resolve report and perform necessary action
+        // set warning fields
         switch (type) {
             // suspend or terminate user based on userAction
             case REPORT_TARGET_TYPE_USER:
@@ -111,7 +112,9 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
             case REPORT_TARGET_TYPE_POST:
                 promises.push(deletePostUtil(req.params.userId, req.params.postId, res.postFromCache));
 
-                warning.content_link = res.post.content_links[0];
+                warning.file_name = res.post.original_names[0];
+                warning.content = res.post.caption;
+                warning.object_creation_time = res.post.creation_time;
 
                 break;
 
@@ -119,11 +122,17 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
             case REPORT_TARGET_TYPE_FORUM:
                 promises.push(deleteForumUtil(req.params.forumID, req.params.userId));
 
+                warning.content = res.forum.forumID;
+                warning.object_creation_time = res.forum.creation_time;
+
                 break;
 
             // delete thread
             case REPORT_TARGET_TYPE_THREAD:
                 promises.push(deleteThreadUtil(req.params.forumID, req.params.threadID, res.threadFromCache));
+
+                warning.content = res.thread.title;
+                warning.object_creation_time = res.thread.creation_time;
 
                 break;
 
@@ -131,17 +140,31 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
             case REPORT_TARGET_TYPE_POST_COMMENT:
                 promises.push(deleteCommentUtil(true, req.params.commentId, res.commentFromCache, res.postFromCache, getUserPostKey(req.params.userId), req.params.postId));
 
+                warning.content = res.comment.content;
+                warning.object_creation_time = res.comment.creation_time;
+
                 break;
 
             // delete comment
             case REPORT_TARGET_TYPE_THREAD_COMMENT:
                 promises.push(deleteCommentUtil(false, req.params.commentId, res.commentFromCache, res.threadFromCache, getForumThreadKey(req.params.forumID), req.params.threadID));
 
+                warning.content = res.comment.content;
+                warning.object_creation_time = res.comment.creation_time;
+
                 break;
 
             // delete message
             case REPORT_TARGET_TYPE_MESSAGE:
                 promises.push(deleteMessageUtil(req.params.messageId));
+
+                warning.content = res.message.content;
+                warning.object_creation_time = res.message.creation_time;
+
+                const originalName = res.message.original_name;
+                if (originalName) {
+                    warning.file_name = originalName;
+                }
 
                 break;
 

@@ -34,7 +34,7 @@ async function getReviewedReports(req, res) {
 // to get reports submitted by a user
 async function getReportsByUser(req, res) {
     try {
-        const reports = await Report.find({ reporter_id: req.params.userId }).lean();
+        const reports = await Report.commonQuery({ 'reporter.id': req.params.userId });
 
         returnGoodReq(res, reports);
     }
@@ -46,7 +46,7 @@ async function getReportsByUser(req, res) {
 // get reports submitted against a user's content
 async function getReportForUser(req, res) {
     try {
-        const reports = await Report.find({ report_target_owner: req.params.userId }).lean();
+        const reports = await Report.commonQuery({ report_target_owner: req.params.userId });
 
         returnGoodReq(res, reports);
     }

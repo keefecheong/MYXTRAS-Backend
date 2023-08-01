@@ -9,7 +9,7 @@ const { cachedPostRemoveSaveByUser } = require('../posts/postSaveCache.js');
 const { deleteAllCachedComments, updateCachedParentCommentCount } = require('../comments/commentDeleteCache.js');
 const { PARENT_MODEL_POST } = require('../../models/comment.js');
 
-function cachedUserAddBlocked(selfId, isBlocker, blockEntry, commentsPerPost, followerIndex) {
+async function cachedUserAddBlocked(selfId, isBlocker, blockEntry, commentsPerPost, followerIndex) {
     if (!redisClient.isReady) {
         return [];
     }
@@ -32,7 +32,7 @@ function cachedUserAddBlocked(selfId, isBlocker, blockEntry, commentsPerPost, fo
     // remove likes and save by target user on self's posts
     const userPostKey = getUserPostKey(selfId);
 
-    const userPostKeyExists = redisClient.exists(userPostKey);
+    const userPostKeyExists = await redisClient.exists(userPostKey);
     
     if (userPostKeyExists) {
         promises.push(cachedPostRemoveLikeByUser(targetUserId, selfId));
@@ -40,7 +40,7 @@ function cachedUserAddBlocked(selfId, isBlocker, blockEntry, commentsPerPost, fo
     }
 
     // delete comments by target user on self's posts
-    commentsPerPost.forEach(async entry => {
+    commentsPerPost.forEach(entry => {
         promises.push(deleteAllCachedComments(entry._id, PARENT_MODEL_POST, targetUserId));
 
         if (userPostKeyExists) {

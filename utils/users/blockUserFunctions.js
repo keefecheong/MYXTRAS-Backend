@@ -53,7 +53,7 @@ async function handleBlockPerUser(self, targetUserId, isBlocker) {
     });
 
     // update cache
-    const cachePromises = cachedUserAddBlocked(self._id, isBlocker, blockEntry, commentsPerPost, followerIndex);
+    const cachePromises = await cachedUserAddBlocked(self._id, isBlocker, blockEntry, commentsPerPost, followerIndex);
 
     return { user, deleteComments, bulkUpdatePost, cachePromises }
 }

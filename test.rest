@@ -185,3 +185,8 @@ Content-Type: application/json
 {
     "reason": "Spam"
 }
+
+###
+
+GET http://127.0.0.1:8081/api/admin/report/for/649fda3cb56cc7cbad70d276
+Cookie: authapi=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OWZkYTdiYjU2Y2M3Y2JhZDcwZDI5NiIsImlhdCI6MTY5MDc4OTY3MH0.FO0eSbYjJCFzFmT2t2fNotGm93b59PMcryO5ACJ2SWg

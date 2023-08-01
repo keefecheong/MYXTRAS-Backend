@@ -1,7 +1,6 @@
 // controller functions to handle POST and PATCH requests for posts
 
 const Post = require('../../models/post.js');
-const { User } = require('../../models/user.js');
 const { REPORT_TARGET_TYPE_POST } = require('../../models/report.js');
 
 const { uploadImages, UPLOAD_TYPE_POST } = require('../../utils/firebase/firebaseStorageUpload.js');
@@ -32,9 +31,8 @@ async function createPost(req, res) {
         return returnBadReq(res, 'At least one image is required.');
     }
     
+    const creator = req.user;
     const creatorId = req.user._id;
-    const self = new User(req.user);
-    self.isNew = false;
 
     const post = new Post({
         creator_id: creatorId,
@@ -72,9 +70,9 @@ async function createPost(req, res) {
 
         const userDetails = {
             _id: creatorId,
-            username: self.username,
-            profile_pic_link: self.profile_pic_link,
-            blocked_users: self.blocked_users
+            username: creator.username,
+            profile_pic_link: creator.profile_pic_link,
+            blocked_users: creator.blocked_users
         }
 
         // moderate text and images
@@ -91,7 +89,7 @@ async function createPost(req, res) {
         await saveDocAsync(post, updateCachedPostResult);
 
         // update user tasks
-        await updateUserTasks(self, 'Create a new blog');
+        await updateUserTasks(creator, 'Create a new blog');
 
         returnGoodReq(res, { message: 'Post created.' });
     }

@@ -1,7 +1,6 @@
 // controller functions related to thread comments
 
 const { Comment, PARENT_MODEL_THREAD } = require('../../models/comment.js');
-const { User } = require('../../models/user.js');
 const { REPORT_TARGET_TYPE_THREAD_COMMENT } = require('../../models/report.js');
 
 const { checkCommentAttributesAll } = require('../../utils/comments/checkAttributes.js');
@@ -51,10 +50,8 @@ async function createComment(req, res) {
         return returnBadReq(res, 'Comment content is required.');
     }
 
-    var creator = req.user;
+    const creator = req.user;
     const creatorId = creator._id;
-    creator = new User(creator);
-    creator.isNew = false;
 
     const thread = res.thread;
     const threadId = thread._id;

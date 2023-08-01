@@ -30,7 +30,7 @@ async function cachedForumAddSubscriber(forumDetails, userId) {
 }
 
 // to remove subscriber from forum in cache
-async function cachedForumRemoveSubscriber(forumId, userId, forSelf) {
+async function cachedForumRemoveSubscriber(forumId, userId, forTerminate) {
     if (!redisClient.isReady) {
         return false;
     }
@@ -38,17 +38,16 @@ async function cachedForumRemoveSubscriber(forumId, userId, forSelf) {
     const forumKey = getForumKey(forumId);
     const removeSubscriberPromise = redisClient.json.del(forumKey, getForumSubscriberPath(userId));
 
-    // if request is to update the user's own entries then remove from the user's subscribed forums entry
-    if (forSelf) {
-        const increaseVersionPromise = redisClient.json.numIncrBy(forumKey, '$.__v', 1);
+    // if function is called while terminating user just return above promise
+    if (forTerminate) return removeSubscriberPromise;
 
-        const subscribedForumKey = getSubscribedForumKey(userId);
-        const removeSubscribedForumPromise = redisClient.json.del(subscribedForumKey, getForumIdPath(forumId));
+    // increase version key and update subscribed forums entry
+    const increaseVersionPromise = redisClient.json.numIncrBy(forumKey, '$.__v', 1);
 
-        return await returnPromiseResult([removeSubscriberPromise, increaseVersionPromise, removeSubscribedForumPromise]);
-    }
+    const subscribedForumKey = getSubscribedForumKey(userId);
+    const removeSubscribedForumPromise = redisClient.json.del(subscribedForumKey, getForumIdPath(forumId));
 
-    return removeSubscriberPromise;
+    return await returnPromiseResult([removeSubscriberPromise, increaseVersionPromise, removeSubscribedForumPromise]);
 }
 
 module.exports = {

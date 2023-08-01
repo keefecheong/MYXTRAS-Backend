@@ -14,8 +14,9 @@ async function getComment(req, res, next, type) {
 
     try {
         const commentId = req.params.commentId;
+        const parentId = forPost ? res.post._id : res.thread._id;
 
-        const key = forPost ? getPostCommentKey(res.post._id) : getThreadCommentKey(res.thread._id);
+        const key = forPost ? getPostCommentKey(parentId) : getThreadCommentKey(parentId);
 
         // attempt to get comment from cache
         const result = await getCommentFromCache(key, commentId);
@@ -30,7 +31,7 @@ async function getComment(req, res, next, type) {
         }
         else {
             // if comment is not found from cache then retrieve from database
-            target = await Comment.findById(commentId).lean();
+            target = await Comment.findOne({ _id: commentId, parent_id: parentId }).lean();
         }
 
         // if target is still null means the comment does not exist, return 404 error
