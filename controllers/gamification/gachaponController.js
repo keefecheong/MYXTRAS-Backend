@@ -27,6 +27,7 @@ async function rollGacha(req, res) {
     const updatedValues = {};
     updatedValues.pets = user.pets;
     const numOfRolls = req.params.numOfRolls;
+    
     // deduct gems from user
     if (user.gems < numOfRolls*160){
         res.status(500).json({ message: 'Not enough gems' })
@@ -77,6 +78,7 @@ async function rollGacha(req, res) {
             } else {
                 const newChosenPet = { ...chosenPet, new: true };
                 newChosenPet.new = false
+                updatedValues.gems += 80
                 rolledPets.push(newChosenPet)
             }
         }
