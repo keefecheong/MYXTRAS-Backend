@@ -120,8 +120,18 @@ const userSchema = new mongoose.Schema({
         default: []
     },
     pets:{
-        type: [Object],
-        default: []
+        type: {
+            enabled :{
+                type: Boolean,
+            },
+            inventory:{
+                type: [Object],
+            },
+        },
+        default:{
+            enabled: true,
+            inventory: [],
+        }
     },
     last_checkin_date: {
         type: Date,

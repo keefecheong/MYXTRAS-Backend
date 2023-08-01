@@ -92,8 +92,29 @@ async function rollGacha(req, res) {
     }
 }
 
+async function enablePets(req, res) {
+    const user = new User(req.user);
+    user.isNew = false;
+    const updatedValues = {};
+    try{
+        user.pets.enabled = !user.pets.enabled;
+        updatedValues.pets = user.pets;
+
+        const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
+        await saveDocAsync(user, updateCacheResult);
+
+        returnGoodReq(res);
+    }
+    catch (error){
+        returnServerErrorReq(res);
+    }
+
+}
+
+
 
 module.exports = {
     getGemsAndPets,
-    rollGacha
+    rollGacha,
+    enablePets
 }
