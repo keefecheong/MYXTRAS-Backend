@@ -22,14 +22,14 @@ async function getGemsAndPets(req, res) {
 async function rollGacha(req, res) {
     const user = new User(req.user);
     user.isNew = false;
-    user.gems = 1000000
+    
     const rolledPets = [];
     const updatedValues = {};
     updatedValues.pets = {};
     updatedValues.pets.inventory = user.pets.inventory;
 
     const numOfRolls = req.params.numOfRolls;
-    
+
     // deduct gems from user
     if (user.gems < numOfRolls*160){
         res.status(500).json({ message: 'Not enough gems' })
