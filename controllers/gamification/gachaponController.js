@@ -10,8 +10,7 @@ const saveDocAsync = require('../../utils/cache/saveDocAsync.js');
 async function getGemsAndPets(req, res) {
     try{
         const gems = req.user.gems;
-        const pets = req.user.pets;
-
+        const pets = req.user.pets.inventory;
         const data = {gems: gems, pets: pets}
         returnGoodReq(res, data);
 
@@ -23,9 +22,12 @@ async function getGemsAndPets(req, res) {
 async function rollGacha(req, res) {
     const user = new User(req.user);
     user.isNew = false;
+    user.gems = 1000000
     const rolledPets = [];
     const updatedValues = {};
-    updatedValues.pets = user.pets;
+    updatedValues.pets = {};
+    updatedValues.pets.inventory = user.pets.inventory;
+
     const numOfRolls = req.params.numOfRolls;
     
     // deduct gems from user
@@ -37,7 +39,6 @@ async function rollGacha(req, res) {
         user.gems -= numOfRolls*160;
         updatedValues.gems = user.gems;
     }
-    
     // Set the probabilities for each rarity
     const ultraRareProbability = 0.05; // 5%
     const rareProbability = 0.1; // 10%
@@ -63,7 +64,7 @@ async function rollGacha(req, res) {
             
             
             // Check if pet exists in user inventory
-            const exists = user.pets.some((pet) => {
+            const exists = user.pets.inventory.some((pet) => {
                 return (
                   pet.name === chosenPet.name
                 );
@@ -73,11 +74,17 @@ async function rollGacha(req, res) {
                 //Create a new copy of chosenPet to remove it from memory ref
                 const newChosenPet = { ...chosenPet, new: true };
                 newChosenPet.new = true
+
+                // To display in the gachapon popup
                 rolledPets.push(newChosenPet)
-                updatedValues.pets.push(chosenPet)
+
+                // Saving the non-duplicated pet in user inventory
+                updatedValues.pets.inventory.push(chosenPet)
             } else {
                 const newChosenPet = { ...chosenPet, new: true };
                 newChosenPet.new = false
+
+                // Refunding half the amount of gems for each duplicate pet
                 updatedValues.gems += 80
                 rolledPets.push(newChosenPet)
             }
