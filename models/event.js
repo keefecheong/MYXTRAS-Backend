@@ -7,6 +7,9 @@ const eventSchema = new mongoose.Schema({
         required: true,
         immutable: true
     },
+    banner_link: {
+        type: String,
+    },
     event_name: {
         type: String,
         required: true,
