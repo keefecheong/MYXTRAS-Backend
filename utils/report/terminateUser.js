@@ -45,8 +45,7 @@ module.exports = async function terminateUser(user, adminId) {
     const deletePosts = await Post.deleteByUser(targetUserId);
 
     const bulkWritePosts = [deletePosts.deletePostsPromise];
-    bulkWriteUsers.push(...(deletePosts.updateUserPromises));
-    const bulkWriteComments = [deletePosts.updateCommentPromise];
+    const bulkWriteComments = [deletePosts.deleteCommentsPromise];
 
     // remove likes by the user on all posts
     bulkWritePosts.push(Post.removePostReactionByUser(targetUserId, true));
@@ -59,7 +58,7 @@ module.exports = async function terminateUser(user, adminId) {
 
     const bulkWriteForums = [deleteForums.deleteForumsPromise];
     const bulkWriteThreads = [deleteForums.deleteThreadsPromise];
-    bulkWriteComments.push(deleteForums.updateCommentPromise);
+    bulkWriteComments.push(deleteForums.deleteCommentsPromise);
 
     // remove subscribe status by the user
     bulkWriteForums.push(Forum.removeSubscriber(targetUserId));
@@ -68,7 +67,7 @@ module.exports = async function terminateUser(user, adminId) {
     const deleteThreads = await Thread.deleteAllSpecified(null, targetUserId, true);
 
     bulkWriteThreads.push(deleteThreads.deleteThreadsPromise);
-    bulkWriteComments.push(deleteThreads.updateCommentPromise);
+    bulkWriteComments.push(deleteThreads.deleteCommentsPromise);
 
     // remove likes and dislikes by the user on all threads
     bulkWriteThreads.push(Thread.removeThreadReactionByUser(targetUserId, true));

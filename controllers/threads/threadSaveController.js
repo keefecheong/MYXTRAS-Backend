@@ -2,8 +2,8 @@
 
 const Thread = require('../../models/thread.js');
 
-const { uploadImages, UPLOAD_TYPE_THREAD } = require('../../utils/firebase/firebaseStorageUpload.js');
-const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
+const { uploadImages, UPLOAD_TYPE_THREAD } = require('../../utils/s3/s3Upload.js');
+const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 
 const returnCreatedReq = require('../../utils/general/returnCreatedReq.js');
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
@@ -53,7 +53,7 @@ async function createThread(req, res) {
         if (req.files.length > 0) {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, newThread._id, UPLOAD_TYPE_THREAD, forumId);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, newThread._id, UPLOAD_TYPE_THREAD);
         
             // if upload not successful then delete the new thread
             if (!threadPicUploadSuccessful) {
@@ -151,7 +151,7 @@ async function updateThread(req, res) {
         if (req.body.pictureUnchanged != 'true') {
             const newImageLinks = [];
 
-            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, threadId, UPLOAD_TYPE_THREAD, forumId);
+            const threadPicUploadSuccessful = await uploadImages(req.files, newImageLinks, threadId, UPLOAD_TYPE_THREAD);
         
             // if upload not successful then return 500 error
             if (!threadPicUploadSuccessful) {
@@ -159,7 +159,7 @@ async function updateThread(req, res) {
             }
 
             // otherwise delete old image and set new image link
-            deleteFiles([thread.content_link]);
+            deleteFiles(thread.content_link);
 
             thread.content_link = newImageLinks[0];
             updatedValues.content_link = newImageLinks[0];

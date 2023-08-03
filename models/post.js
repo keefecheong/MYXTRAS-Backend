@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { User } = require('./user.js');
 const { Comment } = require('./comment.js');
-const { deleteFiles } = require('../utils/firebase/firebaseStorageDelete.js');
+const { deleteFiles } = require('../utils/s3/s3Delete.js');
 
 const postSchema = new mongoose.Schema({
     creator_id: {
@@ -96,16 +96,14 @@ postSchema.statics.deleteByUser = async function(userId) {
     
     // promise to delete all posts created by the specified userId
     const deletePostsPromise = { deleteMany: { filter } };
-    const updateCommentPromise = Comment.deleteAllSpecified(null, userId, true);
     
     const posts = await this.find(filter, { _id: 1, content_links: 1 });
+    
+    // delete images and comments associated with the posts
+    deleteFiles(posts.map(post => [...post.content_links]).flat());
+    const deleteCommentsPromise = Comment.deleteAllSpecified(posts.map(post => post._id), null, true);
 
-    // get promises to clean up for each post deleted
-    posts.forEach(post => {
-        this.cleanUpOnDeletePost(post._id, post.content_links, true);
-    });
-
-    return { deletePostsPromise, updateUserPromises, updateCommentPromise };
+    return { deletePostsPromise, deleteCommentsPromise };
 }
 
 // remove all likes by the specified userId

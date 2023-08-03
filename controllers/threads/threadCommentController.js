@@ -20,6 +20,7 @@ const deleteCommentUtil = require('../../utils/comments/deleteComment.js');
 const updateUserTasks = require('../../utils/gamification/updateUserTasks.js');
 
 const moderateText = require('../../utils/admin/moderation/moderateText.js');
+const { createReportAfterModeration } = require('../../utils/report/createReport.js');
 
 // get all comments for a thread
 async function getThreadComments(req, res) {

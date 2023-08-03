@@ -1,10 +1,7 @@
-// to upload files to firebase storage
+// to upload files to s3 storage
 
 const crypto = require('crypto');
-const { getStorage, ref, uploadBytes, getDownloadURL } = require('firebase/storage');
-const { deleteFiles } = require('./firebaseStorageDelete.js');
-
-const firebaseStorage = getStorage();
+const { deleteFiles } = require('./s3Delete.js');
 
 const UPLOAD_TYPE_POST = 'posts';
 const UPLOAD_TYPE_FORUM = 'forums';
@@ -13,9 +10,9 @@ const UPLOAD_TYPE_USER = 'users';
 const UPLOAD_TYPE_REPORT = 'reports';
 const UPLOAD_TYPE_CHAT = 'chats';
 
-// upload image to firebase storage and update image links
-// if uploading fails then delete all the uploaded images (ask user to retry later)
-async function uploadImages(images, imageLinks, objId, type, forumID) {
+// upload image to s3 and update image links
+// if uploading fails then delete all the uploaded images
+async function uploadImages(images, imageLinks, objId, type) {
     for (let i = 0; i < images.length; i++) {
         let prefix = `${type}/${objId}`;
 
@@ -37,7 +34,7 @@ async function uploadImages(images, imageLinks, objId, type, forumID) {
     return true;
 }
 
-// upload file to firebase storage and return file link
+// upload file to s3 and return file link
 // if uploading fails then delete file
 async function uploadFile(buffer, objId, name, type) {
     const prefix = `${UPLOAD_TYPE_CHAT}/${objId}`;
@@ -47,7 +44,7 @@ async function uploadFile(buffer, objId, name, type) {
 
     // delete files if upload unsuccessful
     if (!uploadResult.success) {
-        deleteFiles([fileLink]);
+        deleteFiles(fileLink);
     }
 
     // return file upload status and link
@@ -76,32 +73,28 @@ async function uploadFunction(buffer, prefix, name, type) {
     // create new file name with hash
     const newName = crypto.createHash('md5').update(name).update(Date.now().toString()).digest('hex');
     
-    // create reference
-    const fileRef = ref(firebaseStorage, `${prefix}/${newName}`);
+    const body = JSON.stringify({
+        key: `${prefix}/${newName}`,
+        buffer: JSON.stringify(buffer),
+        type: type
+    });
 
-    // set metadata of the file
-    const metadata = {
-        cacheControl: 'max-age=31536000',  // set max cache lifetime to 1 year
-        contentType: type
-    }
+    // send name, buffer, and file type to lambda upload function
+    await fetch(`${process.env.AWS_S3_LAMBDA_BASE_URL}/upload`, {
+        method: 'POST',
+        mode: 'cors',
+        body: body,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(async res => {
+        if (res.ok) {
+            await res.json().then(data => {
+                link = data.link;
+                success = true;
+            });
+        }
+    }).catch(err => console.log(err));
 
-    // upload file
-    await uploadBytes(fileRef, buffer, metadata)
-        .then(async (result) => {
-            // get link to file
-            await getDownloadURL(result.ref)
-                .then((downloadURL) => {
-                    link = downloadURL.split('&token')[0];
-                    success = true;
-                });
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-
-    // return file upload status and link
-    return {
-        success,
-        link
-    };
+    return { success, link };
 }

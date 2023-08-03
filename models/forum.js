@@ -91,7 +91,8 @@ forumSchema.statics.deleteByUser = async function(userId) {
     const deleteForumsPromise = { deleteMany: { filter: { creator_id: userId } } };
 
     // clean up threads and comments
-    const cleanUpThreads = await Thread.deleteAllSpecified(null, userId, true);
+    const forums = await this.find({ creator_id: userId });
+    const cleanUpThreads = await Thread.deleteAllSpecified(forums.map(forum => forum._id), null, true);
 
     return { ...cleanUpThreads, deleteForumsPromise };
 }

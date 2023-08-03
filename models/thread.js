@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { Comment } = require('./comment.js');
-const { deleteFiles } = require('../utils/firebase/firebaseStorageDelete.js');
+const { deleteFiles } = require('../utils/s3/s3Delete.js');
 
 const threadSchema = new mongoose.Schema({
     parent_id: {
@@ -86,12 +86,12 @@ threadSchema.statics.commonQuery = function (filter, sort, cache, cacheOptions) 
 }
 
 // to remove all threads under a forum or created by a user
-threadSchema.statics.deleteAllSpecified = async function(forumId, userId, asJSON) {
+threadSchema.statics.deleteAllSpecified = async function(forumIds, userId, asJSON) {
     let filter = {};
 
-    if (forumId) {
+    if (forumIds) {
         filter = {
-            parent_id: forumId
+            parent_id: Array.isArray(forumIds) ? { $in: forumIds } : forumIds
         };
     }
 
@@ -103,16 +103,17 @@ threadSchema.statics.deleteAllSpecified = async function(forumId, userId, asJSON
 
     const threads = await this.find(filter, { _id: 1, content_link: 1 });
 
-    const updateCommentPromise = Comment.deleteAllSpecified(threads.map(thread => thread._id), userId, true);
+    // delete all images associated with the threads
+    deleteFiles(threads.map(thread => thread.content_link).filter(link => link));
 
-    // clean up images for all threads
-    threads.forEach(thread => this.cleanUpOnDeleteThread(thread._id, thread.content_link, true));
+    // clean up comments for all threads
+    const deleteCommentsPromise = Comment.deleteAllSpecified(threads.map(thread => thread._id), null, true);
 
     // delete threads
     const deleteThreadsPromise = asJSON ? { deleteMany: { filter } } : this.deleteMany(filter);
 
     // if asJSON is true return JSON objects else return promise for all
-    return asJSON ? { deleteThreadsPromise, updateCommentPromise } : Promise.all([deleteThreadsPromise, Comment.bulkWrite(bulkWriteComments)]);
+    return asJSON ? { deleteThreadsPromise, deleteCommentsPromise } : Promise.all([deleteThreadsPromise, Comment.bulkWrite(deleteCommentsPromise)]);
 }
 
 // to remove all likes/dislikes by a specified user
@@ -138,10 +139,10 @@ threadSchema.statics.removeThreadReactionByUser = function(userId, forLikes) {
 }
 
 // to clean up child comments and delete associated images when deleted
-threadSchema.statics.cleanUpOnDeleteThread = async function(threadId, contentLink, asJSON, userId) {
+threadSchema.statics.cleanUpOnDeleteThread = function(threadId, contentLink, asJSON, userId) {
     // delete associated image if exists
     if (contentLink) {
-        deleteFiles([contentLink]);
+        deleteFiles(contentLink);
     }
 
     // delete associated comments

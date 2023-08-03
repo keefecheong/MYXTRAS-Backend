@@ -3,8 +3,8 @@
 const Forum = require('../../models/forum.js');
 const { REPORT_TARGET_TYPE_FORUM } = require('../../models/report.js');
 
-const { uploadImages, UPLOAD_TYPE_FORUM } = require('../../utils/firebase/firebaseStorageUpload.js');
-const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
+const { uploadImages, UPLOAD_TYPE_FORUM } = require('../../utils/s3/s3Upload.js');
+const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 
 const returnGoodReq = require('../../utils/general/returnGoodReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
@@ -158,6 +158,7 @@ async function updateForum(req, res) {
 
         let index = 0;
         const newImageLinks = [];
+        const deleteImageLinks = [];
 
         // upload new forum picture if exists
         if (req.body.pictureUnchanged != 'true') {
@@ -169,7 +170,7 @@ async function updateForum(req, res) {
             }
     
             // otherwise delete old picture and update forum_pic_link
-            deleteFiles([forum.forum_pic_link]);
+            deleteImageLinks.push(forum.forum_pic_link);
     
             forum.forum_pic_link = newImageLinks[index];
             updatedValues.forum_pic_link = newImageLinks[index];
@@ -188,11 +189,13 @@ async function updateForum(req, res) {
             }
     
             // otherwise delete old picture and update banner_link
-            deleteFiles([forum.banner_link]);
+            deleteImageLinks.push(forum.banner_link);
     
             forum.banner_link = newImageLinks[index];
             updatedValues.banner_link = newImageLinks[index];
         }
+
+        if (deleteImageLinks.length > 0) deleteFiles(deleteImageLinks);
 
         // moderate text and images if changed
         const moderationPromises = newImageLinks.map(link => moderateImage(link));

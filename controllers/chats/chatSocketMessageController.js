@@ -5,7 +5,7 @@ const Message = require('../../models/message.js');
 
 const { emitSocketEvent } = require('../../utils/chats/emitSocketEvent.js');
 const { getUserOnline } = require('../../utils/chats/getUserStatus.js');
-const { uploadFile } = require('../../utils/firebase/firebaseStorageUpload.js');
+const { uploadFile } = require('../../utils/s3/s3Upload.js');
 
 const updateUserTasks = require('../../utils/gamification/updateUserTasks.js');
 

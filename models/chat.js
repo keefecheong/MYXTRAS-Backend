@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Message = require('./message.js');
-const { deleteFiles } = require('../utils/firebase/firebaseStorageDelete.js');
+const { deleteFiles } = require('../utils/s3/s3Delete.js');
 
 const chatSchema = new mongoose.Schema({
     users: {
@@ -50,9 +50,7 @@ chatSchema.statics.cleanUpOnDeleteChat = async function(chatIds) {
     }, { file_link: 1 });
     
     // delete files from messages in the chats to delete
-    messageWithFiles.forEach(message => {
-        deleteFiles([message.file_link]);
-    });
+    deleteFiles(messageWithFiles.map(message => message.file_link));
 
     // delete messages in the chats to delete
     return Message.deleteMany({ chat_id: { $in: chatIds } });

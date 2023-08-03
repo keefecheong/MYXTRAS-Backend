@@ -2,8 +2,8 @@
 
 const { User, DEFAULT_PROFILE_PIC_LINK } = require('../../models/user.js');
 
-const { uploadImages, UPLOAD_TYPE_USER } = require('../../utils/firebase/firebaseStorageUpload.js');
-const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
+const { uploadImages, UPLOAD_TYPE_USER } = require('../../utils/s3/s3Upload.js');
+const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 
 const returnNoContentReq = require('../../utils/general/returnNoContentReq.js');
 const returnBadReq = require('../../utils/general/returnBadReq.js');
@@ -73,7 +73,7 @@ async function updateUser(req, res) {
 
             // if upload successful then delete old picture and update profile_pic_link
             if (user.profile_pic_link != DEFAULT_PROFILE_PIC_LINK){
-                deleteFiles([user.profile_pic_link]);
+                deleteFiles(user.profile_pic_link);
             }   
             user.profile_pic_link = profile_pic_link[0];
             updatedValues.profile_pic_link = profile_pic_link[0];

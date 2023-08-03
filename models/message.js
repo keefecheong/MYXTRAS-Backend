@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Chat = require('./chat.js');
-const { deleteFiles } = require('../utils/firebase/firebaseStorageDelete.js');
+const { deleteFiles } = require('../utils/s3/s3Delete.js');
 
 const messageSchema = new mongoose.Schema({
     creator_id: {
@@ -92,7 +92,7 @@ messageSchema.post('findOneAndDelete', function(doc, next) {
 
     try {
         // delete associated files
-        deleteFiles([doc.file_link]);
+        deleteFiles(doc.file_link);
 
         next();
     }

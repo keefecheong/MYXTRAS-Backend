@@ -3,8 +3,8 @@
 const Post = require('../../models/post.js');
 const { REPORT_TARGET_TYPE_POST } = require('../../models/report.js');
 
-const { uploadImages, UPLOAD_TYPE_POST } = require('../../utils/firebase/firebaseStorageUpload.js');
-const { deleteFiles } = require('../../utils/firebase/firebaseStorageDelete.js');
+const { uploadImages, UPLOAD_TYPE_POST } = require('../../utils/s3/s3Upload.js');
+const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 
 const compareId = require('../../utils/general/compareId.js');
 const saveDocAsync = require('../../utils/cache/saveDocAsync.js');

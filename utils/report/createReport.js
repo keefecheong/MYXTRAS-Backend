@@ -13,7 +13,7 @@ const {
     REPORTER_SUBJECT_USER
 } = require('../../models/report.js');
 
-const { uploadImages, UPLOAD_TYPE_REPORT } = require('../firebase/firebaseStorageUpload.js');
+const { uploadImages, UPLOAD_TYPE_REPORT } = require('../s3/s3Upload.js');
 const getJoinedReasons = require('../admin/moderation/getJoinedReasons.js');
 
 // to create a report with the given arguments
