@@ -4,12 +4,12 @@ const redisClient = require('./redis.js');
 
 const mongoose = require('mongoose');
 
-const { getUserFromCache, cacheUser } = require('./users/userCache.js');
-const { cachePosts } = require('./posts/postCache.js');
-const { cacheComments } = require('./comments/commentCache.js');
-const { cacheForums } = require('./forums/forumCache.js');
-const { cacheThreads } = require('./threads/threadCache.js');
-const { cacheUnblock } = require('./unblock/unblockCache.js');
+const { getUserFromCache, cacheUser } = require('../user/cache/userCache.js');
+const { cachePosts } = require('../post/cache/postCache.js');
+const { cacheComments } = require('../comment/cache/commentCache.js');
+const { cacheForums } = require('../forum/cache/forumCache.js');
+const { cacheThreads } = require('../thread/cache/threadCache.js');
+const { cacheUnblock } = require('../user/cache/unblockCache.js');
 
 // save exec for use later
 const exec = mongoose.Query.prototype.exec;

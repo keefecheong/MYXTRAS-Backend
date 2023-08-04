@@ -1,6 +1,6 @@
 const socketIO = require('socket.io');
 
-const { chatHandler } = require('./chats/chatHandler.js');
+const { chatHandler } = require('../chat/sockets/chatHandler.js');
 
 // initialize socket
 function initSocket(server, corsOptions) {

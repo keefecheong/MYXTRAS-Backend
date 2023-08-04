@@ -12,22 +12,16 @@ const cors = require('cors');
 const corsOptions = {
     origin: process.env.FRONTEND_SERVER_URL,
     methods: ['GET', 'POST', 'OPTIONS', 'DELETE', 'PATCH'],
-    credentials: true,
+    credentials: true
 };
 
 app.use(cors(corsOptions));
 
-// make connection with mongodb
-const mongoose = require('mongoose');
-
-mongoose.connect(process.env.DATABASE_URL);
-
-const db = mongoose.connection;
-db.on('error', (error) => console.error(error));
-db.once('open', () => console.log('Connected to database.'));
+// initialize connection with mongoDB
+require('./initMongoDB.js');
 
 // initialize gamification
-require('./utils/gamification/init.js');
+require('./gamification/utils/init.js');
 
 // initialize cache             
 require('./cache/init.js');
