@@ -22,6 +22,10 @@ const announcementSchema = new mongoose.Schema({
         type: Date,
         required: true,
     },
+    event_location: {
+        type: String,
+        required: true,
+    },
     event_color: {
         type: String,
         default: '#FF6363' // secondary color - light pink
