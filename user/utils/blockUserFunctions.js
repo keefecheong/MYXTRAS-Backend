@@ -35,8 +35,8 @@ async function handleBlockPerUser(self, targetUserId, isBlocker) {
     // remove likes by self on the other user's posts
     const removePostLikes = Post.removePostReactionByUser(user._id, true, targetUserId);
 
-    // remove self from saved_by on other user's posts
-    const removeSave = Post.removePostReactionByUser(user._id, true, targetUserId);
+    // remove save on other user's posts
+    const removeSave = Post.removePostReactionByUser(user._id, false, targetUserId);
 
     // get list of posts created by self where there are comments by the target user
     // also get number of comments by that user for each post
@@ -45,7 +45,7 @@ async function handleBlockPerUser(self, targetUserId, isBlocker) {
     const postIds = commentsPerPost.map(entry => entry._id);
 
     // delete comments by the target user under posts by created by self
-    const deleteComments = Comment.deleteAllSpecified(postIds, targetUserId);
+    const deleteComments = Comment.deleteAllSpecified(postIds, targetUserId, true);
 
     const bulkUpdatePost = [removePostLikes, removeSave];
 

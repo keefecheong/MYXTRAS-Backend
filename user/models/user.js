@@ -45,12 +45,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: DEFAULT_PROFILE_PIC_LINK
     },
-    gender:{
+    gender: {
         type: String
     },
     biography: {
         type: String,
-        default: function() {
+        default: function () {
             return `Hi! I am ${this.username}.`;
         }
     },
@@ -102,33 +102,33 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    daily_missions:{
+    daily_missions: {
         type: [{
-            title:{
+            title: {
                 type: String,
                 required: true
             },
-            claimed:{
+            claimed: {
                 type: Boolean,
                 default: false
             },
-            locked:{
+            locked: {
                 type: Boolean,
                 default: true
             }
         }],
         default: []
     },
-    pets:{
+    pets: {
         type: {
-            enabled :{
+            enabled: {
                 type: Boolean,
             },
-            inventory:{
+            inventory: {
                 type: [Object],
             },
         },
-        default:{
+        default: {
             enabled: true,
             inventory: [],
         }
@@ -144,16 +144,16 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    allClaimed:{
+    all_claimed: {
         type: {
-            claimed:{
+            claimed: {
                 type: Boolean,
             },
-            locked:{
+            locked: {
                 type: Boolean,
             }
         },
-        default:{
+        default: {
             claimed: false,
             locked: true
         }
@@ -220,7 +220,7 @@ const userSchema = new mongoose.Schema({
             end_time: {
                 type: Date,
                 // specify required if user is suspended
-                required: function() {
+                required: function () {
                     return this.status?.status == USER_STATUS_SUSPENDED;
                 }
             },
@@ -234,7 +234,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // custom query to get follower details
-userSchema.query.getFollowers = function() {
+userSchema.query.getFollowers = function () {
     return this.populate({
         path: 'followers',
         select: 'username profile_pic_link'
@@ -242,7 +242,7 @@ userSchema.query.getFollowers = function() {
 }
 
 // specify validation only for new documents
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
     if (this.isNew) {
         if (!this.email) {
             throw new mongoose.Error.ValidatorError({ type: 'required', path: 'email' });
@@ -261,7 +261,7 @@ userSchema.pre('save', function(next) {
 });
 
 // delete given id/ids from the specified array fields if exists
-userSchema.statics.deleteFromArrayField = function(forFollowers, userId, asJSON) {
+userSchema.statics.deleteFromArrayField = function (forFollowers, userId, asJSON) {
     let filter = {};
     let update = {};
 

@@ -1,0 +1,17 @@
+// make connection with mongodb
+const mongoose = require('mongoose');
+
+mongoose.connect(process.env.DATABASE_URL);
+
+const db = mongoose.connection;
+
+db.on('error', (error) => console.error(error));
+db.once('open', async () => {
+    // show connection successful
+    console.log('Connected to database.');
+
+    // seed user accounts
+    const seedUsers = require('./seedUsers.js');
+
+    await seedUsers();
+});

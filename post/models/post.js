@@ -111,7 +111,9 @@ postSchema.statics.removePostReactionByUser = function(userId, forLikes, creator
     let update;
 
     if (creatorId) {
-        filter.creator_id = creatorId;
+        filter = {
+            creator_id: creatorId
+        };
     }
 
     // set filter and update

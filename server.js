@@ -18,7 +18,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // initialize connection with mongoDB
-require('./initMongoDB.js');
+require('./mongoDB/initMongoDB.js');
 
 // initialize gamification
 require('./gamification/utils/init.js');

@@ -10,7 +10,7 @@ const {
     REPORT_STATUS_SUBMITTED,
 } = require('../models/report.js');
 
-const createReport = require('../utils/createReport.js');
+const { createReport } = require('../utils/createReport.js');
 
 const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnBadReq = require('../../utils/returnReq/returnBadReq.js');
