@@ -14,7 +14,10 @@ async function getMissions(req, res) {
     try{
         const user = req.user;
         const daily_missions = [];
-        const allClaimed = user.allClaimed;
+        const allClaimed = {};
+        if (user.allClaimed){
+            allClaimed = user.allClaimed;
+        }
         for (const task of user.daily_missions) {            
             if (task.title.startsWith('Like 5 threads')){
                 daily_missions.push({
@@ -33,6 +36,7 @@ async function getMissions(req, res) {
                 });
             }
         }
+        
         returnGoodReq(res, {daily_missions, allClaimed});
         
 
