@@ -7,6 +7,8 @@ const mainRouter = express.Router();
 const dailyCheckInRouter = require('./dailyCheckInRouter.js');
 const missionRouter = require('./missionRouter.js');
 const gachaponRouter = require('./gachaponRouter.js');
+const petsRouter = require('./petsRouter.js');
+
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/authMiddleware.js');
@@ -18,5 +20,7 @@ mainRouter.use(validateUserHTTP);
 mainRouter.use('/missions', missionRouter);
 mainRouter.use('/daily-checkin', dailyCheckInRouter);
 mainRouter.use('/gachapon', gachaponRouter);
+mainRouter.use('/pets', petsRouter);
+
 
 module.exports = mainRouter;

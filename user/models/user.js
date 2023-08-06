@@ -127,10 +127,14 @@ const userSchema = new mongoose.Schema({
             inventory: {
                 type: [Object],
             },
+            chosen_pet: {
+                type: String
+            }
         },
         default: {
             enabled: true,
             inventory: [],
+            chosen_pet: ''
         }
     },
     last_checkin_date: {
