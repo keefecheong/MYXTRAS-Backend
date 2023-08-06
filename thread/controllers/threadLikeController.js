@@ -40,7 +40,7 @@ async function addLikeThread(req, res) {
         await saveDocAsync(thread, updateCacheResult);
         
         // update user tasks
-        await updateUserTasks(req.user)
+        await updateUserTasks(req.user, 'Like 5 threads')
 
         returnCreatedReq(res);
     }

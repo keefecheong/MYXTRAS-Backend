@@ -7,32 +7,28 @@ const saveDocAsync = require('../../utils/general/saveDocAsync.js');
 
 module.exports = async function updateUserTasks(user, taskTitle, decreaseTaskCount) {
     const targetTaskIndex = user.daily_missions.findIndex(task => task.title.startsWith(taskTitle));
-    
     if (targetTaskIndex == -1) return;
 
-    let setLockedFalse = true;
-
+    setLockedFalse = (taskTitle != 'Like 5 threads') ? true : false;
+   
     // decrease remaining task count where appropriate
-    if (decreaseTaskCount) {
+    if (taskTitle = 'Like 5 threads') {
         const actualTaskTitle = user.daily_missions[targetTaskIndex].title;
-
         const openParenthesisIndex = actualTaskTitle.indexOf('(');
         const closeParenthesisIndex = actualTaskTitle.indexOf(')');
 
         if (openParenthesisIndex !== -1 && closeParenthesisIndex !== -1) {
             const currentTaskCount = parseInt(actualTaskTitle.substring(openParenthesisIndex + 1, closeParenthesisIndex), 10);
-
             if (currentTaskCount <= 5 && currentTaskCount > 0){
                 // decrease the current task count by 1
                 user.daily_missions[targetTaskIndex].title = actualTaskTitle.replace(`(${currentTaskCount})`, `(${currentTaskCount - 1})`);
-
-                if (decrementedNumber != 0) {
-                    setLockedFalse = false;
+                if (currentTaskCount - 1 == 0) {  
+                    setLockedFalse = true;
                 }
             }
         }
     }
-    
+
     if (setLockedFalse) {
         user.daily_missions[targetTaskIndex].locked = false;
     }
