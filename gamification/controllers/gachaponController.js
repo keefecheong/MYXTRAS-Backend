@@ -13,7 +13,9 @@ async function getGemsAndPets(req, res) {
     try{
         const gems = req.user.gems;
         const pets = req.user.pets;
-        const data = {gems: gems, pets: pets}
+        const chosen_pet = pets.chosen_pet;
+        const chosenPetData = petsArray.find((item) => item.name === chosen_pet);
+        const data = {gems: gems, pets: pets, chosenPetData: chosenPetData}
         returnGoodReq(res, data);
 
     }
