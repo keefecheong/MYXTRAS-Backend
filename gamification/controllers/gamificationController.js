@@ -14,7 +14,7 @@ async function getMissions(req, res) {
     try{
         const user = req.user;
         const daily_missions = [];
-        const allClaimed = {};
+        const allClaimed = {'claimed': false, 'locked': true};
         if (user.allClaimed){
             allClaimed = user.allClaimed;
         }
