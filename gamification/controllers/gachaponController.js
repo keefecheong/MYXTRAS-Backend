@@ -12,7 +12,7 @@ const { updateCachedUser } = require('../../user/cache/userUpdateCache.js');
 async function getGemsAndPets(req, res) {
     try{
         const gems = req.user.gems;
-        const pets = req.user.pets.inventory;
+        const pets = req.user.pets;
         const data = {gems: gems, pets: pets}
         returnGoodReq(res, data);
 
