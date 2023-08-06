@@ -36,3 +36,5 @@ const server = app.listen(process.env.PORT, () => console.log(`Listening on Port
 // initialize socket
 const { initSocket } = require('./sockets/init.js');
 initSocket(server, corsOptions);
+
+module.exports = server;

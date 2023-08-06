@@ -65,7 +65,7 @@ commentSchema.statics.commonQuery = function (filter, sort, cache, cacheOptions)
 }
 
 // automatically increment parent object's comment_count by 1 on save
-commentSchema.pre('save', async function (next) {
+commentSchema.pre('save', function (next) {
     if (!this.isNew) {
         return next();
     }
@@ -75,8 +75,15 @@ commentSchema.pre('save', async function (next) {
     next();
 });
 
+// automatically increment parent object's comment_count by <count> on insertMany (mainly for test case population)
+commentSchema.post('insertMany', function(docs, next) {
+    updateParentCommentCount(docs[0].parent_model, docs[0].parent_id, true, false, docs.length).catch(error => console.log(error));
+
+    next();
+});
+
 // automatically decrement parent object's comment_count by 1 on delete
-commentSchema.post('findOneAndDelete', async function (doc, next) {
+commentSchema.post('findOneAndDelete', function (doc, next) {
     updateParentCommentCount(doc.parent_model, doc.parent_id, false).catch(error => console.log(error));
 
     next();
