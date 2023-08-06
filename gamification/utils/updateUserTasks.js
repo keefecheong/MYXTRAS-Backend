@@ -9,7 +9,7 @@ module.exports = async function updateUserTasks(user, taskTitle, decreaseTaskCou
     const targetTaskIndex = user.daily_missions.findIndex(task => task.title.startsWith(taskTitle));
     if (targetTaskIndex == -1) return;
 
-    let setLockedFalse = true;
+    setLockedFalse = (taskTitle != 'Like 5 threads') ? true : false;
    
     // decrease remaining task count where appropriate
     if (taskTitle = 'Like 5 threads') {
@@ -22,9 +22,8 @@ module.exports = async function updateUserTasks(user, taskTitle, decreaseTaskCou
             if (currentTaskCount <= 5 && currentTaskCount > 0){
                 // decrease the current task count by 1
                 user.daily_missions[targetTaskIndex].title = actualTaskTitle.replace(`(${currentTaskCount})`, `(${currentTaskCount - 1})`);
-                console.log(user.daily_missions[targetTaskIndex].title);
-                if (currentTaskCount == 0) {
-                    setLockedFalse = false;
+                if (currentTaskCount - 1 == 0) {  
+                    setLockedFalse = true;
                 }
             }
         }

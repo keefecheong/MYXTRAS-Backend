@@ -14,9 +14,8 @@ async function getMissions(req, res) {
     try{
         const user = req.user;
         const daily_missions = [];
-        const allClaimed = {'claimed': false, 'locked': true};
-        if (user.allClaimed){
-            allClaimed = user.allClaimed;
+        if (user.all_claimed){
+            allClaimed = user.all_claimed;
         }
         for (const task of user.daily_missions) {            
             if (task.title.startsWith('Like 5 threads')){
@@ -52,7 +51,7 @@ async function claimMissions(req, res) {
         const user = new User(req.user);
         user.isNew = false;
         const tasks = user.daily_missions;
-        const allClaimed = user.allClaimed;
+        const allClaimed = user.all_claimed;
        
         let gems = 0;
         const updatedValues = {};
@@ -61,7 +60,7 @@ async function claimMissions(req, res) {
             gems = 500
             allClaimed.claimed = true;
             allClaimed.locked = false;
-            updatedValues.allClaimed = allClaimed;
+            updatedValues.all_claimed = allClaimed;
         }
         else{
             const targetTaskIndex = tasks.findIndex(task => task.title.substring(0, task.title.startsWith(title)));
