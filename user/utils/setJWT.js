@@ -3,9 +3,9 @@
 const jwt = require('jsonwebtoken');
 const JWT_COOKIE_KEY = 'authapi';
 
+// get jwt and set as cookie in res
 function setJWT(userId, res) {
-    // Signs JWT token to be stored in HTTP cookie
-    const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET);
+    const accessToken = generateJWT(userId);
 
     // set secure: true and sameSite: 'none' only in production mode
     if (process.env.NODE_ENV === 'production') {
@@ -28,7 +28,13 @@ function setJWT(userId, res) {
     }
 }
 
+// craft jwt token
+function generateJWT(userId) {
+    return jwt.sign({ id: userId }, process.env.JWT_SECRET);
+}
+
 module.exports = {
     setJWT,
+    generateJWT,
     JWT_COOKIE_KEY
 }

@@ -84,7 +84,6 @@ async function getReportMessages(req, res) {
         returnGoodReq(res, messages);
     }
     catch (error) {
-        console.log(error)
         returnServerErrorReq(res);
     }
 }
