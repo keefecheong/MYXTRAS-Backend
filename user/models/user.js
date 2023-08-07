@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const { REPORT_TARGET_TYPES, REPORT_REASONS } = require('../../report/models/report.js');
+const { REPORT_TARGET_TYPES } = require('../../report/models/report.js');
 
 const DEFAULT_PROFILE_PIC_LINK = "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg";
 
@@ -193,8 +193,7 @@ const userSchema = new mongoose.Schema({
             reason: {
                 type: String,
                 required: true,
-                immutable: true,
-                enum: REPORT_REASONS
+                immutable: true
             },
             review_time: {
                 type: Date,

@@ -1,8 +1,17 @@
+const mongoose = require('mongoose');
+const { PARENT_MODEL_POST } = require('../../comment/models/comment.js');
 const { REPORT_STATUS_SUBMITTED } = require('../models/report.js');
 
 // to get reports grouped by report_target
 // sorted by descending number of reports for the report_target and ascending report_time of the first report
-module.exports = function getAggFunction(pending) {
+function getReportsAgg(pending) {
+    const sort = pending ? {
+        'count': -1,
+        'report_time': 1
+    } : {
+        'review_time': 1
+    };
+
     return [
         // get pending/reviewed reports based on 'pending' value
         {
@@ -35,6 +44,9 @@ module.exports = function getAggFunction(pending) {
                 'report_reasons': {
                     '$addToSet': '$report_reason'
                 },
+                'report_other_reasons': {
+                    '$addToSet': '$report_other_reason'
+                },
                 'report_evidence': {
                     '$first': '$report_evidence'
                 },
@@ -43,6 +55,9 @@ module.exports = function getAggFunction(pending) {
                 },
                 'reviewer_id': {
                     '$first': '$reviewer_id'
+                },
+                'review_reason': {
+                    '$first': '$review_reason'
                 },
                 'status': {
                     '$first': '$status'
@@ -57,10 +72,7 @@ module.exports = function getAggFunction(pending) {
         },
         // sort by descending number of reports and ascending report_time
         {
-            '$sort': {
-                'count': -1,
-                'report_time': 1
-            }
+            '$sort': sort
         },
         // populate creator of the reported object and the reviewer of the report
         {
@@ -99,6 +111,7 @@ module.exports = function getAggFunction(pending) {
                 },
                 'meta': 1,
                 'report_reasons': 1,
+                'report_other_reasons': 1,
                 'report_evidence': 1,
                 'review_time': 1,
                 'reviewer_id': {
@@ -109,8 +122,88 @@ module.exports = function getAggFunction(pending) {
                         ]
                     }
                 },
+                'review_reason': 1,
                 'status': 1
             }
         }
     ]
+}
+
+// get aggregation function to get number of comments per post or thread created by the target user
+function getCommentsPerParentAgg(userId) {
+    return [
+        {
+            '$match': {
+                'creator_id': new mongoose.Types.ObjectId(userId)
+            }
+        },
+        {
+            '$group': {
+                '_id': '$parent_id', 
+                'count': {
+                    '$count': {}
+                }, 
+                'parent_model': {
+                    '$first': '$parent_model'
+                }
+            }
+        },
+        {
+            '$lookup': {
+                'from': 'threads',
+                'localField': '_id',
+                'foreignField': '_id',
+                'as': 'thread',
+                'pipeline': [
+                    {
+                        '$project': {
+                            '_id': 0,
+                            'parent_id': 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            '$lookup': {
+                'from': 'posts',
+                'localField': '_id',
+                'foreignField': '_id',
+                'as': 'post',
+                'pipeline': [
+                    {
+                        '$project': {
+                            '_id': 0,
+                            'creator_id': 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            '$project': {
+                '_id': 1,
+                'count': 1,
+                'parent_model': 1,
+                'key_creation_id': {
+                    '$cond': {
+                        'if': {
+                            '$eq': [ '$parent_model', PARENT_MODEL_POST ]
+                        },
+                        'then': {
+                            '$arrayElemAt': [ '$post.creator_id', 0 ]
+                        },
+                        'else': {
+                            '$arrayElemAt': ['$thread.parent_id', 0 ]
+                        }
+                    }
+                }
+            }
+        }
+    ];
+}
+
+module.exports = {
+    getReportsAgg,
+    getCommentsPerParentAgg
 }

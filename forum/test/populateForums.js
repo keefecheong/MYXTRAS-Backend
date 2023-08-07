@@ -43,7 +43,7 @@ function generateForumsPerCreator(creatorId, count, userIds) {
             forum_id: `forum_id_${1}`,
             forum_pic_link: 'http://fakelink/forum_pic.png',
             banner_link: 'http://fakelink/banner.png',
-            subscribers: generateRandomReactions(userIds.filter(userId => !compareId(userId, creatorId)))
+            subscribers: userIds.filter(userId => !compareId(userId, creatorId))
         }));
     }
 

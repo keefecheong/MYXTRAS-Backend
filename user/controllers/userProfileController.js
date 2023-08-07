@@ -64,6 +64,12 @@ async function getAllUsers(req, res) {
             })
             .lean();
 
+        users.forEach(user => {
+            if (compareId(user._id, req.user._id)) {
+                user.isSelf = true;
+            }
+        });
+
         returnGoodReq(res, users);
     }
     catch (error) {

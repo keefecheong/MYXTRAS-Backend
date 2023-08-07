@@ -8,7 +8,7 @@ const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnBadReq = require('../../utils/returnReq/returnBadReq.js');
 const returnForbiddenReq = require('../../utils/returnReq/returnForbiddenReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
-const suspendUser = require('../../report/utils/suspendUser.js');
+const suspendUserUtil = require('../../report/utils/suspendUserUtil.js');
 
 // login user
 async function loginUser(req, res) {
@@ -34,7 +34,7 @@ async function loginUser(req, res) {
         }
 
         // remove suspend if end_time is reached
-        const checkUserStatus = await suspendUser(false, user);
+        const checkUserStatus = await suspendUserUtil(false, user);
 
         // if accessGranted is false means user is terminated or suspended
         // return 403

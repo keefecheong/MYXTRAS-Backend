@@ -4,11 +4,11 @@ const express = require('express');
 const manageAdminRouter = express.Router();
 
 // get middleware
-const { getUser } = require('../../user/middleware/getRequestedUserMiddleware.js');
+const { getUser } = require('../../../user/middleware/getRequestedUserMiddleware.js');
 
 // get controllers
-const { getAllUsers } = require('../../user/controllers/userProfileController.js');
-const { promoteAdmin, demoteAdmin } = require('../../admin/controllers/manageAdminController.js');
+const { getAllUsers } = require('../../../user/controllers/userProfileController.js');
+const { promoteAdmin, demoteAdmin } = require('../../controllers/manageAdminController.js');
 
 // mount various routes
 // to get list of users

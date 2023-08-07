@@ -5,12 +5,12 @@ const { Report } = require('../models/report.js');
 const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
 
-const getAggFunction = require('../utils/getAggFunction.js');
+const { getReportsAgg } = require('../utils/getAggFunction.js');
 
 // to get all pending reports
 async function getPendingReports(req, res) {
     try {
-        const reports = await Report.aggregate(getAggFunction(true));
+        const reports = await Report.aggregate(getReportsAgg(true));
 
         returnGoodReq(res, reports);
     }
@@ -22,7 +22,7 @@ async function getPendingReports(req, res) {
 // to get all reviewed reports
 async function getReviewedReports(req, res) {
     try {
-        const reports = await Report.aggregate(getAggFunction(false));
+        const reports = await Report.aggregate(getReportsAgg(false));
 
         returnGoodReq(res, reports);
     }

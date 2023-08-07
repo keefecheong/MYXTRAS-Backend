@@ -1,7 +1,5 @@
 // to terminate a user
 
-const mongoose = require('mongoose');
-
 const { User, USER_STATUS_TERMINATED } = require('../../user/models/user.js');
 const Post = require('../../post/models/post.js');
 const Forum = require('../../forum/models/forum.js');
@@ -12,7 +10,9 @@ const Chat = require('../../chat/models/chat.js');
 const updateParentCommentCount = require('../../comment/utils/updateParentCommentCount.js');
 const { terminateCachedUser } = require('../../user/cache/userTerminateCache.js');
 
-module.exports = async function terminateUser(user, adminId) {
+const { getCommentsPerParentAgg } = require('./getAggFunction.js');
+
+module.exports = async function terminateUserUtil(user, adminId) {
     const targetUser = new User(user);
     targetUser.isNew = false;
 
@@ -79,7 +79,7 @@ module.exports = async function terminateUser(user, adminId) {
     bulkWriteComments.push(Comment.deleteAllSpecified(null, targetUserId, true));
 
     // update comment_count for posts/threads
-    const agg = getAggFunction(targetUserId);
+    const agg = getCommentsPerParentAgg(targetUserId);
     const commentsPerParent = await Comment.aggregate(agg);
     commentsPerParent.forEach(entry => {
         const promise = updateParentCommentCount(entry.parent_model, entry._id, false, true, entry.count);
@@ -109,78 +109,4 @@ module.exports = async function terminateUser(user, adminId) {
     ];
 
     return Promise.all(promises);
-}
-
-// get aggregation function to get number of comments per post or thread created by the target user
-function getAggFunction(userId) {
-    return [
-        {
-            '$match': {
-                'creator_id': new mongoose.Types.ObjectId(userId)
-            }
-        },
-        {
-            '$group': {
-                '_id': '$parent_id', 
-                'count': {
-                    '$count': {}
-                }, 
-                'parent_model': {
-                    '$first': '$parent_model'
-                }
-            }
-        },
-        {
-            '$lookup': {
-                'from': 'threads',
-                'localField': '_id',
-                'foreignField': '_id',
-                'as': 'thread',
-                'pipeline': [
-                    {
-                        '$project': {
-                            '_id': 0,
-                            'parent_id': 1
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            '$lookup': {
-                'from': 'posts',
-                'localField': '_id',
-                'foreignField': '_id',
-                'as': 'post',
-                'pipeline': [
-                    {
-                        '$project': {
-                            '_id': 0,
-                            'creator_id': 1
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            '$project': {
-                '_id': 1,
-                'count': 1,
-                'parent_model': 1,
-                'key_creation_id': {
-                    '$cond': {
-                        'if': {
-                            '$eq': [ '$parent_model', PARENT_MODEL_POST ]
-                        },
-                        'then': {
-                            '$arrayElemAt': [ '$post.creator_id', 0 ]
-                        },
-                        'else': {
-                            '$arrayElemAt': ['$thread.parent_id', 0 ]
-                        }
-                    }
-                }
-            }
-        }
-    ];
 }

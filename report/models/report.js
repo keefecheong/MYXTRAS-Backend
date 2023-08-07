@@ -32,6 +32,7 @@ const REPORT_REASON_SELF_INJURY = 'Suicide or self-injury';
 const REPORT_REASON_EATING_DISORDER = 'Eating disorders';
 const REPORT_REASON_SCAM = 'Scams or fraud';
 const REPORT_REASON_FALSE_INFO = 'False information';
+const REPORT_REASON_OTHER = 'Other';
 
 const REPORT_REASONS = [
     REPORT_REASON_SPAM,
@@ -44,7 +45,8 @@ const REPORT_REASONS = [
     REPORT_REASON_SELF_INJURY,
     REPORT_REASON_EATING_DISORDER,
     REPORT_REASON_SCAM,
-    REPORT_REASON_FALSE_INFO
+    REPORT_REASON_FALSE_INFO,
+    REPORT_REASON_OTHER
 ]
 
 // valid report_status values
@@ -127,6 +129,13 @@ const reportSchema = new mongoose.Schema({
         required: true,
         immutable: true
     },
+    report_other_reason: {
+        type: String,
+        required: function() {
+            return this.report_reason == REPORT_REASON_OTHER
+        },
+        immutable: true
+    },
     report_evidence: {
         type: String,
         immutable: true
@@ -176,11 +185,17 @@ const reportSchema = new mongoose.Schema({
         required: function() {
             return this.status != REPORT_STATUS_SUBMITTED;
         }
+    },
+    review_reason: {
+        type: String,
+        required: function() {
+            return this.status == REPORT_STATUS_SUCCESS
+        }
     }
 });
 
 // method to resolve report for given target and new status
-reportSchema.statics.resolveReport = function(objectId, newStatus, reviewerId, reviewTime) {
+reportSchema.statics.resolveReport = function(objectId, newStatus, reviewerId, reviewTime, reviewReason) {
     return this.updateMany({
         report_target: objectId,
         status: REPORT_STATUS_SUBMITTED
@@ -188,7 +203,8 @@ reportSchema.statics.resolveReport = function(objectId, newStatus, reviewerId, r
         $set: {
             status: newStatus,
             reviewer_id: reviewerId,
-            review_time: reviewTime
+            review_time: reviewTime,
+            review_reason: reviewReason
         }
     });
 }
@@ -254,6 +270,7 @@ module.exports = {
     REPORT_STATUS_FAILED,
     REPORT_REASONS,
     REPORT_REASON_SPAM,
+    REPORT_REASON_OTHER,
     REPORT_MESSAGE_SUBMITTED,
     REPORTER_SUBJECT_AI,
     REPORTER_SUBJECT_USER

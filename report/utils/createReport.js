@@ -10,7 +10,8 @@ const {
     REPORT_TARGET_TYPE_MESSAGE,
     REPORT_TARGET_TYPE_COMMENT,
     REPORTER_SUBJECT_AI,
-    REPORTER_SUBJECT_USER
+    REPORTER_SUBJECT_USER,
+    REPORT_REASON_OTHER
 } = require('../models/report.js');
 
 const { uploadImages, UPLOAD_TYPE_REPORT } = require('../../utils/s3/s3Upload.js');
@@ -22,6 +23,7 @@ async function createReport(
     reportTargetType,
     reportTargetOwner,
     reportReason,
+    reportOtherReason,
     meta,
     reporterId,
     reportUserImage
@@ -32,6 +34,7 @@ async function createReport(
         report_target_type: reportTargetType,
         report_target_owner: reportTargetOwner,
         report_reason: reportReason,
+        report_other_reason: reportOtherReason,
         // set reporter subject to ai if reporterId is not provided
         reporter: {
             subject: reporterId ? REPORTER_SUBJECT_USER : REPORTER_SUBJECT_AI
@@ -112,7 +115,7 @@ function createReportAfterModeration(moderationPromises, reportTarget, reportTar
         if (results.some(result => result?.length > 0)) {
             const reportReason = getJoinedReasons(results);
             
-            createReport(reportTarget, reportTargetType, reportTargetOwner, reportReason, meta).then(report => report.save());
+            createReport(reportTarget, reportTargetType, reportTargetOwner, REPORT_REASON_OTHER, reportReason, meta).then(report => report.save());
         }
     });
 }

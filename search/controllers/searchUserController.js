@@ -8,6 +8,7 @@ function searchUserPromise(regexTerm, userId, excludeUsers, limit) {
         .find({
             $and: [
                 { _id: { $nin: excludeUsers } },
+                { is_profile_setup: true },
                 { 'blocked_users.user_id': { $ne: userId } },
                 { status: {} },
                 {

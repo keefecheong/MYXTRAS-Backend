@@ -39,8 +39,8 @@ function generatePostsPerCreator(creatorId, count, userIds) {
             creator_id: creatorId,
             content_links: ['http://fakelink/post.png'],
             original_names: ['post.jpg'],
-            likes: generateRandomReactions(userIds),
-            saved_by: generateRandomReactions(userIds)
+            likes: userIds,
+            saved_by: userIds
         }));
     }
 

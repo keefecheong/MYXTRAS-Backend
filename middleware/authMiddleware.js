@@ -9,7 +9,7 @@ const returnServerErrorReq = require('../utils/returnReq/returnServerErrorReq.js
 const returnForbiddenReq = require('../utils/returnReq/returnForbiddenReq.js');
 
 const { getUserKey } = require('../user/cache/userCache.js');
-const suspendUser = require('../report/utils/suspendUser.js');
+const suspendUserUtil = require('../report/utils/suspendUserUtil.js');
 const acknowledgeWarning = require('../report/utils/acknowledgeWarning.js');
 
 const clearJWTCookie = require('../user/utils/clearJWTCookie.js');
@@ -42,7 +42,7 @@ async function validateUserHTTP(req, res, next, checkAdmin = false) {
         }
 
         // remove suspend if end_time is reached
-        const checkUserStatus = await suspendUser(false, user);
+        const checkUserStatus = await suspendUserUtil(false, user);
 
         // if accessGranted is false means user is terminated or suspended
         // clear jwt cookie and return 403

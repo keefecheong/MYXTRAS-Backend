@@ -10,7 +10,7 @@ const generateRandomReactions = require('../../utils/test/generateRandomReaction
 const compareId = require('../../utils/general/compareId.js');
 
 // to add users to database
-module.exports = async function addUsersToDB(count) {
+module.exports = async function addUsersToDB(count, needBlocked) {
     const users = [];
     const min = 30000000;
     const max = 99999999;
@@ -31,15 +31,15 @@ module.exports = async function addUsersToDB(count) {
 
     const userIds = users.map(user => user._id);
 
-    // add some followers/blocked users for each user
+    // add followers and blocked_users
     users.forEach(user => {
-        const workingUserIds = userIds.filter(userId => !compareId(userId, user._id));
+        const otherUserIds = userIds.filter(userId => !compareId(userId, user._id));
         
-        user.followers = generateRandomReactions(workingUserIds);
+        user.followers = otherUserIds;
 
-        user.blocked_users = generateRandomReactions(workingUserIds).map(userId => {
+        user.blocked_users = needBlocked ? generateRandomReactions(otherUserIds).map(userId => {
             return { user_id: userId, block_time: Date.now() };
-        });
+        }) : [];
     });
 
     // add users to database

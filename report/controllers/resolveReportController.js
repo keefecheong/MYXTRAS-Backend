@@ -3,6 +3,7 @@
 const { 
     Report,
     REPORT_REASONS,
+    REPORT_REASON_OTHER,
     REPORT_STATUS_FAILED,
     REPORT_STATUS_SUCCESS,
     REPORT_TARGET_TYPES,
@@ -26,8 +27,8 @@ const { getUserPostKey } = require('../../post/cache/postCache.js');
 const { getForumThreadKey } = require('../../thread/cache/threadCache.js');
 
 const warnUser = require('../utils/warnUser.js');
-const suspendUser = require('../utils/suspendUser.js');
-const terminateUser = require('../utils/terminateUser.js');
+const suspendUserUtil = require('../utils/suspendUserUtil.js');
+const terminateUserUtil = require('../utils/terminateUserUtil.js');
 
 const deletePostUtil = require('../../post/utils/deletePost.js');
 const deleteForumUtil = require('../../forum/utils/deleteForum.js');
@@ -38,11 +39,24 @@ const deleteMessageUtil = require('../../chat/utils/deleteMessage.js');
 // no further action required (invalid report)
 async function reportFailed(req, res) {
     try {
+        const adminId = req.user._id;
+        const now = Date.now();
+
         // update all reports for the specified objectId that have not been reviewed
         // set status as failed
-        await Report.resolveReport(req.params.objectId, REPORT_STATUS_FAILED, req.user._id, Date.now());
+        await Report.resolveReport(req.params.objectId, REPORT_STATUS_FAILED, adminId, now);
 
-        returnGoodReq(res, { message: 'Report reviewed successfully.' });
+        const responseBody = {
+            message: 'Report resolved successfully.',
+            resolveDetails: {
+                reviewerId: adminId,
+                reviewerUsername: req.user.username,
+                status: REPORT_STATUS_FAILED,
+                reviewTime: now
+            }
+        };
+
+        returnGoodReq(res, responseBody);
     }
     catch (error) {
         returnServerErrorReq(res);
@@ -58,6 +72,10 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
         if (!REPORT_REASONS.includes(req.body?.reason)) {
             return returnBadReq(res, 'Invalid report reason');
         }
+        // return 400 if reason is 'Other' but no supporting description/reason was provided
+        else if (req.body.reason == REPORT_REASON_OTHER && !req.body?.otherReason) {
+            return returnBadReq(res, 'Description is required.');
+        }
 
         const validTypes = [REPORT_TARGET_TYPE_POST_COMMENT, REPORT_TARGET_TYPE_THREAD_COMMENT].concat(REPORT_TARGET_TYPES);
 
@@ -72,25 +90,26 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
         }
         // return 400 error if userAction is to suspend user but duration is invalid
         else if (userAction && userAction == USER_STATUS_SUSPENDED) {
-            if (!req.body?.duration || isNaN(req.body.duration)) {
+            if (req.body?.duration == null || isNaN(req.body.duration)) {
                 return returnBadReq(res, 'Invalid suspend duration.');
             }
         }
 
         const now = Date.now();
+        const reviewReason = req.body.reason == REPORT_REASON_OTHER ? req.body.otherReason : req.body.reason;
 
         // create warning to add to user's warnings list
         const warning = {
             object_id: reportTargetId,
             object_type: (type == REPORT_TARGET_TYPE_POST_COMMENT || type == REPORT_TARGET_TYPE_THREAD_COMMENT) ? REPORT_TARGET_TYPE_COMMENT : type,
-            reason: req.body.reason,
+            reason: reviewReason,
             review_time: now,
             reviewer_id: adminId
         }
-
+        
         // as default always issue warning to user and resolve report
         const promises = [
-            Report.resolveReport(reportTargetId, REPORT_STATUS_SUCCESS, adminId, now)
+            Report.resolveReport(reportTargetId, REPORT_STATUS_SUCCESS, adminId, now, reviewReason)
         ];
 
         // resolve report and perform necessary action
@@ -100,10 +119,10 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
             case REPORT_TARGET_TYPE_USER:
                 if (userAction == USER_STATUS_SUSPENDED) {
                     const endTime = now + parseInt(req.body.duration);
-                    promises.push(suspendUser(true, res.user, endTime, adminId));
+                    promises.push(suspendUserUtil(true, res.user, adminId, endTime));
                 }
                 else {
-                    promises.push(terminateUser(res.user, adminId));
+                    promises.push(terminateUserUtil(res.user, adminId));
                 }
 
                 break;
@@ -172,11 +191,25 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
                 break;
         }
 
-        promises.push(warnUser(res.report.report_target_owner, warning));
+        // only add warning if report is for content
+        if (type != REPORT_TARGET_TYPE_USER) {
+            promises.push(warnUser(res.report.report_target_owner, warning));
+        }
 
         await Promise.all(promises);
 
-        returnGoodReq(res, { message: 'Report resolved successfully.' });
+        const responseBody = {
+            message: 'Report resolved successfully.',
+            resolveDetails: {
+                reviewerId: adminId,
+                reviewerUsername: req.user.username,
+                status: REPORT_STATUS_SUCCESS,
+                reviewReason,
+                reviewTime: now
+            }
+        };
+
+        returnGoodReq(res, responseBody);
     }
     catch (error) {
         returnServerErrorReq(res);

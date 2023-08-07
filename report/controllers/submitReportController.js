@@ -8,6 +8,7 @@ const {
     REPORT_REASONS,
     REPORT_MESSAGE_SUBMITTED,
     REPORT_STATUS_SUBMITTED,
+    REPORT_REASON_OTHER
 } = require('../models/report.js');
 
 const { createReport } = require('../utils/createReport.js');
@@ -29,6 +30,10 @@ async function submitReport(req, res, type, objectId, reportTargetOwner) {
     if (!REPORT_REASONS.includes(req.body?.reason)) {
         return returnBadReq(res, 'Invalid request body.');
     }
+    // return 400 if report reason is Other but no other reason/description is provided
+    else if (req.body.reason == REPORT_REASON_OTHER && !req.body.otherReason) {
+        return returnBadReq(res, 'Description is required.');
+    }
 
     try {
         // check if a pending report by the same user exists for the same target object and return 400 error if so
@@ -48,6 +53,7 @@ async function submitReport(req, res, type, objectId, reportTargetOwner) {
             type,
             reportTargetOwner,
             req.body.reason,
+            req.body.otherReason,
             {
                 creatorId: req.params.userId,
                 postId: req.params.postId,
