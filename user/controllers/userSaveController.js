@@ -62,10 +62,9 @@ async function updateUser(req, res) {
             user.gender = gender;
             updatedValues.gender = gender;
         }
-
         if (req.files[0] != undefined){
-            var profile_pic_link = [];
-            const uploadSuccessful = await uploadImages(req.files, profile_pic_link, user._id, UPLOAD_TYPE_USER);
+            var picture_link = [];
+            const uploadSuccessful = await uploadImages(req.files, picture_link, user._id, UPLOAD_TYPE_USER);
             if (!uploadSuccessful) {
                 return returnServerErrorReq(res);
             }
@@ -73,9 +72,18 @@ async function updateUser(req, res) {
             // if upload successful then delete old picture and update profile_pic_link
             if (user.profile_pic_link != DEFAULT_PROFILE_PIC_LINK){
                 deleteFiles(user.profile_pic_link);
-            }   
-            user.profile_pic_link = profile_pic_link[0];
-            updatedValues.profile_pic_link = profile_pic_link[0];
+            }
+
+            for (let i = 0; i < req.files.length; i++){
+                if (req.files[i].originalname == 'profilePicture'){
+                    user.profile_pic_link = picture_link[i];
+                    updatedValues.profile_pic_link = picture_link[i];
+                }
+                else{
+                    user.banner_pic_link = picture_link[i];
+                    updatedValues.banner_pic_link = picture_link[i];
+                }
+            }            
         }
 
         // update cache

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { REPORT_TARGET_TYPES } = require('../../report/models/report.js');
 
 const DEFAULT_PROFILE_PIC_LINK = "https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg";
+const DEFAULT_PROFILE_BANNER_LINK = "https://firebasestorage.googleapis.com/v0/b/myxtras-8890e.appspot.com/o/banner%2FCustomBanner.png?alt=media&token=d5d2f17b-1097-40a2-a34b-f443cb7d8e46"
 
 // user status
 const USER_STATUS_SUSPENDED = 'Suspended';
@@ -44,6 +45,10 @@ const userSchema = new mongoose.Schema({
     profile_pic_link: {
         type: String,
         default: DEFAULT_PROFILE_PIC_LINK
+    },
+    banner_pic_link:{
+        type: String,
+        default: DEFAULT_PROFILE_BANNER_LINK
     },
     gender: {
         type: String
