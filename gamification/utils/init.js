@@ -47,7 +47,7 @@ async function resetDailyMissions() {
 
             const updatedValues = {
                 daily_missions: dailyMissions,
-                allClaimed
+                all_claimed: allClaimed
             }
             
             // update cache
