@@ -137,7 +137,7 @@ const userSchema = new mongoose.Schema({
             }
         },
         default: {
-            enabled: true,
+            enabled: false,
             inventory: [],
             chosen_pet: ''
         }
