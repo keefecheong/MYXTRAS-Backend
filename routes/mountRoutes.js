@@ -9,6 +9,7 @@ const chatRouter = require('../chat/routes/mainRouter.js');
 const reportRouter = require('../report/routes/mainRouter.js');
 const adminRouter = require('../admin/routes/mainRouter.js');
 const gamificationRouter = require('../gamification/routes/mainRouter.js');
+const eventRouter = require('../event/routes/mainRouter.js');
 
 module.exports = function(app) {
     app.use('/api/users', usersRouter);
@@ -21,4 +22,5 @@ module.exports = function(app) {
     app.use('/api/report', reportRouter);
     app.use('/api/admin', adminRouter);
     app.use('/api/gamification', gamificationRouter);
+    app.use('/api/events', eventRouter);
 }

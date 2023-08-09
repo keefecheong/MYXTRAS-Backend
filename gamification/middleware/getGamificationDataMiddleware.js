@@ -5,8 +5,6 @@ const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq
 
 async function getGameData(req, res, next) {
     let target = null;
-    console.log('hello')
-    console.log("!1111")
     try {
         const user_id = req.user._id;
         

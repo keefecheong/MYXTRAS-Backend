@@ -9,6 +9,7 @@ const UPLOAD_TYPE_THREAD = 'threads';
 const UPLOAD_TYPE_USER = 'users';
 const UPLOAD_TYPE_REPORT = 'reports';
 const UPLOAD_TYPE_CHAT = 'chats';
+const UPLOAD_TYPE_EVENT = 'events';
 
 // upload image to s3 and update image links
 // if uploading fails then delete all the uploaded images
@@ -62,7 +63,8 @@ module.exports = {
     UPLOAD_TYPE_THREAD,
     UPLOAD_TYPE_USER,
     UPLOAD_TYPE_REPORT,
-    UPLOAD_TYPE_CHAT
+    UPLOAD_TYPE_CHAT,
+    UPLOAD_TYPE_EVENT
 }
 
 // common function to upload file

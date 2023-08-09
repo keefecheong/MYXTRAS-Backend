@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const announcementSchema = new mongoose.Schema({
+const eventSchema = new mongoose.Schema({
     user_id: {
         type: mongoose.SchemaTypes.ObjectId,
         ref: 'User',
@@ -13,10 +13,10 @@ const announcementSchema = new mongoose.Schema({
     event_name: {
         type: String,
         required: true,
-        immutable: true
     },
     event_desc: {
         type: String,
+        required: true,
     },
     event_date: {
         type: Date,
@@ -32,4 +32,4 @@ const announcementSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Announcement', announcementSchema);
+module.exports = mongoose.model('Event', eventSchema);
