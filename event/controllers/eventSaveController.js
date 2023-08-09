@@ -2,12 +2,11 @@
 
 const Event = require('../models/event.js');
 
-const { uploadImages, UPLOAD_TYPE_FORUM } = require('../../utils/s3/s3Upload.js');
+const { uploadImages, UPLOAD_TYPE_EVENT } = require('../../utils/s3/s3Upload.js');
 const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 
 const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnBadReq = require('../../utils/returnReq/returnBadReq.js');
-const returnUnauthorizedReq = require('../../utils/returnReq/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
 
 // create a new event
@@ -47,8 +46,11 @@ async function createEvent(req, res) {
 
         // add image links to new event
         newEvent.banner_link = imageLinks[0];
+
+        returnGoodReq(res)
     }
     catch (error) {
+        console.log(error);
         returnServerErrorReq(res);
     }
 }

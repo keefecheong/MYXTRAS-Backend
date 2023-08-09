@@ -8,6 +8,7 @@ const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq
 async function getAllEvents(req, res) {
     try {
         // get all events
+        console.log('get all events')
         const events = await Event
             .find()
             .sort({ event_date: -1 })

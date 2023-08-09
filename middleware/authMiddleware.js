@@ -64,6 +64,7 @@ async function validateUserHTTP(req, res, next, checkAdmin = false) {
         // acknowledge warnings
         acknowledgeWarning(user);
 
+        console.log('1')
         next();
     }
     // Handle token verification or database errors
