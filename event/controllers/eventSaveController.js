@@ -8,6 +8,7 @@ const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnBadReq = require('../../utils/returnReq/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
+const saveDocAsync = require('../../utils/general/saveDocAsync.js');
 
 // create a new event
 async function createEvent(req, res) {
@@ -47,7 +48,10 @@ async function createEvent(req, res) {
         // add image links to new event
         newEvent.banner_link = imageLinks[0];
 
-        returnGoodReq(res)
+        // save new event to database
+        await saveDocAsync(newEvent);
+
+        returnGoodReq(res, newEvent)
     }
     catch (error) {
         console.log(error);
@@ -131,6 +135,9 @@ async function updateEvent(req, res) {
         }
 
         if (deleteImageLinks.length > 0) deleteFiles(deleteImageLinks);
+
+        // save updated event to database
+        await saveDocAsync(event);
 
         returnGoodReq(res);
     }
