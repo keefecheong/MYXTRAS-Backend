@@ -16,6 +16,6 @@ mainRouter.use((req, res, next) => validateUserHTTP(req, res, next, true));
 
 // mount various routes
 mainRouter.use('/', eventRouter);
-mainRouter.use('/:eventID', eventSpecificRouter);
+mainRouter.use('/:eventId', eventSpecificRouter);
 
 module.exports = mainRouter;

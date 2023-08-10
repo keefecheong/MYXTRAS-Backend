@@ -1,13 +1,14 @@
 // controller functions to handle DELETE requests for events
+
+const Event = require('../models/event.js');
+
 const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnUnauthorizedReq = require('../../utils/returnReq/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
 
-const deleteEventUtil = require('../utils/deleteEvent.js');
-
 // to delete a forum
 async function deleteEvent(req, res) {
-    const eventId = req.params.eventID;
+    const eventId = req.params.eventId;
 
     if (!req.user.is_admin) {
         return returnUnauthorizedReq(res);
@@ -15,7 +16,7 @@ async function deleteEvent(req, res) {
 
     try {
         // delete event and database
-        await deleteEventUtil(eventId);
+        await Event.findByIdAndDelete(eventId);
 
         returnGoodReq(res, { message: 'Event removed.' });
     }

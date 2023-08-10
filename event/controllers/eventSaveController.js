@@ -8,7 +8,6 @@ const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnBadReq = require('../../utils/returnReq/returnBadReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
-const saveDocAsync = require('../../utils/general/saveDocAsync.js');
 
 // create a new event
 async function createEvent(req, res) {
@@ -49,20 +48,17 @@ async function createEvent(req, res) {
         newEvent.banner_link = imageLinks[0];
 
         // save new event to database
-        await saveDocAsync(newEvent);
+        await newEvent.save();
 
         returnGoodReq(res, newEvent)
     }
     catch (error) {
-        console.log(error);
         returnServerErrorReq(res);
     }
 }
 
 // update an existing event
 async function updateEvent(req, res) {
-    const userId = req.user._id
-
     // check if text fields are provided in the body
     // if provided, continue to create event
     // otherwise return 400 error
@@ -74,7 +70,7 @@ async function updateEvent(req, res) {
     // if provided, continue to update event
     // otherwise return 400 error
     if (req.files.length <= 0 && req.body.bannerUnchanged != 'true') {
-        return returnBadReq(res, 'Forum picture and banner are required.');
+        return returnBadReq(res, 'Event banner is required.');
     }
 
     try {
@@ -85,40 +81,30 @@ async function updateEvent(req, res) {
         const event = new Event(res.event);
         event.isNew = false;
 
-        const updatedValues = {};
-
         // update fields and add to updatedValues if changed
         if (event_name != event.event_name) {
             event.event_name = event_name;
-            updatedValues.event_name = event_name;
         }
-        
         
         if (event_desc != event.event_desc) {
             event.event_desc = event_desc;
-            updatedValues.event_desc = event_desc;
         }
         
         if (event_date != event.event_date) {
             event.event_date = event_date;
-            updatedValues.event_date = event_date;
         }
 
         if (event_location != event.event_location) {
             event.event_location = event_location;
-            updatedValues.event_location = event_location;
         }
 
         if (event_color != event.event_color) {
             event.event_color = event_color;
-            updatedValues.event_color = event_color;
         }
 
-        let index = 0;
         const newImageLinks = [];
-        const deleteImageLinks = [];
 
-        // upload new forum banner if exists
+        // upload new event banner if exists
         if (req.body.bannerUnchanged != 'true') {
             const uploadSuccessful = await uploadImages([req.files[index]], newImageLinks, event._id, UPLOAD_TYPE_EVENT);
     
@@ -128,16 +114,13 @@ async function updateEvent(req, res) {
             }
     
             // otherwise delete old picture and update banner_link
-            deleteImageLinks.push(event.banner_link);
+            deleteFiles(event.banner_link);
     
-            event.banner_link = newImageLinks[index];
-            updatedValues.banner_link = newImageLinks[index];
+            event.banner_link = newImageLinks[0];
         }
 
-        if (deleteImageLinks.length > 0) deleteFiles(deleteImageLinks);
-
         // save updated event to database
-        await saveDocAsync(event);
+        await event.save();
 
         returnGoodReq(res);
     }
