@@ -7,7 +7,6 @@ const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq
 // get all enrolled chats of the requesting user
 async function getAllEvents(req, res) {
     try {
-        // get all events
         const events = await Event
             .find()
             .sort({ event_date: -1 })

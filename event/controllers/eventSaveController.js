@@ -2,13 +2,13 @@
 
 const Event = require('../models/event.js');
 
-const { uploadImages, UPLOAD_TYPE_FORUM } = require('../../utils/s3/s3Upload.js');
+const { uploadImages, UPLOAD_TYPE_EVENT } = require('../../utils/s3/s3Upload.js');
 const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 
 const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnBadReq = require('../../utils/returnReq/returnBadReq.js');
-const returnUnauthorizedReq = require('../../utils/returnReq/returnUnauthorizedReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
+const saveDocAsync = require('../../utils/general/saveDocAsync.js');
 
 // create a new event
 async function createEvent(req, res) {
@@ -47,8 +47,14 @@ async function createEvent(req, res) {
 
         // add image links to new event
         newEvent.banner_link = imageLinks[0];
+
+        // save new event to database
+        await saveDocAsync(newEvent);
+
+        returnGoodReq(res, newEvent)
     }
     catch (error) {
+        console.log(error);
         returnServerErrorReq(res);
     }
 }
@@ -129,6 +135,9 @@ async function updateEvent(req, res) {
         }
 
         if (deleteImageLinks.length > 0) deleteFiles(deleteImageLinks);
+
+        // save updated event to database
+        await saveDocAsync(event);
 
         returnGoodReq(res);
     }
