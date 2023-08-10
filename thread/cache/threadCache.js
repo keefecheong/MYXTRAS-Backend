@@ -88,7 +88,7 @@ function getThreadIdPath(threadId) {
 
 // get path for threads created by a user
 function getThreadByUserPath(userId) {
-    return `$[?(@.creator_id._id=="${userId}")]`;
+    return `$[?(@.creator_id=="${userId}" || @.creator_id._id=="${userId}")]`;
 }
 
 // get path for likes by a user

@@ -49,7 +49,7 @@ async function deleteCachedForumsOnTerminate(userId) {
     const promises = [];
 
     for await (const key of redisClient.scanIterator({ MATCH: `${FORUM_SINGLE_KEY_BASE}:*` })) {
-        const ids = await redisClient.json.get(key, { path: '$.._id' });
+        const ids = await redisClient.json.get(key, { path: '$["_id", "creator_id"]' });
         const forumId = ids[0];
         const targetUserId = ids[1];
     

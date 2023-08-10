@@ -11,7 +11,7 @@ const expectEqualValue = require('../../utils/test/expectEqualValue.js');
 // to send request to terminate user and check that the response is 200
 async function terminateUser(terminatedUserId, adminId) {
     const res = await sendMockRequest(`/api/admin/accounts/terminate/${terminatedUserId}`, adminId, 'post');
-
+    
     expectEqualValue(res.status, 200);
 }
 
