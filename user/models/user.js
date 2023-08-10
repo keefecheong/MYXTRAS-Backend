@@ -245,7 +245,7 @@ const userSchema = new mongoose.Schema({
 userSchema.query.getFollowers = function () {
     return this.populate({
         path: 'followers',
-        select: 'username profile_pic_link'
+        select: 'username profile_pic_link blocked_users'
     });
 }
 

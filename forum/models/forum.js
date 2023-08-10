@@ -54,7 +54,7 @@ const forumSchema = new mongoose.Schema({
 forumSchema.query.getCreator = function() {
     return this.populate({
         path: 'creator_id',
-        select: 'username profile_pic_link'
+        select: 'username profile_pic_link blocked_users'
     });
 }
 

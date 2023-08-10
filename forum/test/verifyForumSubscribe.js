@@ -20,7 +20,7 @@ async function verifyCacheUserSubscribedToOtherForums(userId, terminated) {
     for await (const key of redisClient.scanIterator({ MATCH: `${FORUM_SINGLE_KEY_BASE}:*` })) {
         const forum = await redisClient.json.get(key);
 
-        if (!compareId(forum.creator_id._id, userId) && forum.subscribers.some(subscriberId => compareId(subscriberId, userId))) {
+        if (!compareId(forum.creator_id, userId) && forum.subscribers.some(subscriberId => compareId(subscriberId, userId))) {
             subscribedForums.push(key);
         }
     }

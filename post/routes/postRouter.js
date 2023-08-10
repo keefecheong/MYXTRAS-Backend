@@ -6,6 +6,7 @@ const postRouter = express.Router();
 
 // get middleware
 const { multerConfig, multerErrorHandler } = require('../../middleware/multerMiddleware.js');
+const { getUser } = require('../../user/middleware/getRequestedUserMiddleware.js');
 
 // get controller functions
 const { getFollowingPosts, getUserPosts, getPopularPosts, getSavedPosts } = require('../controllers/postController.js');
@@ -21,7 +22,7 @@ postRouter.get('/explore', getPopularPosts);
 postRouter.get('/by/self', getUserPosts);
 
 // retrieve a post by userid
-postRouter.get('/by/:userId', getUserPosts);
+postRouter.get('/by/:userId', getUser, getUserPosts);
 
 // retrieve posts saved by the user
 postRouter.get('/saved', getSavedPosts);

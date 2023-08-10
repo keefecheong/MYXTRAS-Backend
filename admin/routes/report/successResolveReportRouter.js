@@ -48,6 +48,7 @@ successResolveReportRouter.patch(
 // delete post
 successResolveReportRouter.patch(
     '/user/:userId/post/:postId',
+    getUser,
     getPost,
     (req, res, next) => getReport(req, res, next, req.params.postId),
     (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_POST, req.params.postId)
@@ -72,6 +73,7 @@ successResolveReportRouter.patch(
 // delete comment
 successResolveReportRouter.patch(
     '/user/:userId/post/:postId/comment/:commentId',
+    getUser,
     getPost,
     (req, res, next) => getComment(req, res, next, PARENT_MODEL_POST),
     (req, res, next) => getReport(req, res, next, req.params.commentId),

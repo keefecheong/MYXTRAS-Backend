@@ -2,7 +2,7 @@
 
 const redisClient = require('../../cache/redis.js');
 
-const { USER_SINGLE_KEY_BASE, getFollowerKey, getFollowingKey, getUserIdFromKey } = require('./userCache.js');
+const { USER_SINGLE_KEY_BASE, getFollowingKey, getUserIdFromKey } = require('./userCache.js');
 const { cachedUserRemoveFollower } = require('./userFollowCache.js');
 const { updateCachedUser } = require('./userUpdateCache.js');
 const { cachedUserRemoveBlocked } = require('./userBlockCache.js');
@@ -25,7 +25,6 @@ async function terminateCachedUser(userId, updatedValues, commentsPerParent) {
     const promises = [
         ...(await updateCachedUser(updatedValues, userId, false)),
         redisClient.json.del(getFollowingKey(userId), '$'),
-        redisClient.json.del(getFollowerKey(userId), '$'),
         redisClient.json.del(getCreatedForumKey(userId)),
         redisClient.json.del(getSubscribedForumKey(userId))
     ];

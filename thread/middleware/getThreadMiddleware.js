@@ -5,7 +5,7 @@ const Thread = require('../models/thread.js');
 const returnNotFoundReq = require('../../utils/returnReq/returnNotFoundReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
 
-const { getThreadFromCache } = require('../cache/threadCache.js');
+const { getOneThreadFromCache } = require('../cache/threadCache.js');
 
 // find thread by id
 async function getThread(req, res, next) {
@@ -16,7 +16,7 @@ async function getThread(req, res, next) {
 
     try {
         // attempt to get thread from cache
-        const result = await getThreadFromCache(forumId, threadId);
+        const result = await getOneThreadFromCache(forumId, threadId);
 
         const threadRetrieved = result != null;
 

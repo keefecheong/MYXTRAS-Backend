@@ -5,7 +5,7 @@ const Post = require('../models/post.js');
 const returnNotFoundReq = require('../../utils/returnReq/returnNotFoundReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
 
-const { getPostFromCache } = require('../cache/postCache.js');
+const { getOnePostFromCache } = require('../cache/postCache.js');
 
 // find post by id
 async function getPost(req, res, next) {
@@ -15,7 +15,7 @@ async function getPost(req, res, next) {
     
     try {
         // attempt to get post from cache
-        const result = await getPostFromCache(userId, postId);
+        const result = await getOnePostFromCache(userId, postId);
 
         const postRetrieved = result != null;
 

@@ -5,10 +5,10 @@ const redisClient = require('./redis.js');
 const mongoose = require('mongoose');
 
 const { getUserFromCache, cacheUser } = require('../user/cache/userCache.js');
-const { cachePosts } = require('../post/cache/postCache.js');
-const { cacheComments } = require('../comment/cache/commentCache.js');
-const { cacheForums } = require('../forum/cache/forumCache.js');
-const { cacheThreads } = require('../thread/cache/threadCache.js');
+const { cachePosts, getPostsFromCache } = require('../post/cache/postCache.js');
+const { cacheComments, getCommentsFromCache } = require('../comment/cache/commentCache.js');
+const { cacheForums, getForumFromCache } = require('../forum/cache/forumCache.js');
+const { cacheThreads, getThreadsFromCache } = require('../thread/cache/threadCache.js');
 const { cacheUnblock } = require('../user/cache/unblockCache.js');
 
 // save exec for use later
@@ -37,12 +37,33 @@ mongoose.Query.prototype.exec = async function() {
     const cachePath = this.cacheOptions.path;
     const userPopulateFollowers = this.cacheOptions.populateFollowers;
 
-    // if using cache check if data exists in cache
-    let data = await (
-        (modelName == 'User' && userPopulateFollowers) 
-        ? getUserFromCache(cacheKey, true) 
-        : getFromCache(cacheKey, cachePath)
-    );
+    let data;
+
+    switch (modelName) {
+        case 'User':
+            data = await getUserFromCache(cacheKey, userPopulateFollowers);
+            break;
+
+        case 'Post':
+            data = await getPostsFromCache(cacheKey);
+            break;
+
+        case 'Forum':
+            data = await getForumFromCache(cacheKey);
+            break;
+
+        case 'Thread':
+            data = await getThreadsFromCache(cacheKey);
+            break;
+
+        case 'Comment':
+            data = await getCommentsFromCache(cacheKey);
+            break;
+
+        default:
+            data = await getFromCache(cacheKey, cachePath);
+            break;
+    }
 
     if (!data) {
         // if cache entry does not exist then execute the query and store data in cache

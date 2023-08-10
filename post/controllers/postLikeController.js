@@ -16,7 +16,9 @@ const { cachedPostAddLike, cachedPostRemoveLike } = require('../cache/postLikeCa
 
 // to add a like under the requested post
 async function postLike(req, res) {
-    var post = res.post;
+    const post = new Post(res.post);
+    post.isNew = false;
+
     const userId = req.user._id;
 
     // check if either the creator or requesting user has blocked each other
@@ -34,10 +36,6 @@ async function postLike(req, res) {
     if (likeExists) {
         return returnBadReq(res, 'You have already liked this post.');
     }
-
-    // convert post to mongoose document to perform operations
-    post = new Post(post);
-    post.isNew = false;
 
     // update post's likes list
     post.likes.push(userId);

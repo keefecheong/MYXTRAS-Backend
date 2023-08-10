@@ -1,6 +1,7 @@
 // to initially add post data from the database to the cache
 
 const redisClient = require('../../cache/redis.js');
+const { storeDetailsSingle, retrieveDetailsSingle } = require('../../user/utils/userDetailsCacheUtil.js');
 
 // cache key prefixes
 // to cache posts grouped by user id
@@ -19,14 +20,27 @@ const POST_USER_EXPIRATION_TIME = 60 * 60;
 const POST_POPULAR_EXPIRATION_TIME = 60;
 
 // to retrieve a single post from cache if exists
-function getPostFromCache(userId, postId) {
+async function getOnePostFromCache(userId, postId) {
     if (!redisClient.isReady) {
         return null;
     }
 
-    return redisClient.json.get(getUserPostKey(userId), {
+    const post = await redisClient.json.get(getUserPostKey(userId), {
         path: getPostIdPath(postId)
     });
+
+    return await retrieveDetailsSingle(post);
+}
+
+// retrieve posts for a key from cache if exists
+async function getPostsFromCache(key) {
+    if (!redisClient.isReady) {
+        return null;
+    }
+
+    const posts = await redisClient.json.get(key);
+
+    return await retrieveDetailsSingle(posts);
 }
 
 // to store post data from database in cache
@@ -34,13 +48,22 @@ function cachePosts(posts, key) {
     // check if cache entry is for storing by user or by tags
     const byUser = key.startsWith(POST_USER_KEY_BASE);
 
-    // determine expiration time
-    const expiry = byUser ? POST_USER_EXPIRATION_TIME : POST_POPULAR_EXPIRATION_TIME;
+    let promises;
 
-    const promises = [
-        redisClient.json.set(key, '$', posts),
-        redisClient.expire(key, expiry)
-    ];
+    if (byUser) {
+        const { workingData, creatorDetailsPromises } = storeDetailsSingle(posts);
+
+        promises = [
+            redisClient.json.set(key, '$', workingData),
+            redisClient.expire(key, POST_USER_EXPIRATION_TIME)
+        ].concat(creatorDetailsPromises);
+    }
+    else {
+        promises = [
+            redisClient.json.set(key, '$', posts),
+            redisClient.expire(key, POST_POPULAR_EXPIRATION_TIME)
+        ];
+    }    
 
     return Promise.all(promises);
 }
@@ -74,7 +97,8 @@ function getPostSavesPath(userId, specificSave) {
 module.exports = {
     POST_USER_KEY_BASE,
     cachePosts,
-    getPostFromCache,
+    getPostsFromCache,
+    getOnePostFromCache,
     getUserPostKey,
     getPopularPostKey,
     getPostIdPath,

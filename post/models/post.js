@@ -68,7 +68,7 @@ const postSchema = new mongoose.Schema({
 postSchema.query.getCreator = function() {
     return this.populate({
         path: 'creator_id',
-        select: 'username profile_pic_link blocked_users.user_id'
+        select: 'username profile_pic_link blocked_users'
     });
 }
 

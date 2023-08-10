@@ -19,7 +19,7 @@ async function verifyCacheUserHasCreatedForums(userId, terminated) {
     const created = [];
 
     for await (const key of redisClient.scanIterator({ MATCH: `${FORUM_SINGLE_KEY_BASE}:*` })) {
-        if (compareId(await redisClient.json.get(key, { path: '$.creator_id._id' }), userId)) {
+        if (compareId(await redisClient.json.get(key, { path: '$.creator_id' }), userId)) {
             created.push(key);
         }
     }

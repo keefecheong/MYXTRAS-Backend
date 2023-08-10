@@ -1,7 +1,7 @@
 
 const redisClient = require('../../cache/redis.js');
 
-const { getUserKey, getBlockedPath } = require('./userCache.js');
+const { getUserKey, getBlockedPath, getHeaderKey } = require('./userCache.js');
 const { cachedUserRemoveFollower } = require('./userFollowCache.js');
 
 const { getUserPostKey } = require('../../post/cache/postCache.js');
@@ -25,6 +25,7 @@ async function cachedUserAddBlocked(selfId, isBlocker, blockEntry, commentsPerPo
     // if self is the blocker then add blocked_users entry
     if (isBlocker) {
         promises.push(redisClient.json.arrAppend(selfKey, '$.blocked_users', blockEntry));
+        promises.push(redisClient.json.arrAppend(getHeaderKey(selfId), '$.blocked_userse', blockEntry));
     }
 
     // unfollow target user
@@ -62,10 +63,16 @@ function cachedUserRemoveBlocked(selfId, targetUserId, increaseVersion) {
 
     const key = getUserKey(selfId);
 
-    const removeBlockPromise = redisClient.json.del(key, getBlockedPath(targetUserId));
-    const increaseVersionPromise = redisClient.json.numIncrBy(key, '$.__v', 1);
+    const promises = [
+        redisClient.json.del(key, getBlockedPath(targetUserId)),
+        redisClient.json.del(getHeaderKey(selfId), getBlockedPath(targetUserId))
+    ];
 
-    return increaseVersion ? [removeBlockPromise, increaseVersionPromise] : removeBlockPromise;
+    if (increaseVersion) {
+        promises.push(redisClient.json.numIncrBy(key, '$.__v', 1));
+    }
+    
+    return promises;
 }
 
 module.exports = {

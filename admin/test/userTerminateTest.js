@@ -72,7 +72,7 @@ let mainSuite = describe('POST /api/admin/accounts/terminate/:userId', () => {
 
         const posts = addPostsResult.postData;
         
-        terminatedUserPostIds = posts.filter(post => compareId(post.creator_id._id, terminatedUserId)).map(post => post._id);
+        terminatedUserPostIds = posts.filter(post => compareId(post.creator_id, terminatedUserId)).map(post => post._id);
 
         const postIds = posts.map(post => post._id);
         const postCommentIds = addPostsResult.postComments.map(comment => comment._id);
@@ -81,13 +81,13 @@ let mainSuite = describe('POST /api/admin/accounts/terminate/:userId', () => {
 
         const forums = addForumsResult.forumData;
         
-        terminatedUserForumIds = forums.filter(forum => compareId(forum.creator_id._id, terminatedUserId)).map(forum => forum._id);
+        terminatedUserForumIds = forums.filter(forum => compareId(forum.creator_id, terminatedUserId)).map(forum => forum._id);
 
         const forumIds = forums.map(forum => forum._id);
 
         const threads = addForumsResult.threadData;
 
-        terminatedUserThreadIds = threads.filter(thread => compareId(thread.creator_id._id, terminatedUserId)).map(thread => thread._id);
+        terminatedUserThreadIds = threads.filter(thread => compareId(thread.creator_id, terminatedUserId)).map(thread => thread._id);
 
         const threadIds = threads.map(thread => thread._id);
         

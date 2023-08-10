@@ -14,7 +14,7 @@ async function deletePost(req, res) {
 
     // check if the creator of the post is the requesting user
     // if creator is not the requesting user return 401 error
-    if (!compareId(userId, res.post.creator_id._id)) {
+    if (!compareId(userId, res.post.creator_id._id || res.post.creator_id)) {
         return returnUnauthorizedReq(res);
     }
 

@@ -30,6 +30,7 @@ const {
 // report post
 submitReportRouter.post(
     '/user/:userId/post/:postId',
+    getUser,
     getPost,
     (req, res) => submitReport(req, res, REPORT_TARGET_TYPE_POST, req.params.postId, res.post.creator_id._id)
 );
@@ -50,7 +51,8 @@ submitReportRouter.post(
 
 // report comment
 submitReportRouter.post(
-    '/user/:userId/post/:postId/comment/:commentId', 
+    '/user/:userId/post/:postId/comment/:commentId',
+    getUser,
     getPost,
     (req, res, next) => getComment(req, res, next, PARENT_MODEL_POST),
     (req, res) => submitReport(req, res, REPORT_TARGET_TYPE_POST_COMMENT, req.params.commentId, res.comment.creator_id._id)

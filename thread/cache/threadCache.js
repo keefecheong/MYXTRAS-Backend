@@ -1,6 +1,7 @@
 // to add thread data from database to the cache
 
 const redisClient = require('../../cache/redis.js');
+const { storeDetailsMany, retrieveDetailsMany, retrieveDetailsSingle } = require('../../user/utils/userDetailsCacheUtil.js');
 
 // cache key prefixes
 // to cache threads grouped by parent forum id
@@ -19,14 +20,16 @@ const THREAD_FORUM_EXPIRATION_TIME = 60 * 60;
 const THREAD_POPULAR_EXPIRATION_TIME = 60;
 
 // to retrieve a single thread from cache if exists
-function getThreadFromCache(forumId, threadId) {
+async function getOneThreadFromCache(forumId, threadId) {
     if (!redisClient.isReady) {
         return null;
     }
 
-    return redisClient.json.get(getForumThreadKey(forumId), {
+    const thread = await redisClient.json.get(getForumThreadKey(forumId), {
         path: getThreadIdPath(threadId)
     });
+
+    return await retrieveDetailsSingle(thread);
 }
 
 // to store thread data from database in cache
@@ -34,19 +37,39 @@ function cacheThreads(threads, key, popularType) {
     // check if cache entry is for storing by forum or by tags
     const byForum = key.startsWith(THREAD_FORUM_KEY_BASE);
 
-    // determine expiration time
-    const expiry = byForum ? THREAD_FORUM_EXPIRATION_TIME : THREAD_POPULAR_EXPIRATION_TIME;
+    let promises = [];
 
-    const promises = [
-        redisClient.json.set(key, '$', threads, {
-            // for popular route (6 threads max) only set cache if cache entry does not exist
-            // prevent overwriting threads retrieved from explore
-            NX: !byForum && popularType == 'popular'
-        }),
-        redisClient.expire(key, expiry)
-    ];
+    if (byForum) {
+        const { workingData, creatorDetailsPromises } = storeDetailsMany(threads);
+
+        promises = [
+            redisClient.json.set(key, '$', workingData),
+            redisClient.expire(key, THREAD_FORUM_EXPIRATION_TIME)
+        ].concat(creatorDetailsPromises);
+    }
+    else {
+        promises = [
+            redisClient.json.set(key, '$', threads, {
+                // for popular route (6 threads max) only set cache if cache entry does not exist
+                // prevent overwriting threads retrieved from explore
+                NX: !byForum && popularType == 'popular'
+            }),
+            redisClient.expire(key, THREAD_POPULAR_EXPIRATION_TIME)
+        ];
+    }
 
     return Promise.all(promises);
+}
+
+// to retrieve threads under a forum from cache if exists
+async function getThreadsFromCache(key) {
+    if (!redisClient.isReady || !key.startsWith(THREAD_FORUM_KEY_BASE)) {
+        return null;
+    }
+
+    const threads = await redisClient.json.get(key);
+
+    return await retrieveDetailsMany(threads);
 }
 
 // to get cache keys
@@ -82,8 +105,9 @@ function getThreadDislikesPath(userId, specificDislike) {
 
 module.exports = {
     THREAD_FORUM_KEY_BASE,
-    getThreadFromCache,
+    getOneThreadFromCache,
     cacheThreads,
+    getThreadsFromCache,
     getForumThreadKey,
     getPopularThreadKey,
     getThreadIdPath,

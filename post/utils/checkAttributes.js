@@ -29,7 +29,7 @@ function checkPostAttributes(post, selfId, blockedUsers) {
     }
 
     // check if the creator of the post or the requesting user have blocked each other
-    if (post.creator_id.blocked_users.some(entry => compareId(entry.user_id, selfId)) || blockedUsers.some(entry => compareId(entry.user_id, creatorId))) {
+    if (post.creator_id?.blocked_users?.some(entry => compareId(entry.user_id, selfId)) || blockedUsers.some(entry => compareId(entry.user_id, creatorId))) {
         post.blocked = true;
     }
 

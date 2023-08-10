@@ -10,6 +10,7 @@ const postSpecificRouter = require('./postSpecificRouter.js');
 
 // get middleware
 const { validateUserHTTP } = require('../../middleware/authMiddleware.js');
+const { getUser } = require('../../user/middleware/getRequestedUserMiddleware.js');
 const { getPost } = require('../middleware/getPostMiddleware.js');
 
 // validate user for all routes
@@ -20,6 +21,6 @@ mainRouter.use(validateUserHTTP);
 mainRouter.use('/', postRouter);
 
 // to perform actions on specific posts
-mainRouter.use('/user/:userId/post/:postId', getPost, postSpecificRouter);
+mainRouter.use('/user/:userId/post/:postId', getUser, getPost, postSpecificRouter);
 
 module.exports = mainRouter;

@@ -5,7 +5,7 @@ const { Comment, PARENT_MODEL_POST } = require('../models/comment.js');
 const returnNotFoundReq = require('../../utils/returnReq/returnNotFoundReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
 
-const { getCommentFromCache, getPostCommentKey, getThreadCommentKey } = require('../cache/commentCache.js');
+const { getOneCommentFromCache, getPostCommentKey, getThreadCommentKey } = require('../cache/commentCache.js');
 
 async function getComment(req, res, next, type) {
     const forPost = type == PARENT_MODEL_POST;
@@ -19,7 +19,7 @@ async function getComment(req, res, next, type) {
         const key = forPost ? getPostCommentKey(parentId) : getThreadCommentKey(parentId);
 
         // attempt to get comment from cache
-        const result = await getCommentFromCache(key, commentId);
+        const result = await getOneCommentFromCache(key, commentId);
 
         const commentRetrieved = result != null;
 

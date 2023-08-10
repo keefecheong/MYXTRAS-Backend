@@ -16,7 +16,9 @@ const { cachedPostAddSave, cachedPostRemoveSave } = require('../cache/postSaveCa
 
 // to save a post
 async function savePost(req, res) {
-    var post = res.post;
+    const post = new Post(res.post);
+    post.isNew = false;
+
     const userId = req.user._id;
 
     // check if either the creator or requesting user has blocked each other
@@ -34,10 +36,6 @@ async function savePost(req, res) {
     if (saveExists) {
         return returnBadReq(res, 'You have already saved this post.');
     }
-
-    // convert post to mongoose document to perform operations
-    post = new Post(post);
-    post.isNew = false;
 
     // update post's saved_by list
     post.saved_by.push(userId);

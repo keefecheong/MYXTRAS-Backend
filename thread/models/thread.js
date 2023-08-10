@@ -65,7 +65,7 @@ threadSchema.query.getForum = function() {
 threadSchema.query.getCreator = function() {
     return this.populate({ 
         path: 'creator_id',
-        select: 'username profile_pic_link'
+        select: 'username profile_pic_link blocked_users'
     });
 }
 

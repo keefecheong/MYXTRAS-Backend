@@ -1,6 +1,7 @@
 // to add forums to the cache from database
 
 const redisClient = require('../../cache/redis.js');
+const { storeDetailsSingle, retrieveDetailsSingle } = require('../../user/utils/userDetailsCacheUtil.js');
 
 // cache key prefixes
 // to cache individual forums
@@ -38,12 +39,35 @@ function cacheForums(forums, key) {
     // determine expiration time
     const expiry = (forCreated || forSingle || forSubscribed) ? FORUM_LONG_EXPIRATION_TIME : FORUM_SHORT_EXPIRATION_TIME;
 
-    const promises = [
-        redisClient.json.set(key, '$', forums),
+    let workingData;
+    let promises = [];
+
+    // if for single forum separate creator details and store in another key
+    if (forSingle) {
+        const storeDetailsResult = storeDetailsSingle(forums);
+
+        workingData = storeDetailsResult.workingData;
+        promises = storeDetailsResult.creatorDetailsPromises;
+    }
+
+    promises = promises.concat([
+        redisClient.json.set(key, '$', forSingle ? workingData : forums),
         redisClient.expire(key, expiry)
-    ];
+    ]);
 
     return Promise.all(promises);
+}
+
+// to get a forum from cache
+async function getForumFromCache(key) {
+    // return if not for querying single forum
+    if (!redisClient.isReady || !key.startsWith(FORUM_SINGLE_KEY_BASE)) {
+        return null;
+    }
+
+    const forum = await redisClient.json.get(key);
+
+    return await retrieveDetailsSingle(forum);
 }
 
 // to get cache keys
@@ -75,6 +99,7 @@ module.exports = {
     FORUM_CATEGORIZED_KEY_BASE,
     FORUM_LONG_EXPIRATION_TIME,
     cacheForums,
+    getForumFromCache,
     getCreatedForumKey,
     getSubscribedForumKey,
     getForumKey,

@@ -103,6 +103,9 @@ async function updatePost(req, res) {
     const userId = req.user._id;
     const postId = req.params.postId;
 
+    const post = new Post(res.post);
+    post.isNew = false;
+
     // check if there is request body provided
     // if no request body is present return 400 error
     // otherwise continue to update post
@@ -120,13 +123,9 @@ async function updatePost(req, res) {
 
     // check if the creator of the post is the requesting user
     // if creator is not the requesting user return 401 error
-    if (!compareId(userId, res.post.creator_id._id)) {
+    if (!compareId(userId, post.creator_id._id)) {
         return returnUnauthorizedReq(res);
     }
-
-    // convert post to mongoose document to perform operations
-    const post = new Post(res.post);
-    post.isNew = false;
 
     const updatedValues = {};
 

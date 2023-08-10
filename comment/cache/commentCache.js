@@ -1,6 +1,7 @@
 // to intially add comment data from database to cache
 
 const redisClient = require('../../cache/redis.js');
+const { storeDetailsMany, retrieveDetailsMany, retrieveDetailsSingle } = require('../../user/utils/userDetailsCacheUtil.js');
 
 // cache key prefixes
 // to cache comments for a post
@@ -15,23 +16,40 @@ const COMMENT_THREAD_KEY_BASE = 'comment:thread';
 const EXPIRATION_TIME = 60 * 60;
 
 // to retrieve a single comment from cache
-function getCommentFromCache(key, commentId) {
+async function getOneCommentFromCache(key, commentId) {
     if (!redisClient.isReady) {
         return null;
     }
 
-    return redisClient.json.get(key, {
+    const comment = await redisClient.json.get(key, {
         path: getCommentIdPath(commentId)
     });
+
+    return await retrieveDetailsSingle(comment);
+}
+
+// to retrieve multiple comments from cache
+async function getCommentsFromCache(key) {
+    if (!redisClient.isReady) {
+        return null;
+    }
+
+    const comments = await redisClient.json.get(key);
+
+    return await retrieveDetailsMany(comments);
 }
 
 // to store comment data from database in cache
 function cacheComments(comments, key) {
-    // add comments and array of comment ids to cache and set expiry
-    return Promise.all([
-        redisClient.json.set(key, '$', comments),
+    const { workingData, creatorDetailsPromises } = storeDetailsMany(comments);
+    
+    const promises = [
+        redisClient.json.set(key, '$', workingData),
         redisClient.expire(key, EXPIRATION_TIME)
-    ]);
+    ].concat(creatorDetailsPromises);
+    
+    // add comments and array of comment ids to cache and set expiry
+    return Promise.all(promises);
 }
 
 // to get cache keys
@@ -56,7 +74,8 @@ function getCommentByUserPath(userId) {
 module.exports = {
     COMMENT_POST_KEY_BASE,
     COMMENT_THREAD_KEY_BASE,
-    getCommentFromCache,
+    getOneCommentFromCache,
+    getCommentsFromCache,
     cacheComments,
     getThreadCommentKey,
     getPostCommentKey,

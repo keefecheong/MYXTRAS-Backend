@@ -41,10 +41,10 @@ const commentSchema = new mongoose.Schema({
 });
 
 // custom query to get creator details
-commentSchema.query.getCreator = function (getRealname) {
+commentSchema.query.getCreator = function () {
     return this.populate({
         path: 'creator_id',
-        select: `username profile_pic_link ${getRealname ? 'real_name' : ''}`
+        select: 'username profile_pic_link blocked_users'
     });
 }
 
