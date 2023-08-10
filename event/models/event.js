@@ -32,4 +32,7 @@ const eventSchema = new mongoose.Schema({
     }
 });
 
+// deletes document one day after event_date
+eventSchema.index({ 'event_date': 1 }, { expires: '24h' });
+
 module.exports = mongoose.model('Event', eventSchema);
