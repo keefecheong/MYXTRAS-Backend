@@ -99,7 +99,7 @@ async function createForum(req, res) {
 // edit existing forum
 async function updateForum(req, res) {
     const userId = req.user._id;
-    const forumId = req.params.forumID;
+    const forumId = req.params.forumId;
 
     // check if text fields are provided in the body
     // if provided, continue to create post

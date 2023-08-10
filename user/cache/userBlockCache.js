@@ -1,4 +1,3 @@
-// to update cache when user blocks another user
 
 const redisClient = require('../../cache/redis.js');
 
@@ -12,6 +11,7 @@ const { cachedPostRemoveSaveByUser } = require('../../post/cache/postSaveCache.j
 const { deleteAllCachedComments, updateCachedParentCommentCount } = require('../../comment/cache/commentDeleteCache.js');
 const { PARENT_MODEL_POST } = require('../../comment/models/comment.js');
 
+// to update cache when user blocks another user
 async function cachedUserAddBlocked(selfId, isBlocker, blockEntry, commentsPerPost, followerIndex) {
     if (!redisClient.isReady) {
         return [];
@@ -51,7 +51,7 @@ async function cachedUserAddBlocked(selfId, isBlocker, blockEntry, commentsPerPo
         }
     });
 
-    return promises;
+    return Promise.all(promises);
 }
 
 // to remove blocked_users entry for the target user from requesting user's key

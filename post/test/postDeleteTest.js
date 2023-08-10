@@ -4,81 +4,69 @@ const { PARENT_MODEL_POST } = require('../../comment/models/comment.js');
 
 const exitAfterTest = require('../../utils/test/exitAfterTest.js');
 const generateContextFromTests = require('../../utils/test/generateContextFromTests.js');
+const generateTestTitle = require('../../utils/test/generateTestTitle.js');
+const generatePlaceholderBlock = require('../../utils/test/generatePlaceholderBlock.js');
+const {
+    VERIFY_POPULATED_DATA_USERS,
+    VERIFY_POPULATED_DATA_POSTS,
+    VERIFY_POPULATED_DATA_POST_COMMENTS,
+    verifyPopulatedData
+} = require('../../utils/test/verifyPopulatedData.js');
 
 const addUsersToDB = require('../../user/test/populateUsers.js');
 const addPostsToDB = require('./populatePosts.js');
 
-const { verifyDBPopulatedUsers, verifyCachePopulatedUsers } = require('../../user/test/verifyPopulateUsers.js');
-const { verifyDBPopulatedPosts, verifyCachePopulatedPosts } = require('./verifyPopulatePosts.js');
 const { deletePost, verifyDBDeletePost, verifyCacheDeletePost } = require('./verifyDeletePost.js');
-const { verifyDBPopulatedComments, verifyCachePopulatedComments } = require('../../comment/test/verifyPopulateComments.js');
 const { verifyDBDeleteCommentParent, verifyCacheDeleteCommentParent } = require('../../comment/test/verifyDeleteParent.js');
 
-// main test block
-let mainSuite = describe('DELETE /api/posts/:postId', async () => {
-    const userCount = 2;
-    const postCount = 2;
-    const commentCount = 5;
-    let userIds, posts, postComments;
+const userCount = 1;
+const postCount = 1;
+const commentCount = 5;
+let deletedPostId, deletedPostCreatorId;
 
+let mainSuite = describe('DELETE /api/posts/user/:userId/post:postId', () => {
     before(async () => {
         // populate users, posts, and comments
-        // and simulate requests to populate cache
-        userIds = await addUsersToDB(userCount);
+        const userIds = (await addUsersToDB(userCount)).map(user => user._id);
 
-        const addPostResults = await addPostsToDB(postCount, userIds, commentCount);
+        const addPostsResult = await addPostsToDB(postCount, userIds, commentCount);
         
-        posts = addPostResults.postData;
-        postComments = addPostResults.postComments;
+        const posts = addPostsResult.postData;
+        const postIds = posts.map(post => post._id);
+        const postCommentIds = addPostsResult.postComments.map(comment => comment._id);
+
+        // verify populated data
+        mainSuite.suites.push(verifyPopulatedData([
+            VERIFY_POPULATED_DATA_USERS,
+            VERIFY_POPULATED_DATA_POSTS,
+            VERIFY_POPULATED_DATA_POST_COMMENTS
+        ], {
+            userIds,
+            postIds,
+            postCommentIds
+        }));
 
         // generate and dynamically add tests to verify data before and after deletion of post
-        const creatorId = posts[0].creator_id;
-        const postId = posts[0]._id;
+        deletedPostId = posts[0]._id;
+        deletedPostCreatorId = posts[0].creator_id;
 
-        mainSuite.suites.push(generateDeletePostTestContexts(postId, creatorId, false));
-        mainSuite.suites.push(generateDeletePostTestContexts(postId, creatorId, true));
+        mainSuite.suites.push(generateDeletePostTestContext(false));
+        mainSuite.suites.push(generateDeletePostTestContext(true));
     });
     
     // clean up and exit
     after(exitAfterTest);
 
-    // check that data is populated correctly
-    context('verifying data populated', async() => {
-        it('should add users to database', async () => {
-            await verifyDBPopulatedUsers(userIds);
-        });
-
-        it('should populate users in cache', async () => {
-            await verifyCachePopulatedUsers(userIds);
-        });
-
-        it('should add posts to database', async () => {
-            await verifyDBPopulatedPosts(posts.map(post => post._id));
-        });
-
-        it('should populate posts in cache', async () => {
-            await verifyCachePopulatedPosts(userIds);
-        });
-
-        it('should add comments to database', async () => {
-            await verifyDBPopulatedComments(postComments.map(comment => comment._id));
-        });
-
-        it('should populate comments in cache', async () => {
-            await verifyCachePopulatedComments(posts.map(post => post._id), PARENT_MODEL_POST);
-        });
-    });
+    generatePlaceholderBlock();
 });
 
 // generate context for post deletion tests
-function generateDeletePostTestContexts(postId, creatorId, deleted) {
-    return generateContextFromTests(`${ deleted ? 'after' : 'before' } delete`, generateDeletePostTests(postId, creatorId, deleted));
+function generateDeletePostTestContext(deleted) {
+    return generateContextFromTests(deleted, 'deleting', generateDeletePostTests(deleted));
 }
 
 // generate tests for post deletion
-function generateDeletePostTests(postId, creatorId, deleted) {
-    // store callback and params separately to execute later
-
+function generateDeletePostTests(deleted) {
     // test cases
     // before deleting:
     //      post should be present in database and cache
@@ -87,25 +75,27 @@ function generateDeletePostTests(postId, creatorId, deleted) {
     //      post should not be present in both database and cache
     //      comments should not be present in both database and cache
     const tests = [
+        // check if post exists in database and cache
         {
-            title: `should ${ deleted ? 'not ' : '' }contain post in database`,
+            title: generateTestTitle(deleted, 'post', true),
             callback: verifyDBDeletePost,
-            params: [postId, deleted]
+            params: [deletedPostId, deleted]
         },
         {
-            title: `should ${ deleted ? 'not ' : '' }contain post in cache`,
+            title: generateTestTitle(deleted, 'post', false),
             callback: verifyCacheDeletePost,
-            params: [creatorId, postId, deleted]
+            params: [deletedPostCreatorId, deletedPostId, deleted]
         },
+        // check if associated comments exist in database and cache
         {
-            title: `should ${ deleted ? 'not ' : '' }contain comments in database`,
+            title: generateTestTitle(deleted, 'comments', true),
             callback: verifyDBDeleteCommentParent,
-            params: [postId, deleted]
+            params: [deletedPostId, deleted]
         },
         {
-            title: `should ${ deleted ? 'not ' : '' }contain comments in cache`,
+            title: generateTestTitle(deleted, 'comments', false),
             callback: verifyCacheDeleteCommentParent,
-            params: [postId, PARENT_MODEL_POST, deleted]
+            params: [deletedPostId, PARENT_MODEL_POST, deleted]
         }
     ];
 
@@ -114,7 +104,7 @@ function generateDeletePostTests(postId, creatorId, deleted) {
         tests.unshift({
             title: 'should return 200',
             callback: deletePost,
-            params: [creatorId, postId]
+            params: [deletedPostCreatorId, deletedPostId]
         });
     }
 

@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const { User } = require('../models/user.js');
 
 const sendMockRequest = require('../../utils/test/sendMockRequest.js');
-const generateRandomReactions = require('../../utils/test/generateRandomReactions.js');
 
 const compareId = require('../../utils/general/compareId.js');
 
@@ -23,7 +22,7 @@ module.exports = async function addUsersToDB(count, needBlocked) {
             phone_number: Math.floor(Math.random() * (max - min)) + min,
             school: 'ICT',
             course: 'CSF',
-            is_admin: i % 2 == 0,
+            is_admin: true,
             password: await bcrypt.hash('Passw0rd', 10),
             is_profile_setup: true
         }));
@@ -35,10 +34,10 @@ module.exports = async function addUsersToDB(count, needBlocked) {
     users.forEach(user => {
         const otherUserIds = userIds.filter(userId => !compareId(userId, user._id));
         
+        // both followers and blocked_users set to simulate and observe change in data
         user.followers = otherUserIds;
-
-        user.blocked_users = needBlocked ? generateRandomReactions(otherUserIds).map(userId => {
-            return { user_id: userId, block_time: Date.now() };
+        user.blocked_users = needBlocked ? otherUserIds.map(userId => {
+            return { user_id: userId, block_time: Date.now()}
         }) : [];
     });
 
@@ -48,8 +47,15 @@ module.exports = async function addUsersToDB(count, needBlocked) {
     // populate cache
     await populateUserCache(userIds);
 
-    // return list of user ids
-    return userIds;
+    return users.map(user => {
+        return {
+            _id: user._id,
+            followers: user.followers,
+            blocked_users: user.blocked_users,
+            warnings: user.warnings,
+            status: user.status
+        }
+    });
 }
 
 // to populate cache with user data

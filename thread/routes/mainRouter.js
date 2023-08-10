@@ -17,6 +17,6 @@ mainRouter.use(validateUserHTTP);
 
 // mount various routes
 mainRouter.use('/', threadRouter);
-mainRouter.use('/forum/:forumID/thread/:threadID', getThread, threadSpecificRouter);
+mainRouter.use('/forum/:forumId/thread/:threadId', getThread, threadSpecificRouter);
 
 module.exports = mainRouter;

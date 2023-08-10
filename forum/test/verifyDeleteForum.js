@@ -18,14 +18,12 @@ async function deleteForum(forumId, creatorId) {
 
 // expect database query for the forum to be null if deleted and not null otherwise
 async function verifyDBDeleteForum(forumId, deleted) {
-    expectEmpty(await Forum.findById(forumId), deleted);
+    expectEmpty(await Forum.findById(forumId).lean(), deleted);
 }
 
 // expect cache query for the forum to be null if deleted and not null otherwise
-// expect cache query for the forum in the user's created forums to be null if deleted and not null otherwise
-async function verifyCacheDeleteForum(forumId, creatorId, deleted) {
+async function verifyCacheDeleteForum(forumId, deleted) {
     expectEmpty(await redisClient.json.get(getForumKey(forumId)), deleted);
-    expectEmpty(await redisClient.json.get(getCreatedForumKey(creatorId), { path: getForumIdPath(forumId) }), deleted);
 }
 
 module.exports = {

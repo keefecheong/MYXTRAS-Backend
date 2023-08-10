@@ -17,6 +17,6 @@ mainRouter.use(validateUserHTTP);
 
 // mount various routes
 mainRouter.use('/', forumRouter);
-mainRouter.use('/:forumID', getForum, forumSpecificRouter);
+mainRouter.use('/:forumId', getForum, forumSpecificRouter);
 
 module.exports = mainRouter;

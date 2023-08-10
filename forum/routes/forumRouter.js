@@ -24,6 +24,6 @@ forumRouter.get('/recommended', getRecommended);
 forumRouter.post('/', multerConfig.array('selectedImages'), multerErrorHandler, createForum);
 
 // verify if forum_id is already taken
-forumRouter.post('/verify-forumID', express.json(), verifyForumID);
+forumRouter.post('/verify-forumId', express.json(), verifyForumID);
 
 module.exports = forumRouter;

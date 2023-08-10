@@ -18,7 +18,7 @@ async function deletePost(creatorId, postId) {
 
 // expect database query results to be null if deleted and not null otherwise
 async function verifyDBDeletePost(postId, deleted) {
-    expectEmpty(await Post.findById(postId), deleted);
+    expectEmpty(await Post.findById(postId).lean(), deleted);
 }
 
 // expect cache query results to be null if deleted and not null otherwise

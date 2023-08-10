@@ -9,22 +9,28 @@ const expectEmpty = require('../../utils/test/expectEmpty.js');
 const expectEqualLengthResults = require('../../utils/test/expectEqualLengthResults.js');
 
 // check that all forums specified by forumIds exist in the database
-async function verifyDBPopulatedForums(forumIds) {
-    const populatedForums = await Forum.find(
-        { _id: { $in: forumIds } },
-        { _id: 1 }
-    ).lean();
-
-    expectEqualLengthResults(populatedForums, forumIds);
+function verifyDBPopulatedForums(forumIds) {
+    return {
+        title: 'should add forums to database',
+        callback: async () => expectEqualLengthResults(await Forum.find(
+            { _id: { $in: forumIds } },
+            { _id: 1 }
+        ).lean(), forumIds),
+        params: [forumIds]
+    };
 }
 
 // check that all forums specified by forumIds exist in cache
-async function verifyCachePopulatedForums(forumIds) {
-    const populatedForums = await Promise.all(
-        forumIds.map(forumId => redisClient.json.get(getForumKey(forumId)))
-    );
-
-    expectEmpty(populatedForums, false);
+function verifyCachePopulatedForums(forumIds) {
+    return {
+        title: 'should populate forums in cache',
+        callback: async () => expectEmpty(await Promise.all(
+            forumIds.map(
+                forumId => redisClient.json.get(getForumKey(forumId))
+            )
+        ), false),
+        params: [forumIds]
+    };
 }
 
 module.exports = {

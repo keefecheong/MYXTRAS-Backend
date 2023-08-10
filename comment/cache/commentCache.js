@@ -54,6 +54,8 @@ function getCommentByUserPath(userId) {
 }
 
 module.exports = {
+    COMMENT_POST_KEY_BASE,
+    COMMENT_THREAD_KEY_BASE,
     getCommentFromCache,
     cacheComments,
     getThreadCommentKey,

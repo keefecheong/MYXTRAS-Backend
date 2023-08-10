@@ -10,7 +10,7 @@ const deleteForumUtil = require('../utils/deleteForum.js');
 // to delete a forum
 async function deleteForum(req, res) {
     const userId = req.user._id;
-    const forumId = req.params.forumID;
+    const forumId = req.params.forumId;
 
     if (!compareId(userId, res.forum.creator_id._id)) {
         return returnUnauthorizedReq(res);

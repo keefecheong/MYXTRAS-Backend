@@ -17,7 +17,7 @@ async function deleteThread(req, res) {
 
     try {
         // delete thread from cache and database
-        await deleteThreadUtil(req.params.forumID, req.params.threadID, res.threadFromCache);
+        await deleteThreadUtil(req.params.forumId, req.params.threadId, res.threadFromCache);
 
         returnGoodReq(res, { message: 'Thread removed.' });
     }

@@ -55,18 +55,18 @@ successResolveReportRouter.patch(
 
 // delete forum
 successResolveReportRouter.patch(
-    '/forum/:forumID',
+    '/forum/:forumId',
     getForum,
-    (req, res, next) => getReport(req, res, next, req.params.forumID),
-    (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_FORUM, req.params.forumID)
+    (req, res, next) => getReport(req, res, next, req.params.forumId),
+    (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_FORUM, req.params.forumId)
 );
 
 // delete thread
 successResolveReportRouter.patch(
-    '/forum/:forumID/thread/:threadID',
+    '/forum/:forumId/thread/:threadId',
     getThread,
-    (req, res, next) => getReport(req, res, next, req.params.threadID),
-    (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_THREAD, req.params.threadID)
+    (req, res, next) => getReport(req, res, next, req.params.threadId),
+    (req, res) => reportSuccess(req, res, REPORT_TARGET_TYPE_THREAD, req.params.threadId)
 );
 
 // delete comment
@@ -79,7 +79,7 @@ successResolveReportRouter.patch(
 );
 
 successResolveReportRouter.patch(
-    '/forum/:forumID/thread/:threadID/comment/:commentId',
+    '/forum/:forumId/thread/:threadId/comment/:commentId',
     getThread,
     (req, res, next) => getComment(req, res, next, PARENT_MODEL_THREAD),
     (req, res, next) => getReport(req, res, next, req.params.commentId),

@@ -6,7 +6,7 @@
   "scripts": {
     "prod": "set NODE_ENV=production& pm2 start server.js",
     "dev": "set NODE_ENV=development& nodemon server.js",
-    "test": "set NODE_ENV=test& mocha"
+    "test": "set NODE_ENV=test& mocha --reporter-options fullTrace=true --slow 0"
   },
   "repository": {
     "type": "git",

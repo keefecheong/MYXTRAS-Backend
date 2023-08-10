@@ -81,6 +81,7 @@ function getThreadDislikesPath(userId, specificDislike) {
 }
 
 module.exports = {
+    THREAD_FORUM_KEY_BASE,
     getThreadFromCache,
     cacheThreads,
     getForumThreadKey,

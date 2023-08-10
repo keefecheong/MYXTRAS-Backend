@@ -48,11 +48,11 @@ async function blockUser(req, res) {
 
         // craft promises to update database for users, posts and comments
         const promises = [
+            selfHandleBlock.cachePromises,
+            targetHandleBlock.cachePromises,
             User.bulkSave([selfHandleBlock.user, targetHandleBlock.user]),
             Post.bulkWrite(selfHandleBlock.bulkUpdatePost.concat(targetHandleBlock.bulkUpdatePost)),
-            Comment.bulkWrite([selfHandleBlock.deleteComments, targetHandleBlock.deleteComments]),
-            selfHandleBlock.cachePromises,
-            targetHandleBlock.cachePromises
+            Comment.bulkWrite([selfHandleBlock.deleteComments, targetHandleBlock.deleteComments])
         ];
 
         // update cache and database synchronously

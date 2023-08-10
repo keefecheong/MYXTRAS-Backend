@@ -5,7 +5,6 @@ const addCommentsToDB = require('../../comment/test/populateComments.js');
 const { PARENT_MODEL_THREAD } = require('../../comment/models/comment.js');
 
 const sendMockRequest = require('../../utils/test/sendMockRequest.js');
-const generateRandomReactions = require('../../utils/test/generateRandomReactions.js');
 const compareId = require('../../utils/general/compareId.js');
 
 // to add threads and forums to database then populate cache
@@ -13,7 +12,7 @@ module.exports = async function addThreadsToDB(count, creatorIds, forumIds, comm
     // create threads for each user under each forum
     const threads = forumIds.flatMap(forumId => 
         creatorIds.flatMap(creatorId => 
-            generateThreadsPerCreatorAndForum(count, forumId, creatorId, creatorIds)
+            generateThreadsPerCreatorAndForum(count, forumId, creatorId, creatorIds, commentCount)
         )
     );
 
@@ -31,20 +30,21 @@ module.exports = async function addThreadsToDB(count, creatorIds, forumIds, comm
     });
 
     // populate comment cache
-    await populateThreadCommentsCache(threadData);
+    await populateThreadCommentsCache(threadData, creatorIds[0]);
 
     return { threadData, threadComments };
 }
 
 // generate <count> threads per user per forum
-function generateThreadsPerCreatorAndForum(count, parentId, creatorId, userIds) {
+function generateThreadsPerCreatorAndForum(count, parentId, creatorId, userIds, commentCount) {
     const threads = [];
 
     for (let i = 0; i < count; i++) {
         // generate likes and dislikes
-        const likes = generateRandomReactions(userIds);
+        // set likes as ids in userIds with even index, if i is even, or ids in userIds with odd index, if i is odd 
+        const likes = userIds.filter((userId, index) => (i % 2 == 0 && index % 2 == 0) || (i % 2 != 0 && index % 2 != 0));
         // dislikes cannot have repeated user ids in likes
-        const dislikes = generateRandomReactions(userIds.filter(userId => !likes.some(likedId => compareId(likedId, userId))));
+        const dislikes = userIds.filter(userId => !likes.some(likedId => compareId(likedId, userId)));
 
         threads.push(new Thread({
             parent_id: parentId,
@@ -52,7 +52,8 @@ function generateThreadsPerCreatorAndForum(count, parentId, creatorId, userIds) 
             title: `thread_${i}`,
             content: `thread content_${i}`,
             likes,
-            dislikes            
+            dislikes,
+            comment_count: commentCount
         }));
     }
 
@@ -60,6 +61,10 @@ function generateThreadsPerCreatorAndForum(count, parentId, creatorId, userIds) 
 }
 
 // to populate cache with thread comments
-async function populateThreadCommentsCache(threads) {
-    await Promise.all(threads.map(thread => sendMockRequest(`/api/threads/forum/${thread.parent_id}/thread/${thread._id}`)));
+async function populateThreadCommentsCache(threads, userId) {
+    await Promise.all(threads.map(
+        thread => 
+            sendMockRequest(`/api/threads/forum/${thread.parent_id}/thread/${thread._id}/comments`, userId, 'get')
+        )
+    );
 }

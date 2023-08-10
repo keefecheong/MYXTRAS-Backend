@@ -35,7 +35,7 @@ async function createThread(req, res) {
         
         const { title, content, tags } = threadObject;
 
-        const forumId = req.params.forumID;
+        const forumId = req.params.forumId;
 
         const creator = req.user;
         const creatorId = req.user._id;

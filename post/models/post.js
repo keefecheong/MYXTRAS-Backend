@@ -107,29 +107,23 @@ postSchema.statics.deleteByUser = async function(userId) {
 
 // remove all likes by the specified userId
 postSchema.statics.removePostReactionByUser = function(userId, forLikes, creatorId) {
-    let filter;
+    let filter = {};
     let update;
 
     if (creatorId) {
-        filter = {
-            creator_id: creatorId
-        };
+        filter.creator_id = creatorId;
     }
 
     // set filter and update
     if (forLikes) {
-        filter = {
-            likes: { $in: [userId] }
-        };
+        filter.likes = { $in: [userId] };
 
         update = {
             $pull: { likes: userId }
         };
     }
     else {
-        filter = {
-            saved_by: { $in: [userId] }
-        };
+        filter.saved_by = { $in: [userId] };
         
         update = {
             $pull: { saved_by: userId }

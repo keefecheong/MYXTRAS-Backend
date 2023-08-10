@@ -5,12 +5,11 @@ const addCommentsToDB = require('../../comment/test/populateComments.js');
 const { PARENT_MODEL_POST } = require('../../comment/models/comment.js');
 
 const sendMockRequest = require('../../utils/test/sendMockRequest.js');
-const generateRandomReactions = require('../../utils/test/generateRandomReactions.js');
 
 // to add posts and comments to database then populate cache
 module.exports = async function addPostsToDB(count, creatorIds, commentCount = 5) {
     // create posts for each user
-    const posts = creatorIds.flatMap(creatorId => generatePostsPerCreator(creatorId, count, creatorIds));
+    const posts = creatorIds.flatMap(creatorId => generatePostsPerCreator(creatorId, count, creatorIds, commentCount));
 
     // add posts and comments to database
     await Post.insertMany(posts);
@@ -31,7 +30,7 @@ module.exports = async function addPostsToDB(count, creatorIds, commentCount = 5
 }
 
 // generate <count> posts by a user
-function generatePostsPerCreator(creatorId, count, userIds) {
+function generatePostsPerCreator(creatorId, count, userIds, commentCount) {
     const posts = [];
 
     for (let i = 0; i < count; i++) {
@@ -40,7 +39,8 @@ function generatePostsPerCreator(creatorId, count, userIds) {
             content_links: ['http://fakelink/post.png'],
             original_names: ['post.jpg'],
             likes: userIds,
-            saved_by: userIds
+            saved_by: userIds,
+            comment_count: commentCount
         }));
     }
 

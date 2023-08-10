@@ -107,13 +107,13 @@ threadSchema.statics.deleteAllSpecified = async function(forumIds, userId, asJSO
     deleteFiles(threads.map(thread => thread.content_link).filter(link => link));
 
     // clean up comments for all threads
-    const deleteCommentsPromise = Comment.deleteAllSpecified(threads.map(thread => thread._id), null, true);
+    const deleteCommentsPromise = Comment.deleteAllSpecified(threads.map(thread => thread._id), null, asJSON);
 
     // delete threads
     const deleteThreadsPromise = asJSON ? { deleteMany: { filter } } : this.deleteMany(filter);
 
     // if asJSON is true return JSON objects else return promise for all
-    return asJSON ? { deleteThreadsPromise, deleteCommentsPromise } : Promise.all([deleteThreadsPromise, Comment.bulkWrite(deleteCommentsPromise)]);
+    return asJSON ? { deleteThreadsPromise, deleteCommentsPromise } : Promise.all([deleteThreadsPromise, deleteCommentsPromise]);
 }
 
 // to remove all likes/dislikes by a specified user

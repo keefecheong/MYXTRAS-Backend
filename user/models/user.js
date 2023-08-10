@@ -275,7 +275,9 @@ userSchema.statics.deleteFromArrayField = function (forFollowers, userId, asJSON
 
     // set filter and update
     if (forFollowers) {
-        filter['blocked_users.user_id'] = userId;
+        filter = {
+            'blocked_users.user_id': userId
+        };
         update = {
             $pull: {
                 blocked_users: { user_id: userId }
@@ -283,7 +285,9 @@ userSchema.statics.deleteFromArrayField = function (forFollowers, userId, asJSON
         };
     }
     else {
-        filter.followers = { $in: [userId] };
+        filter = {
+            followers: { $in: [userId] }
+        };
         update = {
             $pull: {
                 followers: userId

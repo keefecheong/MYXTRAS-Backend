@@ -19,9 +19,9 @@ threadRouter.get('/popular', getPopularThreads);
 threadRouter.get('/recent', getRecentThreads);
 
 // get list of threads for a forum
-threadRouter.get('/forum/:forumID', getForumThreads);
+threadRouter.get('/forum/:forumId', getForumThreads);
 
 // creating a new thread
-threadRouter.post('/:forumID', getForum, multerConfig.array('picture'), multerErrorHandler, createThread);
+threadRouter.post('/:forumId', getForum, multerConfig.array('picture'), multerErrorHandler, createThread);
 
 module.exports = threadRouter;

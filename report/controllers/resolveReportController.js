@@ -139,16 +139,16 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
 
             // delete forum
             case REPORT_TARGET_TYPE_FORUM:
-                promises.push(deleteForumUtil(req.params.forumID, req.params.userId));
+                promises.push(deleteForumUtil(req.params.forumId, req.params.userId));
 
-                warning.content = res.forum.forumID;
+                warning.content = res.forum.forumId;
                 warning.object_creation_time = res.forum.creation_time;
 
                 break;
 
             // delete thread
             case REPORT_TARGET_TYPE_THREAD:
-                promises.push(deleteThreadUtil(req.params.forumID, req.params.threadID, res.threadFromCache));
+                promises.push(deleteThreadUtil(req.params.forumId, req.params.threadId, res.threadFromCache));
 
                 warning.content = res.thread.title;
                 warning.object_creation_time = res.thread.creation_time;
@@ -166,7 +166,7 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
 
             // delete comment
             case REPORT_TARGET_TYPE_THREAD_COMMENT:
-                promises.push(deleteCommentUtil(false, req.params.commentId, res.commentFromCache, res.threadFromCache, getForumThreadKey(req.params.forumID), req.params.threadID));
+                promises.push(deleteCommentUtil(false, req.params.commentId, res.commentFromCache, res.threadFromCache, getForumThreadKey(req.params.forumId), req.params.threadId));
 
                 warning.content = res.comment.content;
                 warning.object_creation_time = res.comment.creation_time;

@@ -57,8 +57,8 @@ async function submitReport(req, res, type, objectId, reportTargetOwner) {
             {
                 creatorId: req.params.userId,
                 postId: req.params.postId,
-                forumId: req.params.forumID,
-                threadId: req.params.threadID,
+                forumId: req.params.forumId,
+                threadId: req.params.threadId,
                 chatId: res.message?.chat_id,
             },
             req.user._id,

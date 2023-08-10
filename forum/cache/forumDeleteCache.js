@@ -2,7 +2,7 @@
 
 const redisClient = require('../../cache/redis.js');
 
-const { getForumKey, getCreatedForumKey, getForumIdPath } = require('./forumCache.js');
+const { FORUM_SINGLE_KEY_BASE, getForumKey, getCreatedForumKey, getForumIdPath } = require('./forumCache.js');
 const { cachedForumRemoveSubscriber } = require('./forumSubscribeCache.js');
 const { getForumThreadKey } = require('../../thread/cache/threadCache.js');
 const { deleteCachedThread } = require('../../thread/cache/threadDeleteCache.js');

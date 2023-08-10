@@ -8,7 +8,7 @@ module.exports = function sendMockRequest(url, userId, method, body) {
     let chainRequest = request(server);
 
     // chain options based on parameters
-    switch (method) {
+    switch (method.toLowerCase()) {
         case 'get':
             chainRequest = chainRequest.get(url);
             

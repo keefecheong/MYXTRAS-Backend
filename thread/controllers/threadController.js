@@ -16,7 +16,7 @@ const { getForumThreadKey, getPopularThreadKey } = require('../cache/threadCache
 // get threads associated with a forum
 async function getForumThreads(req, res) {
     try {
-        const forumId = req.params.forumID;
+        const forumId = req.params.forumId;
 
         var threads = await Thread.commonQuery({
             parent_id: forumId

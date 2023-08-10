@@ -30,7 +30,7 @@ module.exports = async function addChatsToDB(userIds, messageCount) {
     await Chat.insertMany(chats);
 
     // create messages
-    const messageIds = await addMessagesToDB(chats, 20);
+    const messageIds = await addMessagesToDB(chats, messageCount);
 
     return { chatIds: chats.map(chat => chat._id), messageIds };
 }

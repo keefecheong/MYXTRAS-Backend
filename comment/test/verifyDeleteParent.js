@@ -8,17 +8,30 @@ const { getPostCommentKey, getThreadCommentKey } = require('../cache/commentCach
 const expectEmpty = require('../../utils/test/expectEmpty.js');
 
 // expect database query results to be null if parent is deleted and not null otherwise
-async function verifyDBDeleteCommentParent(parentId, deleted) {
-    expectEmpty(await Comment.find({ parent_id: parentId }), deleted);
+async function verifyDBDeleteCommentParent(parentIds, deleted) {
+    const filter = Array.isArray(parentIds) ? { parent_id: { $in: parentIds } } : { parent_id: parentIds };
+    expectEmpty(await Comment.find(filter).lean(), deleted);
 }
 
 // expect cache entries to be null if parent is deleted and not null otherwise
-async function verifyCacheDeleteCommentParent(parentId, parentModel, deleted) {
-    const key = parentModel == PARENT_MODEL_POST ? getPostCommentKey(parentId) : getThreadCommentKey(parentId);
-    expectEmpty(await redisClient.json.get(key), deleted);
+async function verifyCacheDeleteCommentParent(parentIds, parentModel, deleted) {
+    let result;
+    if (Array.isArray(parentIds)) {
+        result = await Promise.all(parentIds.map(parentId => redisClient.json.get(getCommentKey(parentId, parentModel))));
+    }
+    else {
+        result = await redisClient.json.get(getCommentKey(parentIds, parentModel));
+    }
+
+    expectEmpty(result, deleted);
 }
 
 module.exports = {
     verifyDBDeleteCommentParent,
     verifyCacheDeleteCommentParent
+}
+
+// to generate comment cache key
+function getCommentKey(parentId, parentModel) {
+    return parentModel == PARENT_MODEL_POST ? getPostCommentKey(parentId) : getThreadCommentKey(parentId);
 }

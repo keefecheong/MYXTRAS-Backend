@@ -4,14 +4,13 @@ const Forum = require('../models/forum.js');
 const addThreadsToDB = require('../../thread/test/populateThreads.js');
 
 const sendMockRequest = require('../../utils/test/sendMockRequest.js');
-const generateRandomReactions = require('../../utils/test/generateRandomReactions.js');
 
 const compareId = require('../../utils/general/compareId.js');
 
 // to add forums, threads, and comments to database then populate cache
 module.exports = async function addForumsToDB(count, creatorIds, threadCount, commentCount) {
     // create forums for each user
-    const forums = creatorIds.flatMap(creatorId => generateForumsPerCreator(creatorId, count));
+    const forums = creatorIds.flatMap(creatorId => generateForumsPerCreator(creatorId, count, creatorIds));
 
     // add forums, threads, and comments to database
     await Forum.insertMany(forums);
@@ -27,7 +26,7 @@ module.exports = async function addForumsToDB(count, creatorIds, threadCount, co
     });
 
     // populate forums and threads in cache
-    await populateForumCache(forumIds);
+    await populateForumCache(forumIds, creatorIds[0]);
 
     return { forumData, threadData, threadComments };
 }
@@ -39,8 +38,8 @@ function generateForumsPerCreator(creatorId, count, userIds) {
     for (let i = 0; i < count; i++) {
         forums.push(new Forum({
             creator_id: creatorId,
-            forum_name: `forum_name_${i}`,
-            forum_id: `forum_id_${1}`,
+            forum_name: `forum_name_${creatorId}_${i}`,
+            forum_id: `forum_id_${creatorId}_${i}`,
             forum_pic_link: 'http://fakelink/forum_pic.png',
             banner_link: 'http://fakelink/banner.png',
             subscribers: userIds.filter(userId => !compareId(userId, creatorId))
@@ -51,6 +50,11 @@ function generateForumsPerCreator(creatorId, count, userIds) {
 }
 
 // to populate cache with forum and threads
-async function populateForumCache(forumIds) {
-    await Promise.all(forumIds.map(forumId => [sendMockRequest(`/api/forums/${forumId}`), sendMockRequest(`/api/threads/forum/${forumId}`)]).flat());
+async function populateForumCache(forumIds, userId) {
+    await Promise.all(forumIds.map(
+        forumId => [
+            sendMockRequest(`/api/forums/${forumId}`, userId, 'get'),
+            sendMockRequest(`/api/threads/forum/${forumId}`, userId, 'get')
+        ]
+    ).flat());
 }

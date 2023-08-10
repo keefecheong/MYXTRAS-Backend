@@ -9,7 +9,7 @@ const { getForumKey } = require('../cache/forumCache.js');
 
 // find post by _id
 async function getForum(req, res, next) {
-    const forumId = req.params.forumID;
+    const forumId = req.params.forumId;
     let target;
 
     try {

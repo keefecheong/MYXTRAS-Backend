@@ -5,13 +5,15 @@ const Message = require('../models/message.js');
 const expectEqualLengthResults = require('../../utils/test/expectEqualLengthResults.js');
 
 // check that all messages specified by messageIds are in the database
-async function verifyDBPopulatedMessages(messageIds) {
-    const populatedMessages = await Message.find(
-        { _id: { $in: messageIds } },
-        { _id: 1 }
-    ).lean();
-
-    expectEqualLengthResults(populatedMessages, messageIds);
+function verifyDBPopulatedMessages(messageIds) {
+    return {
+        title: 'should add messages to database',
+        callback: async () => expectEqualLengthResults(await Message.find(
+            { _id: { $in: messageIds } },
+            { _id: 1 }
+        ).lean(), messageIds),
+        params: [messageIds]
+    }
 }
 
 module.exports = {

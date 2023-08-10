@@ -3,7 +3,7 @@
 const redisClient = require('../../cache/redis.js');
 
 const { getUserIdFromKey } = require('../../user/cache/userCache.js');
-const { getUserPostKey, getPostIdPath } = require('./postCache.js');
+const { POST_USER_KEY_BASE, getUserPostKey, getPostIdPath } = require('./postCache.js');
 const { cachedPostRemoveLikeByUser } = require('./postLikeCache.js');
 const { cachedPostRemoveSaveByUser } = require('./postSaveCache.js');
 const { deleteAllCachedComments } = require('../../comment/cache/commentDeleteCache.js');

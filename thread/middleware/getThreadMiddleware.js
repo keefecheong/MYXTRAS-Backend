@@ -9,8 +9,8 @@ const { getThreadFromCache } = require('../cache/threadCache.js');
 
 // find thread by id
 async function getThread(req, res, next) {
-    const forumId = req.params.forumID;
-    const threadId = req.params.threadID;
+    const forumId = req.params.forumId;
+    const threadId = req.params.threadId;
     
     let target = null;
 

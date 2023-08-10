@@ -36,16 +36,16 @@ submitReportRouter.post(
 
 // report forum
 submitReportRouter.post(
-    '/forum/:forumID', 
+    '/forum/:forumId', 
     getForum, 
-    (req, res) => submitReport(req, res, REPORT_TARGET_TYPE_FORUM, req.params.forumID, res.forum.creator_id._id)
+    (req, res) => submitReport(req, res, REPORT_TARGET_TYPE_FORUM, req.params.forumId, res.forum.creator_id._id)
 );
 
 // report thread
 submitReportRouter.post(
-    '/forum/:forumID/thread/:threadID', 
+    '/forum/:forumId/thread/:threadId', 
     getThread, 
-    (req, res) => submitReport(req, res, REPORT_TARGET_TYPE_THREAD, req.params.threadID, res.thread.creator_id._id)
+    (req, res) => submitReport(req, res, REPORT_TARGET_TYPE_THREAD, req.params.threadId, res.thread.creator_id._id)
 );
 
 // report comment
@@ -57,7 +57,7 @@ submitReportRouter.post(
 );
 
 submitReportRouter.post(
-    '/forum/:forumID/thread/:threadID/comment/:commentId', 
+    '/forum/:forumId/thread/:threadId/comment/:commentId', 
     getThread, 
     (req, res, next) => getComment(req, res, next, PARENT_MODEL_THREAD),
     (req, res) => submitReport(req, res, REPORT_TARGET_TYPE_THREAD_COMMENT, req.params.commentId, res.comment.creator_id._id)

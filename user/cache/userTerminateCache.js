@@ -39,7 +39,7 @@ async function terminateCachedUser(userId, updatedValues, commentsPerParent) {
         deleteCachedForumsOnTerminate(userId)
     ]).then(results => {
         // push all promises
-        promises.push(results).flat(2);
+        promises.push(results.flat(2));
     });
 
 
@@ -59,7 +59,7 @@ async function removeTerminatedUser(userId) {
     for await (const key of redisClient.scanIterator({ MATCH: `${USER_SINGLE_KEY_BASE}:*` })) {
         const targetUserId = getUserIdFromKey(key);
 
-        promises.push(cachedUserRemoveBlocked(userId, targetUserId, false));
+        promises.push(cachedUserRemoveBlocked(targetUserId, userId, false));
         promises.push(cachedUserRemoveFollower(targetUserId, userId, false));
     }
 
