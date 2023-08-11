@@ -7,6 +7,7 @@ const { deleteFiles } = require('../../utils/s3/s3Delete.js');
 
 const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
 const returnBadReq = require('../../utils/returnReq/returnBadReq.js');
+const returnNotFoundReq = require('../../utils/returnReq/returnNotFoundReq.js');
 const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
 
 // create a new event
@@ -23,11 +24,9 @@ async function createEvent(req, res) {
     }
 
     try {
-        const creatorId = req.user._id;
         const { event_name, event_desc, event_date, event_location, event_color } = JSON.parse(req.body.eventObject);
 
         const newEvent = new Event({
-            user_id: creatorId,
             event_name: event_name,
             event_desc: event_desc,
             event_date: event_date,
@@ -59,6 +58,14 @@ async function createEvent(req, res) {
 
 // update an existing event
 async function updateEvent(req, res) {
+    // check if event exists
+    // if does not exist return 404 error
+    const event = await Event.findById(req.params.eventId);
+
+    if (!event) {
+        return returnNotFoundReq(res);
+    }
+
     // check if text fields are provided in the body
     // if provided, continue to create event
     // otherwise return 400 error
@@ -77,30 +84,11 @@ async function updateEvent(req, res) {
         // update fields
         const { event_name, event_desc, event_date, event_location, event_color } = JSON.parse(req.body.eventObject);
 
-        // convert forum to mongoose document to perform operations
-        const event = new Event(res.event);
-        event.isNew = false;
-
-        // update fields and add to updatedValues if changed
-        if (event_name != event.event_name) {
-            event.event_name = event_name;
-        }
-        
-        if (event_desc != event.event_desc) {
-            event.event_desc = event_desc;
-        }
-        
-        if (event_date != event.event_date) {
-            event.event_date = event_date;
-        }
-
-        if (event_location != event.event_location) {
-            event.event_location = event_location;
-        }
-
-        if (event_color != event.event_color) {
-            event.event_color = event_color;
-        }
+        event.event_name = event_name;
+        event.event_desc = event_desc;
+        event.event_date = event_date;
+        event.event_location = event_location;
+        event.event_color = event_color;
 
         const newImageLinks = [];
 
@@ -119,7 +107,6 @@ async function updateEvent(req, res) {
             event.banner_link = newImageLinks[0];
         }
 
-        // save updated event to database
         await event.save();
 
         returnGoodReq(res);

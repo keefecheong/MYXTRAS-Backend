@@ -77,7 +77,6 @@ async function checkIn(req, res) {
 
     }
     catch (error) {
-        console.log(error)
         returnServerErrorReq(res);
     }
 }
