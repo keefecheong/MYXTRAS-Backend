@@ -16,9 +16,7 @@ const { cachedPostAddSave, cachedPostRemoveSave } = require('../cache/postSaveCa
 
 // to save a post
 async function savePost(req, res) {
-    const post = new Post(res.post);
-    post.isNew = false;
-
+    var post = res.post;
     const userId = req.user._id;
 
     // check if either the creator or requesting user has blocked each other
@@ -27,6 +25,9 @@ async function savePost(req, res) {
     if (blocked) {
         return returnBadReq(res, 'Could not save this post.');
     }
+
+    post = new Post(post);
+    post.isNew = false;
 
     // check if the specified post is saved by the user
     const saveExists = post.saved_by.find(user_id => compareId(user_id, userId));
