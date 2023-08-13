@@ -1,83 +1,83 @@
 {
-    "Business & Accountancy": {
-        "short": "BA",
-        "courses": {
-            "Accountancy": "ACC",
-            "Banking & Finance": "BF",
-            "Business Studies": "BS",
-            "International Trade & Business": "ITB",
-            "Tourism & Resort Management": "TRM",
-            "Common Business Programme": "CBP"
-        }
-    },
-    "Design & Environment": {
-        "short": "DE",
-        "courses": {
-            "Design": "DES",
-            "Hotel & Leisure Facilities Management": "HLFM",
-            "Real Estate Business": "REB"
-        }
-    },
-    "Engineering": {
-        "short": "SoE",
-        "courses": {
-            "Aerospace Engineering": "AEG",
-            "Biomedical Engineering": "BME",
-            "Electrical Engineering": "EE",
-            "Electronic & Computer Engineering": "ECE",
-            "Engineering Science": "ES",
-            "Marine & Offshore Technology": "MOT",
-            "Mechanical Engineering": "ME",
-            "Mechatronics & Robotics": "MR",
-            "Common Engineering Programme": "CEP"
-        }
-    },
-    "Film & Media Studies": {
-        "short": "FMS",
-        "courses": {
-            "Film, Sound & Video": "FSV",
-            "Mass Communication": "MCM",
-            "Media Post-Production": "MPP",
-            "Common Media Programme": "CMP"
-        }
-    },
-    "Health Sciences": {
-        "short": "HS",
-        "courses": {
-            "Nursing": "NSG",
-            "Optometry": "OPT"
-        }
-    },
-    "Humanities & Social Sciences": {
-        "short": "HMS",
-        "courses": {
-            "Arts Business Management": "ABM",
-            "Chinese Media & Communication": "CMC",
-            "Chinese Studies": "CHS",
-            "Community Development": "CDT",
-            "Early Childhood Development & Education": "ECDE",
-            "Tamil Studies with Early Education": "TSE"
-        }
-    },
-    "InfoComm Technology": {
-        "short": "ICT",
-        "courses": {
-            "Cybersecurity & Digital Forensics": "CSF",
-            "Data Science": "DS",
-            "Immersive Media": "IM",
-            "Information Technology": "IT",
-            "Common ICT Programme": "CICTP"
-        }
-    },
-    "Life Sciences & Chemical Technology": {
-        "short": "LSCT",
-        "courses": {
-            "Biomedical Science": "BMS",
-            "Chemical & Biomolecular Engineering": "CBE",
-            "Environmental & Water Technology": "EWT",
-            "Landscape Design & Horticulture": "LDH",
-            "Pharmaceutical Science": "PHARM",
-            "Common Science Programme": "CSP"
-        }
+  "Business & Accountancy": {
+    "short": "BA",
+    "courses": {
+      "Accountancy": "ACC",
+      "Banking & Finance": "BF",
+      "Business Studies": "BS",
+      "International Trade & Business": "ITB",
+      "Tourism & Resort Management": "TRM",
+      "Common Business Programme": "CBP"
     }
+  },
+  "Design & Environment": {
+    "short": "DE",
+    "courses": {
+      "Design": "DES",
+      "Hotel & Leisure Facilities Management": "HLFM",
+      "Real Estate Business": "REB"
+    }
+  },
+  "Engineering": {
+    "short": "SoE",
+    "courses": {
+      "Aerospace Engineering": "AEG",
+      "Biomedical Engineering": "BME",
+      "Electrical Engineering": "EE",
+      "Electronic & Computer Engineering": "ECE",
+      "Engineering Science": "ES",
+      "Marine & Offshore Technology": "MOT",
+      "Mechanical Engineering": "ME",
+      "Mechatronics & Robotics": "MR",
+      "Common Engineering Programme": "CEP"
+    }
+  },
+  "Film & Media Studies": {
+    "short": "FMS",
+    "courses": {
+      "Film, Sound & Video": "FSV",
+      "Mass Communication": "MCM",
+      "Media Post-Production": "MPP",
+      "Common Media Programme": "CMP"
+    }
+  },
+  "Health Sciences": {
+    "short": "HS",
+    "courses": {
+      "Nursing": "NSG",
+      "Optometry": "OPT"
+    }
+  },
+  "Humanities & Social Sciences": {
+    "short": "HMS",
+    "courses": {
+      "Arts Business Management": "ABM",
+      "Chinese Media & Communication": "CMC",
+      "Chinese Studies": "CHS",
+      "Community Development": "CDT",
+      "Early Childhood Development & Education": "ECDE",
+      "Tamil Studies with Early Education": "TSE"
+    }
+  },
+  "InfoComm Technology": {
+    "short": "ICT",
+    "courses": {
+      "Cybersecurity & Digital Forensics": "CSF",
+      "Data Science": "DS",
+      "Immersive Media": "IM",
+      "Information Technology": "IT",
+      "Common ICT Programme": "CICTP"
+    }
+  },
+  "Life Sciences & Chemical Technology": {
+    "short": "LSCT",
+    "courses": {
+      "Biomedical Science": "BMS",
+      "Chemical & Biomolecular Engineering": "CBE",
+      "Environmental & Water Technology": "EWT",
+      "Landscape Design & Horticulture": "LDH",
+      "Pharmaceutical Science": "PHARM",
+      "Common Science Programme": "CSP"
+    }
+  }
 }

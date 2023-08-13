@@ -1,60 +1,76 @@
 // to populate forums
 
-const Forum = require('../models/forum.js');
-const addThreadsToDB = require('../../thread/test/populateThreads.js');
+const Forum = require("../models/forum.js");
+const addThreadsToDB = require("../../thread/test/populateThreads.js");
 
-const sendMockRequest = require('../../utils/test/sendMockRequest.js');
+const sendMockRequest = require("../../utils/test/sendMockRequest.js");
 
-const compareId = require('../../utils/general/compareId.js');
+const compareId = require("../../utils/general/compareId.js");
 
 // to add forums, threads, and comments to database then populate cache
-module.exports = async function addForumsToDB(count, creatorIds, threadCount, commentCount) {
-    // create forums for each user
-    const forums = creatorIds.flatMap(creatorId => generateForumsPerCreator(creatorId, count, creatorIds));
+module.exports = async function addForumsToDB(
+  count,
+  creatorIds,
+  threadCount,
+  commentCount,
+) {
+  // create forums for each user
+  const forums = creatorIds.flatMap((creatorId) =>
+    generateForumsPerCreator(creatorId, count, creatorIds),
+  );
 
-    // add forums, threads, and comments to database
-    await Forum.insertMany(forums);
+  // add forums, threads, and comments to database
+  await Forum.insertMany(forums);
 
-    const forumIds = forums.map(forum => forum._id);
-    const { threadData, threadComments } = await addThreadsToDB(threadCount, creatorIds, forumIds, commentCount);
+  const forumIds = forums.map((forum) => forum._id);
+  const { threadData, threadComments } = await addThreadsToDB(
+    threadCount,
+    creatorIds,
+    forumIds,
+    commentCount,
+  );
 
-    const forumData = forums.map(forum => {
-        return {
-            _id: forum._id,
-            creator_id: forum.creator_id
-        }
-    });
+  const forumData = forums.map((forum) => {
+    return {
+      _id: forum._id,
+      creator_id: forum.creator_id,
+    };
+  });
 
-    // populate forums and threads in cache
-    await populateForumCache(forumIds, creatorIds[0]);
+  // populate forums and threads in cache
+  await populateForumCache(forumIds, creatorIds[0]);
 
-    return { forumData, threadData, threadComments };
-}
+  return { forumData, threadData, threadComments };
+};
 
 // generate <count> forums by a user
 function generateForumsPerCreator(creatorId, count, userIds) {
-    const forums = [];
+  const forums = [];
 
-    for (let i = 0; i < count; i++) {
-        forums.push(new Forum({
-            creator_id: creatorId,
-            forum_name: `forum_name_${creatorId}_${i}`,
-            forum_id: `forum_id_${creatorId}_${i}`,
-            forum_pic_link: 'http://fakelink/forum_pic.png',
-            banner_link: 'http://fakelink/banner.png',
-            subscribers: userIds.filter(userId => !compareId(userId, creatorId))
-        }));
-    }
+  for (let i = 0; i < count; i++) {
+    forums.push(
+      new Forum({
+        creator_id: creatorId,
+        forum_name: `forum_name_${creatorId}_${i}`,
+        forum_id: `forum_id_${creatorId}_${i}`,
+        forum_pic_link: "http://fakelink/forum_pic.png",
+        banner_link: "http://fakelink/banner.png",
+        subscribers: userIds.filter((userId) => !compareId(userId, creatorId)),
+      }),
+    );
+  }
 
-    return forums;
+  return forums;
 }
 
 // to populate cache with forum and threads
 async function populateForumCache(forumIds, userId) {
-    await Promise.all(forumIds.map(
-        forumId => [
-            sendMockRequest(`/api/forums/${forumId}`, userId, 'get'),
-            sendMockRequest(`/api/threads/forum/${forumId}`, userId, 'get')
-        ]
-    ).flat());
+  await Promise.all(
+    forumIds
+      .map((forumId) => [
+        sendMockRequest(`/api/forums/${forumId}`, userId, "get"),
+        sendMockRequest(`/api/threads/forum/${forumId}`, userId, "get"),
+      ])
+      .flat(),
+  );
 }

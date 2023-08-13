@@ -1,64 +1,74 @@
 // to populate users
 
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 
-const { User } = require('../models/user.js');
+const { User } = require("../models/user.js");
 
-const sendMockRequest = require('../../utils/test/sendMockRequest.js');
+const sendMockRequest = require("../../utils/test/sendMockRequest.js");
 
-const compareId = require('../../utils/general/compareId.js');
+const compareId = require("../../utils/general/compareId.js");
 
 // to add users to database
 module.exports = async function addUsersToDB(count, needBlocked) {
-    const users = [];
-    const min = 30000000;
-    const max = 99999999;
+  const users = [];
+  const min = 30000000;
+  const max = 99999999;
 
-    for (let i = 0; i < count; i++) {
-        users.push(new User({
-            email: `email_${i}@gmail.com`,
-            username: `username_${i}`,
-            real_name: `realname_${i}`,
-            phone_number: Math.floor(Math.random() * (max - min)) + min,
-            school: 'ICT',
-            course: 'CSF',
-            is_admin: true,
-            password: await bcrypt.hash('Passw0rd', 10),
-            is_profile_setup: true
-        }));
-    }
+  for (let i = 0; i < count; i++) {
+    users.push(
+      new User({
+        email: `email_${i}@gmail.com`,
+        username: `username_${i}`,
+        real_name: `realname_${i}`,
+        phone_number: Math.floor(Math.random() * (max - min)) + min,
+        school: "ICT",
+        course: "CSF",
+        is_admin: true,
+        password: await bcrypt.hash("Passw0rd", 10),
+        is_profile_setup: true,
+      }),
+    );
+  }
 
-    const userIds = users.map(user => user._id);
+  const userIds = users.map((user) => user._id);
 
-    // add followers and blocked_users
-    users.forEach(user => {
-        const otherUserIds = userIds.filter(userId => !compareId(userId, user._id));
-        
-        // both followers and blocked_users set to simulate and observe change in data
-        user.followers = otherUserIds;
-        user.blocked_users = needBlocked ? otherUserIds.map(userId => {
-            return { user_id: userId, block_time: Date.now()}
-        }) : [];
-    });
+  // add followers and blocked_users
+  users.forEach((user) => {
+    const otherUserIds = userIds.filter(
+      (userId) => !compareId(userId, user._id),
+    );
 
-    // add users to database
-    await User.insertMany(users);
+    // both followers and blocked_users set to simulate and observe change in data
+    user.followers = otherUserIds;
+    user.blocked_users = needBlocked
+      ? otherUserIds.map((userId) => {
+          return { user_id: userId, block_time: Date.now() };
+        })
+      : [];
+  });
 
-    // populate cache
-    await populateUserCache(userIds);
+  // add users to database
+  await User.insertMany(users);
 
-    return users.map(user => {
-        return {
-            _id: user._id,
-            followers: user.followers,
-            blocked_users: user.blocked_users,
-            warnings: user.warnings,
-            status: user.status
-        }
-    });
-}
+  // populate cache
+  await populateUserCache(userIds);
+
+  return users.map((user) => {
+    return {
+      _id: user._id,
+      followers: user.followers,
+      blocked_users: user.blocked_users,
+      warnings: user.warnings,
+      status: user.status,
+    };
+  });
+};
 
 // to populate cache with user data
 function populateUserCache(userIds) {
-    return Promise.all(userIds.map(userId => sendMockRequest(`/api/users/profile/${userId}`, userId, 'get')));
+  return Promise.all(
+    userIds.map((userId) =>
+      sendMockRequest(`/api/users/profile/${userId}`, userId, "get"),
+    ),
+  );
 }

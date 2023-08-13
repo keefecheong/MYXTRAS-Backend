@@ -1,29 +1,28 @@
-const Gamification = require('../models/gamification.js');
+const Gamification = require("../models/gamification.js");
 
-const returnNotFoundReq = require('../../utils/returnReq/returnNotFoundReq.js');
-const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
+const returnNotFoundReq = require("../../utils/returnReq/returnNotFoundReq.js");
+const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq.js");
 
 async function getGameData(req, res, next) {
-    let target = null;
+  let target = null;
 
-    try {
-        const user_id = req.user._id;
-        
-        target = await Gamification.findOne({ user_id: user_id }).lean();
+  try {
+    const user_id = req.user._id;
 
-        // if does not exist return 404 error
-        if (!target) {
-            return returnNotFoundReq(res);
-        }
+    target = await Gamification.findOne({ user_id: user_id }).lean();
+
+    // if does not exist return 404 error
+    if (!target) {
+      return returnNotFoundReq(res);
     }
-    catch (error) {
-        return returnServerErrorReq(res);
-    }
+  } catch (error) {
+    return returnServerErrorReq(res);
+  }
 
-    res.comment = target;
-    next();
+  res.comment = target;
+  next();
 }
 
 module.exports = {
-    getGameData
-}
+  getGameData,
+};

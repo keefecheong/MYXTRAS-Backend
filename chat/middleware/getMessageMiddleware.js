@@ -1,31 +1,30 @@
 // middleware to get a message
 
-const Message = require('../models/message.js');
+const Message = require("../models/message.js");
 
-const returnNotFoundReq = require('../../utils/returnReq/returnNotFoundReq.js');
-const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
+const returnNotFoundReq = require("../../utils/returnReq/returnNotFoundReq.js");
+const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq.js");
 
 // get message by id
 async function getMessage(req, res, next) {
-    const messageId = req.params.messageId;
-    let target = null;
+  const messageId = req.params.messageId;
+  let target = null;
 
-    try {
-        target = await Message.findById(messageId).lean();
+  try {
+    target = await Message.findById(messageId).lean();
 
-        // if message is not found then return 404 error
-        if (!target) {
-            return returnNotFoundReq(res);
-        }
+    // if message is not found then return 404 error
+    if (!target) {
+      return returnNotFoundReq(res);
     }
-    catch (error) {
-        return returnServerErrorReq(res);
-    }
+  } catch (error) {
+    return returnServerErrorReq(res);
+  }
 
-    res.message = target;
-    next();
+  res.message = target;
+  next();
 }
 
-module.exports = { 
-    getMessage
-}
+module.exports = {
+  getMessage,
+};

@@ -1,106 +1,113 @@
 // utils to handle separate user details for caching objects
 
-const redisClient = require('../../cache/redis.js');
-const { getHeaderKey, USER_EXPIRATION_TIME } = require('../cache/userCache.js');
+const redisClient = require("../../cache/redis.js");
+const { getHeaderKey, USER_EXPIRATION_TIME } = require("../cache/userCache.js");
 
 // to retrieve details from objects with the same creator to store in cache
 function storeDetailsSingle(data) {
-    const workingData = JSON.parse(JSON.stringify(data));
+  const workingData = JSON.parse(JSON.stringify(data));
 
-    const isArray = Array.isArray(data);
+  const isArray = Array.isArray(data);
 
-    const creatorDetails = isArray ? workingData[0].creator_id : workingData.creator_id;
-    const headerKey = getHeaderKey(creatorDetails._id);
+  const creatorDetails = isArray
+    ? workingData[0].creator_id
+    : workingData.creator_id;
+  const headerKey = getHeaderKey(creatorDetails._id);
 
-    isArray ? 
-        workingData.forEach(data => data.creator_id = data.creator_id._id) : 
-        workingData.creator_id = workingData.creator_id._id;
+  isArray
+    ? workingData.forEach((data) => (data.creator_id = data.creator_id._id))
+    : (workingData.creator_id = workingData.creator_id._id);
 
-    const creatorDetailsPromises = [
-        redisClient.json.set(headerKey, '$', creatorDetails),
-        redisClient.expire(headerKey, USER_EXPIRATION_TIME)
-    ];
+  const creatorDetailsPromises = [
+    redisClient.json.set(headerKey, "$", creatorDetails),
+    redisClient.expire(headerKey, USER_EXPIRATION_TIME),
+  ];
 
-    return { workingData, creatorDetailsPromises };
+  return { workingData, creatorDetailsPromises };
 }
 
 // to retrieve details from objects with multiple possible creators to store in cache
 function storeDetailsMany(data) {
-    const workingData = JSON.parse(JSON.stringify(data));
+  const workingData = JSON.parse(JSON.stringify(data));
 
-    const uniqueCreatorDetails = new Set();
+  const uniqueCreatorDetails = new Set();
 
-    workingData.forEach(object => {
-        uniqueCreatorDetails.add(JSON.stringify(object.creator_id));
-        object.creator_id = object.creator_id._id;
-    });
+  workingData.forEach((object) => {
+    uniqueCreatorDetails.add(JSON.stringify(object.creator_id));
+    object.creator_id = object.creator_id._id;
+  });
 
-    const creatorDetailsPromises = [];
+  const creatorDetailsPromises = [];
 
-    Array.from(uniqueCreatorDetails).forEach(entry => {
-        const details = JSON.parse(entry);
-        const headerKey = getHeaderKey(details._id);
+  Array.from(uniqueCreatorDetails).forEach((entry) => {
+    const details = JSON.parse(entry);
+    const headerKey = getHeaderKey(details._id);
 
-        creatorDetailsPromises.push(redisClient.json.set(headerKey, '$', details));
-        creatorDetailsPromises.push(redisClient.expire(headerKey, USER_EXPIRATION_TIME));
-    });
+    creatorDetailsPromises.push(redisClient.json.set(headerKey, "$", details));
+    creatorDetailsPromises.push(
+      redisClient.expire(headerKey, USER_EXPIRATION_TIME),
+    );
+  });
 
-    return { workingData, creatorDetailsPromises };
+  return { workingData, creatorDetailsPromises };
 }
 
 // to retrieve details from cache and populate same creator_id on objects
 async function retrieveDetailsSingle(data) {
-    if (!data) {
-        return null;
-    }
+  if (!data) {
+    return null;
+  }
 
-    const isArray = Array.isArray(data);
+  const isArray = Array.isArray(data);
 
-    const creatorId = isArray ? data[0].creator_id : data.creator_id;
+  const creatorId = isArray ? data[0].creator_id : data.creator_id;
 
-    const creatorDetails = await redisClient.json.get(getHeaderKey(creatorId));
+  const creatorDetails = await redisClient.json.get(getHeaderKey(creatorId));
 
-    if (!creatorDetails) {
-        return null;
-    }
+  if (!creatorDetails) {
+    return null;
+  }
 
-    isArray ?
-        data.forEach(entry => entry.creator_id = creatorDetails) :
-        data.creator_id = creatorDetails;
+  isArray
+    ? data.forEach((entry) => (entry.creator_id = creatorDetails))
+    : (data.creator_id = creatorDetails);
 
-    return data;
+  return data;
 }
 
 // to retrieve details from cache and populate creator_id on objects
 async function retrieveDetailsMany(data) {
-    if (!data) {
-        return null;
-    }
+  if (!data) {
+    return null;
+  }
 
-    const uniqueCreatorIds = new Set();
+  const uniqueCreatorIds = new Set();
 
-    data.forEach(object => uniqueCreatorIds.add(object.creator_id));
+  data.forEach((object) => uniqueCreatorIds.add(object.creator_id));
 
-    const creatorDetails = await Promise.all(
-        Array.from(uniqueCreatorIds).map(
-            creatorId => 
-                redisClient.json.get(getHeaderKey(creatorId)
-            )
-        )
-    );
+  const creatorDetails = await Promise.all(
+    Array.from(uniqueCreatorIds).map((creatorId) =>
+      redisClient.json.get(getHeaderKey(creatorId)),
+    ),
+  );
 
-    if (creatorDetails.includes(null)) {
-        return null;
-    }
+  if (creatorDetails.includes(null)) {
+    return null;
+  }
 
-    data.forEach(object => object.creator_id = creatorDetails.find(entry => entry._id == object.creator_id));
+  data.forEach(
+    (object) =>
+      (object.creator_id = creatorDetails.find(
+        (entry) => entry._id == object.creator_id,
+      )),
+  );
 
-    return data;
+  return data;
 }
 
 module.exports = {
-    storeDetailsSingle,
-    storeDetailsMany,
-    retrieveDetailsSingle,
-    retrieveDetailsMany
-}
+  storeDetailsSingle,
+  storeDetailsMany,
+  retrieveDetailsSingle,
+  retrieveDetailsMany,
+};

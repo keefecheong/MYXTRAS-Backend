@@ -1,7 +1,7 @@
 // to delete a message
 
-const Message = require('../models/message.js');
+const Message = require("../models/message.js");
 
 module.exports = function deleteMessageUtil(messageId) {
-    return Message.findByIdAndDelete(messageId);
-}
+  return Message.findByIdAndDelete(messageId);
+};

@@ -1,35 +1,40 @@
 // to delete thread from cache
 
-const redisClient = require('../../cache/redis.js');
+const redisClient = require("../../cache/redis.js");
 
-const { getForumThreadKey, getThreadIdPath, getThreadByUserPath } = require('./threadCache.js');
-const { deleteAllCachedComments } = require('../../comment/cache/commentDeleteCache.js');
-const { PARENT_MODEL_THREAD } = require('../../comment/models/comment.js');
+const {
+  getForumThreadKey,
+  getThreadIdPath,
+  getThreadByUserPath,
+} = require("./threadCache.js");
+const {
+  deleteAllCachedComments,
+} = require("../../comment/cache/commentDeleteCache.js");
+const { PARENT_MODEL_THREAD } = require("../../comment/models/comment.js");
 
-// to delete thread from cache 
+// to delete thread from cache
 function deleteCachedThread(forumId, threadId, userId) {
-    if (!redisClient.isReady) {
-        return [];
-    }
-    
-    const forumThreadKey = getForumThreadKey(forumId);
+  if (!redisClient.isReady) {
+    return [];
+  }
 
-    let path;
+  const forumThreadKey = getForumThreadKey(forumId);
 
-    if (threadId) {
-        path = getThreadIdPath(threadId);
-    }
-    else if (userId) {
-        path = getThreadByUserPath(userId);
-    }
+  let path;
 
-    // remove thread entry and associated comments from cache
-    return [
-        redisClient.json.del(forumThreadKey, path),
-        deleteAllCachedComments(threadId, PARENT_MODEL_THREAD)
-    ];
+  if (threadId) {
+    path = getThreadIdPath(threadId);
+  } else if (userId) {
+    path = getThreadByUserPath(userId);
+  }
+
+  // remove thread entry and associated comments from cache
+  return [
+    redisClient.json.del(forumThreadKey, path),
+    deleteAllCachedComments(threadId, PARENT_MODEL_THREAD),
+  ];
 }
 
 module.exports = {
-    deleteCachedThread
-}
+  deleteCachedThread,
+};

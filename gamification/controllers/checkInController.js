@@ -1,88 +1,93 @@
 // controller functions to handle user profile related requests
-const { User } = require('../../user/models/user.js');
+const { User } = require("../../user/models/user.js");
 
-const returnGoodReq = require('../../utils/returnReq/returnGoodReq.js');
-const returnServerErrorReq = require('../../utils/returnReq/returnServerErrorReq.js');
+const returnGoodReq = require("../../utils/returnReq/returnGoodReq.js");
+const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq.js");
 
-const { updateCachedUser } = require('../../user/cache/userUpdateCache.js');
-const saveDocAsync = require('../../utils/general/saveDocAsync.js');
+const { updateCachedUser } = require("../../user/cache/userUpdateCache.js");
+const saveDocAsync = require("../../utils/general/saveDocAsync.js");
 
-const missions = require('../utils/config.json');
+const missions = require("../utils/config.json");
 
 const rewards = [50, 100, 100, 100, 150, 200, 500];
 
 async function getCheckInData(req, res) {
-    try{
-        const user = new User(req.user);
-        user.isNew = false;
-        const last_checkin_date = user.last_checkin_date;
-        
-        const current_date = new Date()
-        // Set time to midnight
-        current_date.setHours(0, 0, 0, 0); 
+  try {
+    const user = new User(req.user);
+    user.isNew = false;
+    const last_checkin_date = user.last_checkin_date;
 
-        const updatedValues = {};
+    const current_date = new Date();
+    // Set time to midnight
+    current_date.setHours(0, 0, 0, 0);
 
-        const differenceInMilliseconds = Math.abs(current_date - last_checkin_date);
-        const millisecondsInOneDay = 24 * 60 * 60 * 1000;
+    const updatedValues = {};
 
-        // If last check in surpasses a day or last day of the week, reset counter
-        if (differenceInMilliseconds >= millisecondsInOneDay && !user.claimed || user.checkin_count == 7) {
-           
-            updatedValues.claimed = false;
-            user.claimed = false;
-            updatedValues.checkin_count = 1; // reset checkIn count
-            user.checkin_count = 1;
-        
-        // If its a new day, add to counter and reset claimed
-        } else if (current_date > last_checkin_date && user.claimed) {
-            updatedValues.claimed = false;
-            user.claimed = false;
-            user.checkin_count = user.checkin_count + 1;
-            updatedValues.checkin_count = user.checkin_count;
-        }
+    const differenceInMilliseconds = Math.abs(current_date - last_checkin_date);
+    const millisecondsInOneDay = 24 * 60 * 60 * 1000;
 
-        // update cache with newly saved user
-        const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
-        await saveDocAsync(user, updateCacheResult);
+    // If last check in surpasses a day or last day of the week, reset counter
+    if (
+      (differenceInMilliseconds >= millisecondsInOneDay && !user.claimed) ||
+      user.checkin_count == 7
+    ) {
+      updatedValues.claimed = false;
+      user.claimed = false;
+      updatedValues.checkin_count = 1; // reset checkIn count
+      user.checkin_count = 1;
 
-        const data = {checkin_count: user.checkin_count, claimed: user.claimed}
-        returnGoodReq(res, data);
-
+      // If its a new day, add to counter and reset claimed
+    } else if (current_date > last_checkin_date && user.claimed) {
+      updatedValues.claimed = false;
+      user.claimed = false;
+      user.checkin_count = user.checkin_count + 1;
+      updatedValues.checkin_count = user.checkin_count;
     }
-    catch (error) {
-        returnServerErrorReq(res);
-    }
+
+    // update cache with newly saved user
+    const updateCacheResult = await updateCachedUser(
+      updatedValues,
+      user._id,
+      true,
+    );
+    await saveDocAsync(user, updateCacheResult);
+
+    const data = { checkin_count: user.checkin_count, claimed: user.claimed };
+    returnGoodReq(res, data);
+  } catch (error) {
+    returnServerErrorReq(res);
+  }
 }
 async function checkIn(req, res) {
-    try{
-        const user = new User(req.user);
-        user.isNew = false;
-        
-        const current_date = Date.now()
-        const checkin_count = user.checkin_count;
-        const updatedValues = {};
+  try {
+    const user = new User(req.user);
+    user.isNew = false;
 
-        updatedValues.gems = user.gems + rewards[checkin_count - 1];
-        updatedValues.last_checkin_date = current_date;
-        updatedValues.claimed = true;
-        user.claimed = true;
-        user.gems = updatedValues.gems;
+    const current_date = Date.now();
+    const checkin_count = user.checkin_count;
+    const updatedValues = {};
 
-        // update cache
-        const updateCacheResult = await updateCachedUser(updatedValues, user._id, true);
-        await saveDocAsync(user, updateCacheResult);
-        
-        returnGoodReq(res);
+    updatedValues.gems = user.gems + rewards[checkin_count - 1];
+    updatedValues.last_checkin_date = current_date;
+    updatedValues.claimed = true;
+    user.claimed = true;
+    user.gems = updatedValues.gems;
 
-    }
-    catch (error) {
-        returnServerErrorReq(res);
-    }
+    // update cache
+    const updateCacheResult = await updateCachedUser(
+      updatedValues,
+      user._id,
+      true,
+    );
+    await saveDocAsync(user, updateCacheResult);
+
+    returnGoodReq(res);
+  } catch (error) {
+    returnServerErrorReq(res);
+  }
 }
-
 
 module.exports = {
-    getCheckInData,
-    checkIn
-}
+  getCheckInData,
+  checkIn,
+};
