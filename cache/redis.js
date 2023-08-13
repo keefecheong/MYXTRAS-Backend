@@ -2,8 +2,7 @@
 const { createClient } = require('redis');
 
 const redisClient = createClient({
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
+    url: process.env.REDIS_URL,
     socket: {
         // reconnect after 1 minute
         reconnectStrategy: 60 * 1000
