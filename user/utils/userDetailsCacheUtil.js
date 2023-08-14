@@ -5,6 +5,10 @@ const { getHeaderKey, USER_EXPIRATION_TIME } = require("../cache/userCache.js");
 
 // to retrieve details from objects with the same creator to store in cache
 function storeDetailsSingle(data) {
+  if (!data || data.length <= 0) {
+    return { workingData: [], creatorDetailsPromises: [] };
+  }
+
   const workingData = JSON.parse(JSON.stringify(data));
 
   const isArray = Array.isArray(data);
@@ -28,6 +32,10 @@ function storeDetailsSingle(data) {
 
 // to retrieve details from objects with multiple possible creators to store in cache
 function storeDetailsMany(data) {
+  if (!data || data.length <= 0) {
+    return { workingData: [], creatorDetailsPromises: [] };
+  }
+  
   const workingData = JSON.parse(JSON.stringify(data));
 
   const uniqueCreatorDetails = new Set();
