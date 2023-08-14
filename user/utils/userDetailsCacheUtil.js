@@ -62,7 +62,7 @@ function storeDetailsMany(data) {
 
 // to retrieve details from cache and populate same creator_id on objects
 async function retrieveDetailsSingle(data) {
-  if (!data) {
+  if (!data || data.length <= 0) {
     return null;
   }
 
@@ -85,7 +85,7 @@ async function retrieveDetailsSingle(data) {
 
 // to retrieve details from cache and populate creator_id on objects
 async function retrieveDetailsMany(data) {
-  if (!data) {
+  if (!data || data.length <= 0) {
     return null;
   }
 
