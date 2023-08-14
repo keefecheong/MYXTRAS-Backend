@@ -1,0 +1,10 @@
+# .ls-lint.yml
+  
+ls:
+  .js: camelCase
+
+ignore:
+  - node_modules
+  - .git
+  - user/utils/clearJWTCookie.js
+  - user/utils/setJWT.js

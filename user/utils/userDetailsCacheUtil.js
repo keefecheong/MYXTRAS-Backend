@@ -35,7 +35,7 @@ function storeDetailsMany(data) {
   if (!data || data.length <= 0) {
     return { workingData: [], creatorDetailsPromises: [] };
   }
-  
+
   const workingData = JSON.parse(JSON.stringify(data));
 
   const uniqueCreatorDetails = new Set();

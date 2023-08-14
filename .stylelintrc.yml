@@ -1,0 +1,4 @@
+# .stylelintrc.yml
+
+extends:
+  - stylelint-config-standard

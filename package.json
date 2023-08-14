@@ -6,7 +6,12 @@
   "scripts": {
     "prod": "set NODE_ENV=production& pm2 start server.js",
     "dev": "set NODE_ENV=development& nodemon server.js",
-    "test": "set NODE_ENV=test& mocha --reporter-options fullTrace=true --slow 0"
+    "test": "set NODE_ENV=test& mocha --reporter-options fullTrace=true --slow 0",
+    "lint:ls": "ls-lint",
+    "lint:editorconfig": "editorconfig-checker",
+    "lint:css": "stylelint *.css",
+    "lint:js": "eslint ./**/*.js",
+    "lint": "npm run lint:ls && npm run lint:editorconfig"
   },
   "repository": {
     "type": "git",
@@ -19,7 +24,10 @@
   },
   "homepage": "https://github.com/kc-np/MYXTRAS-Backend#readme",
   "devDependencies": {
+    "@ls-lint/ls-lint": "2.0.1",
     "chai": "^4.3.7",
+    "editorconfig-checker": "5.1.1",
+    "eslint": "8.47.0",
     "mocha": "^10.2.0",
     "mongodb-memory-server": "^8.14.0",
     "nodemon": "^3.0.1",
