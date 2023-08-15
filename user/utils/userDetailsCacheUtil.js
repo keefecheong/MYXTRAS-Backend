@@ -31,7 +31,7 @@ function storeDetailsSingle(data) {
 }
 
 // to retrieve details from objects with multiple possible creators to store in cache
-function storeDetailsMany(data) {
+function storeDetailsMany(data, forId) {
   if (!data || data.length <= 0) {
     return { workingData: [], creatorDetailsPromises: [] };
   }
@@ -40,10 +40,16 @@ function storeDetailsMany(data) {
 
   const uniqueCreatorDetails = new Set();
 
-  workingData.forEach((object) => {
-    uniqueCreatorDetails.add(JSON.stringify(object.creator_id));
-    object.creator_id = object.creator_id._id;
-  });
+  if (forId) {
+    workingData.forEach((object) => {
+      uniqueCreatorDetails.add(JSON.stringify(object._id));
+    });
+  } else {
+    workingData.forEach((object) => {
+      uniqueCreatorDetails.add(JSON.stringify(object.creator_id));
+      object.creator_id = object.creator_id._id;
+    });
+  }
 
   const creatorDetailsPromises = [];
 
@@ -53,7 +59,7 @@ function storeDetailsMany(data) {
 
     creatorDetailsPromises.push(redisClient.json.set(headerKey, "$", details));
     creatorDetailsPromises.push(
-      redisClient.expire(headerKey, USER_EXPIRATION_TIME),
+      redisClient.expire(headerKey, USER_EXPIRATION_TIME)
     );
   });
 
@@ -84,30 +90,33 @@ async function retrieveDetailsSingle(data) {
 }
 
 // to retrieve details from cache and populate creator_id on objects
-async function retrieveDetailsMany(data) {
+async function retrieveDetailsMany(data, forId) {
   if (!data || data.length <= 0) {
     return null;
   }
 
   const uniqueCreatorIds = new Set();
 
-  data.forEach((object) => uniqueCreatorIds.add(object.creator_id));
+  data.forEach((object) =>
+    uniqueCreatorIds.add(forId ? object._id : object.creator_id)
+  );
 
   const creatorDetails = await Promise.all(
     Array.from(uniqueCreatorIds).map((creatorId) =>
-      redisClient.json.get(getHeaderKey(creatorId)),
-    ),
+      redisClient.json.get(getHeaderKey(creatorId))
+    )
   );
 
   if (creatorDetails.includes(null)) {
     return null;
   }
 
-  data.forEach(
-    (object) =>
-      (object.creator_id = creatorDetails.find(
-        (entry) => entry._id == object.creator_id,
-      )),
+  data.forEach((object) =>
+    forId
+      ? (object = creatorDetails.find((entry) => entry._id == object._id))
+      : (object.creator_id = creatorDetails.find(
+          (entry) => entry._id == object.creator_id
+        ))
   );
 
   return data;

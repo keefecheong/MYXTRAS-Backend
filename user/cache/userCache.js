@@ -1,6 +1,7 @@
 // to add users from the database to the cache
 
 const redisClient = require("../../cache/redis.js");
+const { storeDetailsMany, retrieveDetailsMany } = require("../utils/userDetailsCacheUtil.js");
 
 // cache key prefixes
 // to cache individual users
@@ -19,72 +20,90 @@ const USER_HEADER_KEY_BASE = "user:header";
 // 1 hour for all (cache is updated)
 const USER_EXPIRATION_TIME = 60 * 60;
 
-// to retrieve a single user from cache if exists
+// to retrieve user data from cache if exists
 async function getUserFromCache(key, populateFollowers) {
   if (!redisClient.isReady) {
     return null;
   }
 
-  let user = await redisClient.json.get(key);
+  let data = await redisClient.json.get(key);
 
-  if (populateFollowers && user?.followers.length > 0) {
-    // if request requires follower data check if the follower details are available
-    const followersExist = await redisClient.exists(user.followers);
+  const dataIsArray = Array.isArray(data);
+
+  if (!populateFollowers) return data;
+
+  if (!dataIsArray && data?.followers.length > 0) {
+    // if request is for a single user and requires follower data check if the follower details are available
+    const followersExist = await redisClient.exists(data.followers);
 
     // if follower data does not exist for all followers return null to request database to populate it
-    if (followersExist == user.followers.length) {
+    if (followersExist == data.followers.length) {
       return null;
     }
 
     // otherwise set the populated data as followers
-    user.followers = await Promise.all(
-      user.followers.map((followerId) =>
-        redisClient.json.get(getHeaderKey(followerId)),
-      ),
+    data.followers = await Promise.all(
+      data.followers.map((followerId) =>
+        redisClient.json.get(getHeaderKey(followerId))
+      )
     );
   }
+  else if (dataIsArray) {
+    // otherwise if data is array means request is for following users
+    // populate following users' data
+    await retrieveDetailsMany(data, true);
+  }
 
-  return user;
+  return data;
 }
 
 // to store user from database to cache
 function cacheUser(data, key, populateFollowers) {
   // get a copy of data if need to manipulate to store followers
-  const workingData = populateFollowers
+  let userWorkingData = populateFollowers
     ? JSON.parse(JSON.stringify(data))
     : data;
 
   let followers;
+  let promises = [];
 
-  if (populateFollowers) {
-    // if cache entry is for storing individual users and user's followers are populated then get the follower data
-    followers = workingData.followers;
+  if (!Array.isArray(userWorkingData)) {
+    if (populateFollowers) {
+      // if cache entry is for storing individual users and user's followers are populated then get the follower data
+      followers = userWorkingData.followers;
 
-    // depopulate followers
-    workingData.followers = followers.map((follower) => follower._id);
+      // depopulate followers
+      userWorkingData.followers = followers.map((follower) => follower._id);
+
+      followers.forEach((follower) => {
+        const followerHeaderKey = getHeaderKey(follower._id);
+
+        promises.push(redisClient.json.set(followerHeaderKey, "$", follower));
+        promises.push(
+          redisClient.expire(followerHeaderKey, USER_EXPIRATION_TIME)
+        );
+      });
+    } else {
+      // otherwise get the user details to store
+      const headerKey = getHeaderKey(data._id);
+      promises.push(redisClient.json.set(headerKey, "$", getUserDetails(data)));
+      promises.push(redisClient.expire(headerKey, USER_EXPIRATION_TIME));
+    }
+  } else {
+    // otherwise if for storing following users then extract the following users' information and store in header keys
+    const { workingData, creatorDetailsPromises } = storeDetailsMany(
+      data,
+      true
+    );
+    userWorkingData = workingData;
+    promises = promises.concat(creatorDetailsPromises);
   }
-
-  const headerKey = getHeaderKey(data._id);
 
   // set promises
-  const promises = [
-    redisClient.json.set(key, "$", workingData),
+  promises.concat([
+    redisClient.json.set(key, "$", userWorkingData),
     redisClient.expire(key, USER_EXPIRATION_TIME),
-    redisClient.json.set(headerKey, "$", getUserDetails(data)),
-    redisClient.expire(headerKey, USER_EXPIRATION_TIME),
-  ];
-
-  // if there is follower data then add follower data to cache
-  if (followers?.length > 0) {
-    followers.forEach((follower) => {
-      const followerHeaderKey = getHeaderKey(follower._id);
-
-      promises.push(redisClient.json.set(followerHeaderKey, "$", follower));
-      promises.push(
-        redisClient.expire(followerHeaderKey, USER_EXPIRATION_TIME),
-      );
-    });
-  }
+  ]);
 
   return Promise.all(promises);
 }

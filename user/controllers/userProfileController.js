@@ -41,12 +41,13 @@ async function getRequestedUser(req, res) {
         _id: 1,
         username: 1,
         profile_pic_link: 1,
-        blocked_users: 1,
+        blocked_users: 1
       }
     )
       .lean()
       .cache({
         key: getFollowingKey(targetUserId),
+        populateFollowers: true
       });
     var userIds = followingUsers.map((user) => user._id);
     console.log(userIds);
