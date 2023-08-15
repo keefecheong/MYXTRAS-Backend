@@ -6,11 +6,12 @@ const compareId = require("../../utils/general/compareId.js");
 const returnGoodReq = require("../../utils/returnReq/returnGoodReq.js");
 const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq.js");
 
+const { getFollowingKey } = require("../../user/cache/userCache.js");
 const { getUserKey } = require("../cache/userCache.js");
 
 // return current user profile
 // user retrieved with authMiddleware
-function getUser(req, res) {
+async function getUser(req, res) {
   delete req.user.blocked_users;
 
   returnGoodReq(res, req.user);
@@ -31,20 +32,39 @@ async function getRequestedUser(req, res) {
         populateFollowers: true,
       });
 
+    // get users that the requesting user follows
+    const followingUsers = await User.find(
+      {
+        followers: { $in: targetUserId },
+      },
+      {
+        _id: 1,
+        username: 1,
+        profile_pic_link: 1,
+        blocked_users: 1,
+      }
+    )
+      .lean()
+      .cache({
+        key: getFollowingKey(targetUserId),
+      });
+    var userIds = followingUsers.map((user) => user._id);
+    console.log(userIds);
+
     const isFollowing = user.followers.some((follower) =>
-      compareId(follower._id, requestingUser._id),
+      compareId(follower._id, requestingUser._id)
     );
 
     const viewSelf = requestingUser._id == targetUserId;
     const blockedByUser =
       !viewSelf &&
       user.blocked_users.some((entry) =>
-        compareId(entry.user_id, requestingUser._id),
+        compareId(entry.user_id, requestingUser._id)
       );
     const blockingUser =
       !viewSelf &&
       requestingUser.blocked_users.some((entry) =>
-        compareId(entry.user_id, user._id),
+        compareId(entry.user_id, user._id)
       );
 
     delete user.blocked_users;
