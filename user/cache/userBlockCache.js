@@ -1,6 +1,7 @@
 const redisClient = require("../../cache/redis.js");
 
-const { getUserKey, getBlockedPath, getHeaderKey } = require("./userCache.js");
+const { getUserKey, getBlockedPath } = require("./userCache.js");
+const { getHeaderKey } = require("../utils/cacheProperties.js");
 const { cachedUserRemoveFollower } = require("./userFollowCache.js");
 
 const { getUserPostKey } = require("../../post/cache/postCache.js");
@@ -23,7 +24,7 @@ async function cachedUserAddBlocked(
   isBlocker,
   blockEntry,
   commentsPerPost,
-  followerIndex,
+  followerIndex
 ) {
   if (!redisClient.isReady) {
     return [];
@@ -37,14 +38,14 @@ async function cachedUserAddBlocked(
   // if self is the blocker then add blocked_users entry
   if (isBlocker) {
     promises.push(
-      redisClient.json.arrAppend(selfKey, "$.blocked_users", blockEntry),
+      redisClient.json.arrAppend(selfKey, "$.blocked_users", blockEntry)
     );
     promises.push(
       redisClient.json.arrAppend(
         getHeaderKey(selfId),
         "$.blocked_userse",
-        blockEntry,
-      ),
+        blockEntry
+      )
     );
   }
 
@@ -66,7 +67,7 @@ async function cachedUserAddBlocked(
   // delete comments by target user on self's posts
   commentsPerPost.forEach((entry) => {
     promises.push(
-      deleteAllCachedComments(entry._id, PARENT_MODEL_POST, targetUserId),
+      deleteAllCachedComments(entry._id, PARENT_MODEL_POST, targetUserId)
     );
 
     if (userPostKeyExists) {
@@ -75,8 +76,8 @@ async function cachedUserAddBlocked(
           selfId,
           entry._id,
           PARENT_MODEL_POST,
-          entry.comment_count,
-        ),
+          entry.comment_count
+        )
       );
     }
   });

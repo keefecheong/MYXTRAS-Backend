@@ -1,11 +1,11 @@
 // to add new user/update existing user in cache
 
 const redisClient = require("../../cache/redis.js");
+const { getUserKey } = require("./userCache.js");
 const {
-  getUserKey,
   USER_EXPIRATION_TIME,
   getHeaderKey,
-} = require("./userCache.js");
+} = require("../utils/cacheProperties.js");
 const returnPromiseResult = require("../../utils/general/returnPromiseResult.js");
 
 // to add new user to cache
@@ -48,7 +48,7 @@ async function updateCachedUser(updatedValues, userId, increaseVersion) {
   for (const updatedKey in updatedValues) {
     if (updatedValues.hasOwnProperty(updatedKey)) {
       promises.push(
-        redisClient.json.set(key, `$.${updatedKey}`, updatedValues[updatedKey]),
+        redisClient.json.set(key, `$.${updatedKey}`, updatedValues[updatedKey])
       );
 
       // update header entry if updated value is for profile pic or username
@@ -58,8 +58,8 @@ async function updateCachedUser(updatedValues, userId, increaseVersion) {
           redisClient.json.set(
             headerKey,
             `$.${updatedKey}`,
-            updatedValues[updatedKey],
-          ),
+            updatedValues[updatedKey]
+          )
         );
       }
     }

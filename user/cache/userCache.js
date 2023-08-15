@@ -1,7 +1,14 @@
 // to add users from the database to the cache
 
 const redisClient = require("../../cache/redis.js");
-const { storeDetailsMany, retrieveDetailsMany } = require("../utils/userDetailsCacheUtil.js");
+const {
+  storeDetailsMany,
+  retrieveDetailsMany,
+} = require("../utils/userDetailsCacheUtil.js");
+const {
+  USER_EXPIRATION_TIME,
+  getHeaderKey,
+} = require("../utils/cacheProperties.js");
 
 // cache key prefixes
 // to cache individual users
@@ -11,14 +18,6 @@ const USER_SINGLE_KEY_BASE = "user:single";
 // to cache user's following users' user id
 // format: 'user:following:userid'
 const USER_FOLLOWING_KEY_BASE = "user:following";
-
-// to cache part of the user's details for reference
-// format: 'user:header:userid'
-const USER_HEADER_KEY_BASE = "user:header";
-
-// expiration time
-// 1 hour for all (cache is updated)
-const USER_EXPIRATION_TIME = 60 * 60;
 
 // to retrieve user data from cache if exists
 async function getUserFromCache(key, populateFollowers) {
@@ -47,8 +46,7 @@ async function getUserFromCache(key, populateFollowers) {
         redisClient.json.get(getHeaderKey(followerId))
       )
     );
-  }
-  else if (dataIsArray) {
+  } else if (dataIsArray) {
     // otherwise if data is array means request is for following users
     // populate following users' data
     await retrieveDetailsMany(data, true);
@@ -127,10 +125,6 @@ function getFollowingKey(userId) {
   return `${USER_FOLLOWING_KEY_BASE}:${userId}`;
 }
 
-function getHeaderKey(userId) {
-  return `${USER_HEADER_KEY_BASE}:${userId}`;
-}
-
 // get userId from user key
 function getUserIdFromKey(key) {
   return key.split(":")[2];
@@ -151,13 +145,11 @@ function getFollowersPath(userId) {
 
 module.exports = {
   USER_SINGLE_KEY_BASE,
-  USER_EXPIRATION_TIME,
   getUserFromCache,
   cacheUser,
   getUserDetails,
   getUserKey,
   getFollowingKey,
-  getHeaderKey,
   getFollowingPath,
   getBlockedPath,
   getFollowersPath,

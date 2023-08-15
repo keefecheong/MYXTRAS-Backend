@@ -1,7 +1,7 @@
 // utils to handle separate user details for caching objects
 
 const redisClient = require("../../cache/redis.js");
-const { getHeaderKey, USER_EXPIRATION_TIME } = require("../cache/userCache.js");
+const { getHeaderKey, USER_EXPIRATION_TIME } = require("./cacheProperties.js");
 
 // to retrieve details from objects with the same creator to store in cache
 function storeDetailsSingle(data) {
