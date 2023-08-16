@@ -20,6 +20,12 @@ jobs:
       - name: Install Dependencies
         run: npm ci
       
+      - name: Install docker
+        run: sudo apt-get install docker-ce docker-ce-cli containerd.io
+      
+      - name: Build docker image
+        run: docker run -v "$(pwd)/cache/redis.conf:/redis-stack.conf" -p 6379:6379 redis/redis-stack:latest
+
       - name: Test Admin
         run: npm run test admin/test/userTerminateTest.js
       
