@@ -20,17 +20,14 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Check redis.conf file
-        run: ls -l cache/redis.conf
-      
-      - name: Pull Redis image
-        run: docker pull redis/redis-stack:latest
-
-      - name: Check Redis image
-        run: docker images redis/redis-stack:latest
-      
-      - name: Build docker image
-        run: docker run -v "$(pwd)/cache/redis.conf:/redis-stack.conf" -p 6379:6379 redis/redis-stack:latest
+      - name: Run Redis Stack
+        uses: addnab/docker-run-action@v3
+        with:
+          image: redis/redis-stack:latest
+          volumes: |
+            $(pwd)/cache/redis.conf:/redis-stack.conf
+          ports: |
+            6379:6379
 
       - name: Test Admin
         run: npm run test admin/test/userTerminateTest.js
