@@ -21,32 +21,22 @@ jobs:
         run: npm ci
       
       - name: Test Admin
-        run: npm run test ../admin/test/userTerminateTest.js
+        run: npm run test admin/test/userTerminateTest.js
       
       - name: Test Chat
-        run: 
-          - npm run test ../chat/test/populateChats.js
-          - npm run test ../chat/test/populateMessages.js
+        run: npm run test chat/test/populateChats.js && npm run test chat/test/populateMessages.js
       
       - name: Test comment
-        run: npm run test ../comment/test/populateComments.js
+        run: npm run test comment/test/populateComments.js
       
       - name: Test forum
-        run: 
-          - npm run test ../forum/test/forumDeleteTest.js
-          - npm run test ../forum/test/populateForums.js
+        run: npm run test forum/test/forumDeleteTest.js && npm run test forum/test/populateForums.js
       
       - name: Test post
-        run: 
-          - npm run test ../post/test/populatePosts.js
-          - npm run test ../post/test/postDeleteTest.js
+        run: npm run test post/test/populatePosts.js && npm run test post/test/postDeleteTest.js
       
       - name: Thread test
-        run: 
-          - npm run test ../thread/test/populateThreads.js
-          - npm run test ../thread/test/threadDeleteTest.js
+        run: npm run test thread/test/populateThreads.js && npm run test thread/test/threadDeleteTest.js
       
       - name: Test user
-        run: 
-          - npm run test ../user/test/populateUsers.js
-          - npm run test ../user/test/userBlockTest.js
+        run: npm run test user/test/populateUsers.js && npm run test user/test/userBlockTest.js
