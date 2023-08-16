@@ -19,6 +19,15 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+
+      - name: Check redis.conf file
+        run: ls -l cache/redis.conf
+      
+      - name: Pull Redis image
+        run: docker pull redis/redis-stack:latest
+
+      - name: Check Redis image
+        run: docker images redis/redis-stack:latest
       
       - name: Build docker image
         run: docker run -v "$(pwd)/cache/redis.conf:/redis-stack.conf" -p 6379:6379 redis/redis-stack:latest
@@ -38,7 +47,7 @@ jobs:
       - name: Test post
         run: npm run test post/test/populatePosts.js && npm run test post/test/postDeleteTest.js
       
-      - name: Thread test
+      - name: test thread
         run: npm run test thread/test/populateThreads.js && npm run test thread/test/threadDeleteTest.js
       
       - name: Test user
