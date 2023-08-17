@@ -8,12 +8,6 @@ const mainRouter = express.Router();
 const eventRouter = require("./eventRouter.js");
 const eventSpecificRouter = require("./eventSpecificRouter.js");
 
-// get middleware
-const { validateUserHTTP } = require("../../middleware/authMiddleware.js");
-
-// validate admin for all routes
-mainRouter.use((req, res, next) => validateUserHTTP(req, res, next, true));
-
 // mount various routes
 mainRouter.use("/", eventRouter);
 mainRouter.use("/:eventId", eventSpecificRouter);
