@@ -43,7 +43,7 @@ async function cachedUserAddBlocked(
     promises.push(
       redisClient.json.arrAppend(
         getHeaderKey(selfId),
-        "$.blocked_userse",
+        "$.blocked_users",
         blockEntry
       )
     );
