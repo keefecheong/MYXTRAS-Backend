@@ -1,0 +1,45 @@
+name: test
+
+on: 
+  push:
+    branches: [ main ]
+
+jobs:
+  testing:
+    name: Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+
+      - name: Code Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Build docker image
+        run: docker run -d -v "$(pwd)/cache/redis.conf:/redis-stack.conf" -p 6379:6379 redis/redis-stack:latest
+
+      - name: Test Admin
+        run: npm run test admin/test/userTerminateTest.js
+      
+      - name: Test Chat
+        run: npm run test chat/test/populateChats.js && npm run test chat/test/populateMessages.js
+      
+      - name: Test comment
+        run: npm run test comment/test/populateComments.js
+      
+      - name: Test forum
+        run: npm run test forum/test/forumDeleteTest.js
+      
+      - name: Test post
+        run: npm run test post/test/postDeleteTest.js
+      
+      - name: Test thread
+        run: npm run test thread/test/threadDeleteTest.js
+      
+      - name: Test user
+        run: npm run test user/test/userBlockTest.js
