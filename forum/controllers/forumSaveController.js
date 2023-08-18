@@ -180,8 +180,8 @@ async function updateForum(req, res) {
     forum.forum_desc = forum_desc;
     updatedValues.forum_desc = forum_desc;
 
-    forum.tags = tags;
-    updatedValues.tags = tags;
+    forum.tags = tags || [];
+    updatedValues.tags = tags || [];
 
     let index = 0;
     const newImageLinks = [];

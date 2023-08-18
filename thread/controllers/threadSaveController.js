@@ -163,8 +163,8 @@ async function updateThread(req, res) {
     thread.content = content;
     updatedValues.content = content;
 
-    thread.tags = tags;
-    updatedValues.tags = tags;
+    thread.tags = tags || [];
+    updatedValues.tags = tags || [];
 
     // save image if changed
     if (req.body.pictureUnchanged != "true") {

@@ -148,8 +148,8 @@ async function updatePost(req, res) {
   post.comments_enabled = req.body.commentsEnabled == "true";
   updatedValues.comments_enabled = req.body.commentsEnabled == "true";
 
-  post.tags = req.body.tags;
-  updatedValues.tags = req.body.tags;
+  post.tags = req.body.tags || [];
+  updatedValues.tags = req.body.tags || [];
 
   try {
     // upload new images and update post if provided
