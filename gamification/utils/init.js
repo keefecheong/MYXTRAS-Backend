@@ -54,7 +54,7 @@ async function resetDailyMissions() {
       const updateCachedResult = await updateCachedUser(
         updatedValues,
         user._id,
-        true,
+        true
       );
 
       // update database asynchronously if cache is updated successfully and synchronously otherwise
@@ -84,7 +84,7 @@ checkDateAndReset.lastDate = new Date().getDate();
 // Checks if new day has occured
 //setInterval(checkDateAndReset, 1000 * 60 * 60); // 1 hr
 
-cron.schedule("59 23 * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
   checkDateAndReset();
   await resetDailyMissions();
 });

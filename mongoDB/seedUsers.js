@@ -1,7 +1,26 @@
 // seed the database with user accounts
 
 const { User } = require("../user/models/user.js");
+const tasks = require("../gamification/utils/config.json");
+
 const bcrypt = require("bcryptjs");
+
+function getRandomElements(arr, n) {
+  const shuffled = arr.slice();
+  let i = arr.length;
+  const min = i - n;
+  let temp;
+  let index;
+
+  while (i-- > min) {
+    index = Math.floor((i + 1) * Math.random());
+    temp = shuffled[index];
+    shuffled[index] = shuffled[i];
+    shuffled[i] = temp;
+  }
+
+  return shuffled.slice(min);
+}
 
 // seed users
 module.exports = async function seedData() {
@@ -18,6 +37,11 @@ module.exports = async function seedData() {
       is_admin: true,
       password: await bcrypt.hash("Passw0rd", 10),
       is_profile_setup: true,
+      daily_missions: getRandomElements(Object.keys(tasks.missions), 4).map(
+        (item) => {
+          return { title: item, claimed: false, locked: true };
+        }
+      ),
     }),
     new User({
       email: "admin_2@gmail.com",
@@ -29,6 +53,11 @@ module.exports = async function seedData() {
       is_admin: true,
       password: await bcrypt.hash("Passw0rd", 10),
       is_profile_setup: true,
+      daily_missions: getRandomElements(Object.keys(tasks.missions), 4).map(
+        (item) => {
+          return { title: item, claimed: false, locked: true };
+        }
+      ),
     }),
     new User({
       email: "user_1@gmail.com",
@@ -40,6 +69,11 @@ module.exports = async function seedData() {
       is_admin: false,
       password: await bcrypt.hash("Passw0rd", 10),
       is_profile_setup: true,
+      daily_missions: getRandomElements(Object.keys(tasks.missions), 4).map(
+        (item) => {
+          return { title: item, claimed: false, locked: true };
+        }
+      ),
     }),
     new User({
       email: "user_2@gmail.com",
@@ -51,16 +85,23 @@ module.exports = async function seedData() {
       is_admin: false,
       password: await bcrypt.hash("Passw0rd", 10),
       is_profile_setup: true,
+      daily_missions: getRandomElements(Object.keys(tasks.missions), 4).map(
+        (item) => {
+          return { title: item, claimed: false, locked: true };
+        }
+      ),
     }),
   ];
 
   // only insert new users that do not already exist (based on email)
   const newUsers = users.filter(
     (user) =>
-      !existingUsers.some((existingUser) => existingUser.email == user.email),
+      !existingUsers.some((existingUser) => existingUser.email == user.email)
   );
 
-  if (newUsers.length <= 0) return console.log("No users to seed");
+  if (newUsers.length <= 0) {
+    return console.log("No users to seed");
+  }
 
   await User.insertMany(newUsers)
     .then(() => console.log("Users seeded successfully"))
