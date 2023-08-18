@@ -24,13 +24,13 @@ async function getFollowingPosts(req, res) {
         _id: 1,
         username: 1,
         profile_pic_link: 1,
-        blocked_users: 1
+        blocked_users: 1,
       }
     )
       .lean()
       .cache({
         key: getFollowingKey(userId),
-        populateFollowers: true
+        populateFollowers: true,
       });
 
     // add user ids into an array
@@ -51,8 +51,8 @@ async function getFollowingPosts(req, res) {
           true,
           {
             key: getUserPostKey(userId),
-          },
-        ),
+          }
+        )
       );
     }
 
@@ -78,6 +78,7 @@ async function getFollowingPosts(req, res) {
 // retrieve a user's posts based on userid if provided, otherwise retrieve the requesting user's own posts
 async function getUserPosts(req, res) {
   try {
+    console.log(1);
     // set targetUserId to provided userId or requesting user's id otherwise
     const targetUserId = req.params.userId || req.user._id;
 
@@ -89,11 +90,11 @@ async function getUserPosts(req, res) {
       true,
       {
         key: getUserPostKey(targetUserId),
-      },
+      }
     );
 
     posts = checkPostAttributesAll(posts, req.user._id, req.user.blocked_users);
-
+    console.log(posts);
     returnGoodReq(res, posts);
   } catch (error) {
     returnServerErrorReq(res);
@@ -174,7 +175,7 @@ async function getPopularPosts(req, res) {
     posts = checkPostAttributesAll(
       posts.filter((post) => post.creator_id._id != req.user._id),
       req.user._id,
-      req.user.blocked_users,
+      req.user.blocked_users
     );
 
     returnGoodReq(res, posts);
@@ -190,7 +191,7 @@ async function getSavedPosts(req, res) {
       {
         saved_by: { $in: [req.user._id] },
       },
-      {},
+      {}
     );
 
     posts = checkPostAttributesAll(posts, req.user._id, req.user.blocked_users);
