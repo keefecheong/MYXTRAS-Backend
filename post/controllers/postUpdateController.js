@@ -53,7 +53,7 @@ async function createPost(req, res) {
     post.caption = req.body.caption;
     post.location = req.body.location;
     post.comments_enabled = req.body.commentsEnabled == "true";
-    post.tags = req.body.tags;
+    post.tags = req.body.tags || [];
   }
 
   try {
