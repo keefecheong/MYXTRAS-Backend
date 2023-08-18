@@ -29,6 +29,15 @@ async function addDislikeThread(req, res) {
     return returnBadReq(res, "You have already disliked this thread.");
   }
 
+  const likeExists = res.thread.likes.some((user_id) =>
+    compareId(user_id, userId)
+  );
+
+  // if the user has liked the thread return 400 error
+  if (likeExists) {
+    return returnBadReq(res, "You cannot like and dislike the thread at the same time.");
+  }
+
   // convert thread to mongoose document to perform operations
   const thread = new Thread(res.thread);
   thread.isNew = false;
