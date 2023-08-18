@@ -20,8 +20,8 @@ const THREAD_POPULAR_KEY_BASE = "thread:popular";
 // 1 hour for threads cached by forum id (cache is updated)
 const THREAD_FORUM_EXPIRATION_TIME = 60 * 60;
 
-// 1 minute for threads cached by tags (by aggregation) - (cache is not updated)
-const THREAD_POPULAR_EXPIRATION_TIME = 60;
+// 15 seconds for threads cached by tags (by aggregation) - (cache is not updated)
+const THREAD_POPULAR_EXPIRATION_TIME = 15;
 
 // to retrieve a single thread from cache if exists
 async function getOneThreadFromCache(forumId, threadId) {
