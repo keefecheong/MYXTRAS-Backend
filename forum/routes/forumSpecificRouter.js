@@ -22,7 +22,7 @@ const { deleteForum } = require("../controllers/forumDeleteController.js");
 forumSpecificRouter.use("/subscribe", subscribeRouter);
 
 // get one forum
-forumSpecificRouter.get("/", getForum, getOneForum);
+forumSpecificRouter.get("/", getOneForum);
 
 // update forum
 forumSpecificRouter.patch(

@@ -56,6 +56,13 @@ async function createPost(req, res) {
     post.tags = req.body.tags || [];
   }
 
+  // field length validation
+  if (
+    post.caption.length > 500 ||
+    post.location.length > 50
+  ) {
+    return returnBadReq(res, "Input length too long");
+  }
   try {
     // upload images and store the links in content_links of the new post
     const uploadSuccessful = await uploadImages(
@@ -150,7 +157,14 @@ async function updatePost(req, res) {
 
   post.tags = req.body.tags || [];
   updatedValues.tags = req.body.tags || [];
-
+  
+  // field length validation
+  if (
+    post.caption.length > 500 ||
+    post.location.length > 50
+  ) {
+    return returnBadReq(res, "Input length too long");
+  }
   try {
     // upload new images and update post if provided
     if (req.body.noFilesChanged != "true") {
