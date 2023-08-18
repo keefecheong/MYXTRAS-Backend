@@ -87,7 +87,11 @@ async function postComment(req, res) {
   if (!req.body.content) {
     return returnBadReq(res, "Comment content is required.");
   }
-
+  
+  // field length validation
+  if (req.body.content.length > 500) {
+    return returnBadReq(res, "Input length too long");
+  }
   // create new comment
   const comment = new Comment({
     creator_id: creatorId,

@@ -116,7 +116,7 @@ async function getCategorized(req, res) {
     },
     {
       $addFields: {
-        subscribers_count: { $size: "$subscribers" },
+        subscribers_count: { $size: "$subscribers" }, // add a new field which counts the number of subscribers
       },
     },
     {

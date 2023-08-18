@@ -48,6 +48,13 @@ async function createThread(req, res) {
     const creator = req.user;
     const creatorId = req.user._id;
 
+    // field length validation
+    if (
+      title.length > 100 ||
+      content.length > 500
+    ) {
+      return returnBadReq(res, "Input length too long");
+    }
     // create new thread
     const newThread = new Thread({
       parent_id: forumId,
@@ -145,7 +152,14 @@ async function updateThread(req, res) {
 
   try {
     const { title, content, tags } = JSON.parse(req.body.threadObject);
-
+    
+    // field length validation
+    if (
+      title.length > 100 ||
+      content.length > 500
+    ) {
+      return returnBadReq(res, "Input length too long");
+    }
     // convert thread to mongoose document to perform operations
     const thread = new Thread(res.thread);
     thread.isNew = false;
