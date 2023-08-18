@@ -65,7 +65,7 @@ async function createThread(req, res) {
         req.files,
         newImageLinks,
         newThread._id,
-        UPLOAD_TYPE_THREAD,
+        UPLOAD_TYPE_THREAD
       );
 
       // if upload not successful then delete the new thread
@@ -100,14 +100,14 @@ async function createThread(req, res) {
       newThread._id,
       REPORT_TARGET_TYPE_THREAD,
       creatorId,
-      { forumId },
+      { forumId }
     );
 
     // update cache if key exists
     const updateCacheResult = await cacheNewThread(
       newThread,
       userDetails,
-      forumDetails,
+      forumDetails
     );
 
     // update database asynchronously if cache is updated successfully and synchronously otherwise
@@ -157,20 +157,14 @@ async function updateThread(req, res) {
     const updatedValues = {};
 
     // update fields and add to updatedValues if changed
-    if (title != thread.title) {
-      thread.title = title;
-      updatedValues.title = title;
-    }
+    thread.title = title;
+    updatedValues.title = title;
 
-    if (content != thread.content) {
-      thread.content = content;
-      updatedValues.content = content;
-    }
+    thread.content = content;
+    updatedValues.content = content;
 
-    if (tags != thread.tags) {
-      thread.tags = tags;
-      updatedValues.tags = tags;
-    }
+    thread.tags = tags;
+    updatedValues.tags = tags;
 
     // save image if changed
     if (req.body.pictureUnchanged != "true") {
@@ -180,7 +174,7 @@ async function updateThread(req, res) {
         req.files,
         newImageLinks,
         threadId,
-        UPLOAD_TYPE_THREAD,
+        UPLOAD_TYPE_THREAD
       );
 
       // if upload not successful then return 500 error
@@ -206,7 +200,7 @@ async function updateThread(req, res) {
       threadId,
       REPORT_TARGET_TYPE_THREAD,
       creatorId,
-      { forumId },
+      { forumId }
     );
 
     // update cache entry if thread is in cache
@@ -214,7 +208,7 @@ async function updateThread(req, res) {
       updatedValues,
       forumId,
       threadId,
-      res.threadFromCache,
+      res.threadFromCache
     );
 
     // update database asynchronously if cache is updated successfully and synchronously otherwise

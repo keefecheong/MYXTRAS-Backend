@@ -42,7 +42,7 @@ async function createForum(req, res) {
 
   try {
     const { forum_name, forum_id, forum_desc, tags } = JSON.parse(
-      req.body.forumObject,
+      req.body.forumObject
     );
 
     // Check for existing forum
@@ -78,7 +78,7 @@ async function createForum(req, res) {
       req.files,
       imageLinks,
       newForum._id,
-      UPLOAD_TYPE_FORUM,
+      UPLOAD_TYPE_FORUM
     );
 
     // if unsuccessful return internal server error
@@ -99,14 +99,14 @@ async function createForum(req, res) {
     // moderate text and images
     const moderationPromises = imageLinks.map((link) => moderateImage(link));
     moderationPromises.push(
-      moderateText(forum_id + " " + forum_name + " " + forum_desc),
+      moderateText(forum_id + " " + forum_name + " " + forum_desc)
     );
 
     createReportAfterModeration(
       moderationPromises,
       newForum._id,
       REPORT_TARGET_TYPE_FORUM,
-      creatorId,
+      creatorId
     );
 
     // update cache
@@ -153,7 +153,7 @@ async function updateForum(req, res) {
   try {
     // update fields
     const { forum_name, forum_id, forum_desc, tags } = JSON.parse(
-      req.body.forumObject,
+      req.body.forumObject
     );
 
     if (
@@ -171,25 +171,17 @@ async function updateForum(req, res) {
     const updatedValues = {};
 
     // update fields and add to updatedValues if changed
-    if (forum_name != forum.forum_name) {
-      forum.forum_name = forum_name;
-      updatedValues.forum_name = forum_name;
-    }
+    forum.forum_name = forum_name;
+    updatedValues.forum_name = forum_name;
 
-    if (forum_id != forum.forum_id) {
-      forum.forum_id = forum_id;
-      updatedValues.forum_id = forum_id;
-    }
+    forum.forum_id = forum_id;
+    updatedValues.forum_id = forum_id;
 
-    if (forum_desc != forum.forum_desc) {
-      forum.forum_desc = forum_desc;
-      updatedValues.forum_desc = forum_desc;
-    }
+    forum.forum_desc = forum_desc;
+    updatedValues.forum_desc = forum_desc;
 
-    if (tags != forum.tags) {
-      forum.tags = tags;
-      updatedValues.tags = tags;
-    }
+    forum.tags = tags;
+    updatedValues.tags = tags;
 
     let index = 0;
     const newImageLinks = [];
@@ -201,7 +193,7 @@ async function updateForum(req, res) {
         [req.files[index]],
         newImageLinks,
         forumId,
-        UPLOAD_TYPE_FORUM,
+        UPLOAD_TYPE_FORUM
       );
 
       // if failed to upload images then send error message
@@ -225,7 +217,7 @@ async function updateForum(req, res) {
         [req.files[index]],
         newImageLinks,
         forumId,
-        UPLOAD_TYPE_FORUM,
+        UPLOAD_TYPE_FORUM
       );
 
       // if failed to upload images then send error message
@@ -246,22 +238,22 @@ async function updateForum(req, res) {
     const moderationPromises = newImageLinks.map((link) => moderateImage(link));
     moderationPromises.push(
       moderateText(
-        `${updatedValues?.forum_id} ${updatedValues?.forum_name} ${updatedValues?.forum_desc}`,
-      ),
+        `${updatedValues?.forum_id} ${updatedValues?.forum_name} ${updatedValues?.forum_desc}`
+      )
     );
 
     createReportAfterModeration(
       moderationPromises,
       forumId,
       REPORT_TARGET_TYPE_FORUM,
-      userId,
+      userId
     );
 
     // update cache entry
     const updateCacheResult = await updateCachedForum(
       updatedValues,
       forumId,
-      userId,
+      userId
     );
 
     // update database asynchronously if cache is updated successfully, or synchronously otherwise

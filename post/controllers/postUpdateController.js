@@ -50,21 +50,10 @@ async function createPost(req, res) {
 
   // check if there is request body (data for other fields)
   if (req.body) {
-    if (req.body.caption) {
-      post.caption = req.body.caption;
-    }
-
-    if (req.body.location) {
-      post.location = req.body.location;
-    }
-
-    if (req.body.commentsEnabled) {
-      post.comments_enabled = req.body.commentsEnabled == "true";
-    }
-
-    if (req.body.tags) {
-      post.tags = req.body.tags;
-    }
+    post.caption = req.body.caption;
+    post.location = req.body.location;
+    post.comments_enabled = req.body.commentsEnabled == "true";
+    post.tags = req.body.tags;
   }
 
   try {
@@ -73,7 +62,7 @@ async function createPost(req, res) {
       req.files,
       post.content_links,
       post._id,
-      UPLOAD_TYPE_POST,
+      UPLOAD_TYPE_POST
     );
 
     // if failed to upload images then return error message
@@ -90,7 +79,7 @@ async function createPost(req, res) {
 
     // moderate text and images
     const moderationPromises = post.content_links.map((link) =>
-      moderateImage(link),
+      moderateImage(link)
     );
     moderationPromises.push(moderateText(post.caption));
 
@@ -100,7 +89,7 @@ async function createPost(req, res) {
       post._id,
       REPORT_TARGET_TYPE_POST,
       creatorId,
-      { creatorId },
+      { creatorId }
     );
 
     // upload to cache if key exists
@@ -150,28 +139,17 @@ async function updatePost(req, res) {
   const updatedValues = {};
 
   // update fields and add to updatedValues if changed
-  if (req.body.caption && req.body.caption != post.caption) {
-    post.caption = req.body.caption;
-    updatedValues.caption = req.body.caption;
-  }
+  post.caption = req.body.caption;
+  updatedValues.caption = req.body.caption;
 
-  if (req.body.location && req.body.location != post.location) {
-    post.location = req.body.location;
-    updatedValues.location = req.body.location;
-  }
+  post.location = req.body.location;
+  updatedValues.location = req.body.location;
 
-  if (
-    req.body.commentsEnabled &&
-    req.body.commentsEnabled != post.comments_enabled
-  ) {
-    post.comments_enabled = req.body.commentsEnabled == "true";
-    updatedValues.comments_enabled = req.body.commentsEnabled == "true";
-  }
+  post.comments_enabled = req.body.commentsEnabled == "true";
+  updatedValues.comments_enabled = req.body.commentsEnabled == "true";
 
-  if (req.body.tags && req.body.tags != post.tags) {
-    post.tags = req.body.tags;
-    updatedValues.tags = req.body.tags;
-  }
+  post.tags = req.body.tags;
+  updatedValues.tags = req.body.tags;
 
   try {
     // upload new images and update post if provided
@@ -182,7 +160,7 @@ async function updatePost(req, res) {
         req.files,
         newImageLinks,
         postId,
-        UPLOAD_TYPE_POST,
+        UPLOAD_TYPE_POST
       );
 
       // if failed to upload images then send error message
@@ -218,7 +196,7 @@ async function updatePost(req, res) {
       postId,
       REPORT_TARGET_TYPE_POST,
       userId,
-      { creatorId: userId },
+      { creatorId: userId }
     );
 
     // update cache entry if post is in cache
@@ -226,7 +204,7 @@ async function updatePost(req, res) {
       updatedValues,
       userId,
       postId,
-      res.postFromCache,
+      res.postFromCache
     );
 
     // update database asynchronously if cache is updated successfully and synchronously otherwise
