@@ -86,6 +86,15 @@ async function getSubscribed(req, res) {
 async function getRecommended(req, res) {
   const recommendedForums = await Forum.aggregate([
     {
+      $addFields: {
+        relevance: {
+          $size: {
+            $setIntersection: ["$tags", req.user.interests],
+          },
+        },
+      },
+    },
+    {
       $project: {
         forum_name: 1,
         forum_id: 1,
@@ -96,6 +105,7 @@ async function getRecommended(req, res) {
     {
       $sort: {
         subscribers_count: -1,
+        relevance: -1
       },
     },
     {
