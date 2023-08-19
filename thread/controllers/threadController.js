@@ -100,7 +100,6 @@ async function getRecentThreads(req, res) {
         key: getCreatedForumKey(userId),
       },
     );
-
     const subscribedForumQuery = Forum.commonQuery(
       {
         subscribers: { $in: [userId] },
