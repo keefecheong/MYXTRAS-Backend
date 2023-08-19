@@ -33,8 +33,8 @@ module.exports = function getAggFunction(interests, limit) {
     },
     {
       $sort: {
-        relevance: -1,
         popularity: -1,
+        relevance: -1,
       },
     },
     {
