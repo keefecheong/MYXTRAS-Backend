@@ -16,12 +16,25 @@ module.exports = function getAggFunction(interests, limit) {
             "$comment_count",
           ],
         },
+        dislikes_count: {
+          $size: "$dislikes"
+        },
+      },
+    },
+    {
+      $addFields: {
+        popularity: {
+          $subtract: [
+            "$activity",
+            "$dislikes_count",
+          ],
+        },
       },
     },
     {
       $sort: {
         relevance: -1,
-        activity: -1,
+        popularity: -1,
       },
     },
     {
