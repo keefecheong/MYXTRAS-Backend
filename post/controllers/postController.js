@@ -78,7 +78,6 @@ async function getFollowingPosts(req, res) {
 // retrieve a user's posts based on userid if provided, otherwise retrieve the requesting user's own posts
 async function getUserPosts(req, res) {
   try {
-    console.log(1);
     // set targetUserId to provided userId or requesting user's id otherwise
     const targetUserId = req.params.userId || req.user._id;
 
@@ -94,7 +93,7 @@ async function getUserPosts(req, res) {
     );
 
     posts = checkPostAttributesAll(posts, req.user._id, req.user.blocked_users);
-    console.log(posts);
+    
     returnGoodReq(res, posts);
   } catch (error) {
     returnServerErrorReq(res);
