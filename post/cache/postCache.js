@@ -19,8 +19,8 @@ const POST_POPULAR_KEY_BASE = "post:popular";
 // 1 hour for posts cached by creator id (cache is updated)
 const POST_USER_EXPIRATION_TIME = 60 * 60;
 
-// 1 minute for posts cached by tags (by aggregation to get popular posts) - (cache not updated)
-const POST_POPULAR_EXPIRATION_TIME = 60;
+// 15 seconds for posts cached by tags (by aggregation to get popular posts) - (cache not updated)
+const POST_POPULAR_EXPIRATION_TIME = 15;
 
 // to retrieve a single post from cache if exists
 async function getOnePostFromCache(userId, postId) {
