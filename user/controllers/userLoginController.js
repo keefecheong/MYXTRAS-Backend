@@ -45,10 +45,7 @@ async function loginUser(req, res) {
     // if accessGranted is false means user is terminated or suspended
     // return 403
     if (!checkUserStatus.accessGranted) {
-      const message = checkUserStatus.terminated
-        ? USER_TERMINATED_MSG
-        : USER_SUSPENDED_MSG;
-      return returnForbiddenReq(res, message);
+      return returnForbiddenReq(res, user.lockoutMessage);
     }
 
     // sign jwt and return as cookie

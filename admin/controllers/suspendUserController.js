@@ -35,7 +35,12 @@ async function suspendUser(req, res) {
     // suspend user
     await suspendUserUtil(true, res.user, req.user._id, endTime);
 
-    returnGoodReq(res, { message: "User suspended successfully." });
+    returnGoodReq(res, {
+      message: `User suspended until ${new Date(endTime).toLocaleString([], {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })}.`,
+    });
   } catch (error) {
     returnServerErrorReq(res);
   }

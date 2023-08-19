@@ -292,7 +292,7 @@ userSchema.pre("save", function (next) {
 userSchema.statics.deleteFromArrayField = function (
   forFollowers,
   userId,
-  asJSON,
+  asJSON
 ) {
   let filter = {};
   let update = {};
@@ -322,6 +322,17 @@ userSchema.statics.deleteFromArrayField = function (
     ? { updateMany: { filter, update } }
     : this.updateMany(filter, update);
 };
+
+userSchema.virtual("lockoutMessage").get(function () {
+  return this.status?.status == USER_STATUS_SUSPENDED
+    ? `Your account has been suspended until ${new Date(
+        this.status.end_time
+      ).toLocaleString([], {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })}, please try again later.`
+    : USER_TERMINATED_MSG;
+});
 
 module.exports = {
   User: mongoose.model("User", userSchema),
