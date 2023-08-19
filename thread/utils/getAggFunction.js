@@ -81,7 +81,7 @@ module.exports = function getAggFunction(interests, limit) {
       },
     },
     {
-      $unset: ["activity", "relevance", "__v", "forum", "user"],
+      $unset: ["activity", "relevance", "__v", "forum", "user", "popularity", "dislikes_count"],
     },
   ];
 };
