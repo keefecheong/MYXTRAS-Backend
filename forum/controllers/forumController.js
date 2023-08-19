@@ -54,7 +54,9 @@ async function getCreated(req, res) {
         key: getCreatedForumKey(userId),
       },
     );
-
+    
+    forums.sort((a, b) => a.forum_name.localeCompare(b.forum_name));
+    console.log(forums)
     returnGoodReq(res, forums);
   } catch (error) {
     returnServerErrorReq(res);
@@ -75,6 +77,8 @@ async function getSubscribed(req, res) {
         key: getSubscribedForumKey(userId),
       },
     );
+
+    subbed_forums.sort((a, b) => a.forum_name.localeCompare(b.forum_name));
 
     returnGoodReq(res, subbed_forums);
   } catch (error) {

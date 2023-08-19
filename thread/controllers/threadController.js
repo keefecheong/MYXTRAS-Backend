@@ -59,7 +59,6 @@ async function getPopularThreads(req, res) {
     });
 
     threads = checkThreadAttributesAll(threads, req.user._id);
-
     returnGoodReq(res, threads);
   } catch (error) {
     returnServerErrorReq(res);
@@ -70,7 +69,6 @@ async function getPopularThreads(req, res) {
 async function getExploreThreads(req, res) {
   try {
     const agg = getAggFunction(req.user.interests, 50);
-
     const tags =
       req.user.interests.length > 0 ? req.user.interests.join("-") : "default";
 
