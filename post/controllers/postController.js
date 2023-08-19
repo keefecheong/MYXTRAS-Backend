@@ -10,6 +10,8 @@ const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq
 const { getFollowingKey } = require("../../user/cache/userCache.js");
 const { getUserPostKey, getPopularPostKey } = require("../cache/postCache.js");
 
+const compareId = require("../../utils/general/compareId.js");
+
 // retrieve user's own posts and posts by users followed
 async function getFollowingPosts(req, res) {
   try {
@@ -93,7 +95,7 @@ async function getUserPosts(req, res) {
     );
 
     posts = checkPostAttributesAll(posts, req.user._id, req.user.blocked_users);
-    
+
     returnGoodReq(res, posts);
   } catch (error) {
     returnServerErrorReq(res);
@@ -172,7 +174,10 @@ async function getPopularPosts(req, res) {
 
     // filter posts to those created by other users and set fields
     posts = checkPostAttributesAll(
-      posts.filter((post) => post.creator_id._id != req.user._id),
+      posts.filter(
+        (post) =>
+          !compareId(post.creator_id._id || post.creator_id, req.user._id)
+      ),
       req.user._id,
       req.user.blocked_users
     );
