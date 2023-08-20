@@ -27,7 +27,7 @@ const FORUM_CATEGORIZED_KEY_BASE = "forum:categorized";
 
 // expiration times for forum cache
 // short expiry for potentially quickly changing data - (cache not updated)
-const FORUM_SHORT_EXPIRATION_TIME = 60;
+const FORUM_SHORT_EXPIRATION_TIME = 15;
 
 // long expiry for data updated in cache
 const FORUM_LONG_EXPIRATION_TIME = 60 * 60;
