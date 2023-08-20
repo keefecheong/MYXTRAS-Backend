@@ -36,7 +36,7 @@ async function getUserFromCache(key, populateFollowers) {
     const followersExist = await redisClient.exists(data.followers);
 
     // if follower data does not exist for all followers return null to request database to populate it
-    if (followersExist == data.followers.length) {
+    if (followersExist != data.followers.length) {
       return null;
     }
 

@@ -17,8 +17,10 @@ function cacheUnblock(unblock) {
   const key = getUnblockKey(unblock.blocker_id, unblock.blocked_id);
 
   // set cache entry to expire when the Unblock entry expires
-  const expiry =
-    unblock.unblock_time.getTime() + UNBLOCK_TTL * 60 * 1000 - Date.now();
+  const expiry = Math.floor(
+    (unblock.unblock_time.getTime() + UNBLOCK_TTL * 60 * 1000 - Date.now()) /
+      1000
+  );
 
   const promises = [
     redisClient.json.set(key, "$", unblock),
