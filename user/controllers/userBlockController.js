@@ -20,8 +20,6 @@ const { cacheUnblock } = require("../cache/unblockCache.js");
 async function blockUser(req, res) {
   var self = req.user;
   var targetUser = res.user;
-  console.log(self)
-  console.log(targetUser)
 
   if (compareId(self._id, targetUser._id)) {
     return returnBadReq(res, "You cannot block yourself.");
@@ -77,7 +75,6 @@ async function blockUser(req, res) {
 
     returnGoodReq(res, { message: "User blocked." });
   } catch (error) {
-    console.log(error)
     returnServerErrorReq(res);
   }
 }

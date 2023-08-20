@@ -56,7 +56,7 @@ async function getCreated(req, res) {
     );
     
     forums.sort((a, b) => a.forum_name.localeCompare(b.forum_name));
-    console.log(forums)
+    
     returnGoodReq(res, forums);
   } catch (error) {
     returnServerErrorReq(res);

@@ -86,7 +86,6 @@ async function getRequestedUser(req, res) {
       followingUsers,
     });
   } catch (error) {
-    console.log(error);
     returnServerErrorReq(res);
   }
 }
