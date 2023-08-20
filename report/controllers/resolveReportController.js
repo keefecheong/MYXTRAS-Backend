@@ -115,8 +115,8 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
     const warning = {
       object_id: reportTargetId,
       object_type:
-        type == REPORT_TARGET_TYPE_POST_COMMENT ||
-        type == REPORT_TARGET_TYPE_THREAD_COMMENT
+        (type == REPORT_TARGET_TYPE_POST_COMMENT ||
+        type == REPORT_TARGET_TYPE_THREAD_COMMENT)
           ? REPORT_TARGET_TYPE_COMMENT
           : type,
       reason: reviewReason,
