@@ -12,7 +12,7 @@ const returnGoodReq = require("../../utils/returnReq/returnGoodReq.js");
 const returnBadReq = require("../../utils/returnReq/returnBadReq.js");
 const returnForbiddenReq = require("../../utils/returnReq/returnForbiddenReq.js");
 const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq.js");
-const suspendUserUtil = require("../../report/utils/suspendUserUtil.js");
+const suspendUserUtil = require("../../admin/utils/accounts/suspendUserUtil.js");
 
 // login user
 async function loginUser(req, res) {

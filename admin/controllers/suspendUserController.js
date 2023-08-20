@@ -6,7 +6,7 @@ const returnGoodReq = require("../../utils/returnReq/returnGoodReq.js");
 const returnBadReq = require("../../utils/returnReq/returnBadReq.js");
 const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq.js");
 
-const suspendUserUtil = require("../../report/utils/suspendUserUtil.js");
+const suspendUserUtil = require("../utils/accounts/suspendUserUtil.js");
 const compareId = require("../../utils/general/compareId.js");
 
 // to suspend user

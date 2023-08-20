@@ -13,7 +13,7 @@ const returnServerErrorReq = require("../utils/returnReq/returnServerErrorReq.js
 const returnForbiddenReq = require("../utils/returnReq/returnForbiddenReq.js");
 
 const { getUserKey } = require("../user/cache/userCache.js");
-const suspendUserUtil = require("../report/utils/suspendUserUtil.js");
+const suspendUserUtil = require("../admin/utils/accounts/suspendUserUtil.js");
 const acknowledgeWarning = require("../report/utils/acknowledgeWarning.js");
 
 const clearJWTCookie = require("../user/utils/clearJWTCookie.js");
