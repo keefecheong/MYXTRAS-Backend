@@ -22,9 +22,11 @@ async function getRequestedUser(req, res) {
   try {
     const requestingUser = req.user;
     let targetUserId =
-      (req.params.userId == "self" || req.params.userId == 'null') ? requestingUser._id : req.params.userId;
+      req.params.userId == "self" || req.params.userId == "null"
+        ? requestingUser._id
+        : req.params.userId;
 
-      const user = await User.findById(targetUserId)
+    const user = await User.findById(targetUserId)
       .getFollowers()
       .lean()
       .cache({
@@ -41,17 +43,17 @@ async function getRequestedUser(req, res) {
         _id: 1,
         username: 1,
         profile_pic_link: 1,
-        blocked_users: 1
+        blocked_users: 1,
       }
     )
       .lean()
       .cache({
         key: getFollowingKey(targetUserId),
-        populateFollowers: true
+        populateFollowers: true,
       });
 
     const isFollowing = user.followers.some((follower) =>
-      compareId(follower._id, requestingUser._id)
+      compareId(follower?._id, requestingUser._id)
     );
 
     const viewSelf = requestingUser._id == targetUserId;
@@ -81,10 +83,10 @@ async function getRequestedUser(req, res) {
       blockedByUser,
       blockingUser,
       self,
-      followingUsers
+      followingUsers,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     returnServerErrorReq(res);
   }
 }
