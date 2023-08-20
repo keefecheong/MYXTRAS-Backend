@@ -1,21 +1,21 @@
 // to terminate a user
 
-const { User, USER_STATUS_TERMINATED } = require("../../user/models/user.js");
-const Post = require("../../post/models/post.js");
-const Forum = require("../../forum/models/forum.js");
-const Thread = require("../../thread/models/thread.js");
+const { User, USER_STATUS_TERMINATED } = require("../../../user/models/user.js");
+const Post = require("../../../post/models/post.js");
+const Forum = require("../../../forum/models/forum.js");
+const Thread = require("../../../thread/models/thread.js");
 const {
   Comment,
   PARENT_MODEL_POST,
-} = require("../../comment/models/comment.js");
-const Chat = require("../../chat/models/chat.js");
+} = require("../../../comment/models/comment.js");
+const Chat = require("../../../chat/models/chat.js");
 
-const updateParentCommentCount = require("../../comment/utils/updateParentCommentCount.js");
+const updateParentCommentCount = require("../../../comment/utils/updateParentCommentCount.js");
 const {
   terminateCachedUser,
-} = require("../../user/cache/userTerminateCache.js");
+} = require("../../../user/cache/userTerminateCache.js");
 
-const { getCommentsPerParentAgg } = require("./getAggFunction.js");
+const { getCommentsPerParentAgg } = require("../../../report/utils/getAggFunction.js");
 
 module.exports = async function terminateUserUtil(user, adminId) {
   const targetUser = new User(user);

@@ -30,8 +30,8 @@ const { getUserPostKey } = require("../../post/cache/postCache.js");
 const { getForumThreadKey } = require("../../thread/cache/threadCache.js");
 
 const warnUser = require("../utils/warnUser.js");
-const suspendUserUtil = require("../utils/suspendUserUtil.js");
-const terminateUserUtil = require("../utils/terminateUserUtil.js");
+const suspendUserUtil = require("../../admin/utils/accounts/suspendUserUtil.js");
+const terminateUserUtil = require("../../admin/utils/accounts/terminateUserUtil.js");
 
 const deletePostUtil = require("../../post/utils/deletePost.js");
 const deleteForumUtil = require("../../forum/utils/deleteForum.js");

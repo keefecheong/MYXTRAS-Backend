@@ -7,7 +7,7 @@ const returnGoodReq = require("../../utils/returnReq/returnGoodReq");
 const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq");
 
 const { updateCachedUser } = require("../../user/cache/userUpdateCache");
-const terminateUserUtil = require("../../report/utils/terminateUserUtil");
+const terminateUserUtil = require("../utils/accounts/terminateUserUtil");
 const compareId = require("../../utils/general/compareId");
 
 // to terminate user

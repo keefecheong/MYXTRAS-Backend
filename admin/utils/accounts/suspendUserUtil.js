@@ -2,9 +2,9 @@ const {
   User,
   USER_STATUS_SUSPENDED,
   USER_STATUS_TERMINATED,
-} = require("../../user/models/user.js");
-const { updateCachedUser } = require("../../user/cache/userUpdateCache.js");
-const returnPromiseResult = require("../../utils/general/returnPromiseResult.js");
+} = require("../../../user/models/user.js");
+const { updateCachedUser } = require("../../../user/cache/userUpdateCache.js");
+const returnPromiseResult = require("../../../utils/general/returnPromiseResult.js");
 
 // to suspend/remove suspend of a user and update cache and database
 module.exports = async function suspendUserUtil(
