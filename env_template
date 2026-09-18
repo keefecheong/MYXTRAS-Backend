@@ -1,0 +1,23 @@
+# Copy this file to .env and replace every placeholder before starting the app.
+# Historical reproduction baseline: Node.js 18 and MongoDB 6.0.
+DATABASE_URL=mongodb://127.0.0.1:27017/myxtras
+PORT=3000
+FRONTEND_SERVER_URL=http://127.0.0.1:5173
+
+#jwt configuration
+# Generate a local value, for example:
+#   python -c "import secrets; print(secrets.token_urlsafe(32))"
+JWT_SECRET=<generate-a-local-secret>
+JWT_EXPIRES_IN=90
+NODE_ENV=development
+
+#redis configuration
+REDIS_URL=redis://127.0.0.1:6379
+
+# Optional: provide your own compatible Sightengine account for moderation.
+SIGHTENGINE_USER=<sightengine-user>
+SIGHTENGINE_API_KEY=<sightengine-api-key>
+SIGHTENGINE_WORKFLOW=<sightengine-workflow>
+
+# Optional: provide your own compatible AWS S3 Lambda facade.
+AWS_S3_LAMBDA_BASE_URL=<s3-lambda-base-url>
