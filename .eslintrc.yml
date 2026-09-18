@@ -2,14 +2,12 @@
 
 env:
   es2023: true
-  browser: true
+  node: true
+  mocha: true
 
 extends:
   - eslint:recommended
 
 parserOptions:
   ecmaVersion: 2023
-  sourceType: module
-
-ignorePatterns:
-  - server.js
+  sourceType: script
