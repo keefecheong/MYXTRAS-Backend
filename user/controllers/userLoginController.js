@@ -1,10 +1,6 @@
 // controller functions to handle user login
 
-const {
-  User,
-  USER_TERMINATED_MSG,
-  USER_SUSPENDED_MSG,
-} = require("../models/user.js");
+const { User } = require("../models/user.js");
 const { setJWT } = require("../utils/setJWT.js");
 const bcrypt = require("bcryptjs");
 

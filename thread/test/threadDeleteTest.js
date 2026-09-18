@@ -44,7 +44,7 @@ let mainSuite =
         userIds,
         threadCount,
         commentCount,
-      ).catch((error) => console.log(error));
+      ).catch((error) => console.error(error));
 
       const forumIds = addForumsResult.forumData.map((forum) => forum._id);
       const threads = addForumsResult.threadData;

@@ -78,7 +78,7 @@ messageSchema.post("save", async function (doc, next) {
 
   Chat.findByIdAndUpdate(doc.chat_id, {
     last_message_timestamp: doc.creation_time,
-  }).catch((error) => console.log(error));
+  }).catch((error) => console.error(error));
 
   next();
 });
@@ -95,7 +95,7 @@ messageSchema.post("findOneAndDelete", function (doc, next) {
 
     next();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 });
 

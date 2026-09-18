@@ -227,6 +227,7 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
 
       // delete message
       case REPORT_TARGET_TYPE_MESSAGE:
+        {
         promises.push(deleteMessageUtil(req.params.messageId));
 
         warning.content = res.message.content;
@@ -238,6 +239,7 @@ async function reportSuccess(req, res, type, reportTargetId, userAction) {
         }
 
         break;
+        }
 
       default:
         break;

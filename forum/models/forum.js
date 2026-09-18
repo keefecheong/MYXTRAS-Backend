@@ -113,7 +113,9 @@ forumSchema.statics.cleanUpOnDeleteForum = async function (forumId) {
 
 // on delete automatically clean up threads associated with the forum if any
 forumSchema.post("findOneAndDelete", async function (doc, next) {
-  this.model.cleanUpOnDeleteForum(doc._id).catch((error) => console.log(error));
+  this.model
+    .cleanUpOnDeleteForum(doc._id)
+    .catch((error) => console.error(error));
 
   next();
 });

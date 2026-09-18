@@ -1,8 +1,8 @@
 name: Lint
 
-on: 
+on:
   push:
-    branches: [ main ]
+    branches: [ main, polish ]
 
 jobs: # list of things to do
   linting:
@@ -10,12 +10,12 @@ jobs: # list of things to do
     runs-on: ubuntu-latest # on which machine to run
     steps: # list of steps
       - name: Install NodeJS
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
       - name: Code Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: npm ci

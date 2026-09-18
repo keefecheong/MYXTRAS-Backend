@@ -5,20 +5,16 @@ const { updateCachedUser } = require("../../user/cache/userUpdateCache.js");
 
 const saveDocAsync = require("../../utils/general/saveDocAsync.js");
 
-module.exports = async function updateUserTasks(
-  user,
-  taskTitle,
-  decreaseTaskCount,
-) {
+module.exports = async function updateUserTasks(user, taskTitle) {
   const targetTaskIndex = user.daily_missions.findIndex((task) =>
     task.title.startsWith(taskTitle),
   );
   if (targetTaskIndex == -1) return;
 
-  setLockedFalse = taskTitle != "Like 5 threads" ? true : false;
+  let setLockedFalse = taskTitle !== "Like 5 threads";
 
   // decrease remaining task count where appropriate
-  if ((taskTitle = "Like 5 threads")) {
+  if (taskTitle === "Like 5 threads") {
     const actualTaskTitle = user.daily_missions[targetTaskIndex].title;
     const openParenthesisIndex = actualTaskTitle.indexOf("(");
     const closeParenthesisIndex = actualTaskTitle.indexOf(")");

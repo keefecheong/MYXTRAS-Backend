@@ -72,7 +72,7 @@ commentSchema.pre("save", function (next) {
   }
 
   updateParentCommentCount(this.parent_model, this.parent_id, true).catch(
-    (error) => console.log(error),
+    (error) => console.error(error),
   );
 
   next();
@@ -86,7 +86,7 @@ commentSchema.post("insertMany", function (docs, next) {
     true,
     false,
     docs.length,
-  ).catch((error) => console.log(error));
+  ).catch((error) => console.error(error));
 
   next();
 });
@@ -94,7 +94,7 @@ commentSchema.post("insertMany", function (docs, next) {
 // automatically decrement parent object's comment_count by 1 on delete
 commentSchema.post("findOneAndDelete", function (doc, next) {
   updateParentCommentCount(doc.parent_model, doc.parent_id, false).catch(
-    (error) => console.log(error),
+    (error) => console.error(error),
   );
 
   next();

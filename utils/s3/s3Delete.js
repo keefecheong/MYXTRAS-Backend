@@ -9,7 +9,7 @@ function deleteFiles(fileLinks) {
     headers: {
       "Content-Type": "application/json",
     },
-  }).catch((err) => console.log(err));
+  }).catch((err) => console.error(err));
 }
 
 module.exports = {

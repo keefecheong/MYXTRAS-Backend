@@ -104,7 +104,7 @@ async function updateEvent(req, res) {
     // upload new event banner if exists
     if (req.body.bannerUnchanged != "true") {
       const uploadSuccessful = await uploadImages(
-        [req.files[index]],
+        [req.files[0]],
         newImageLinks,
         event._id,
         UPLOAD_TYPE_EVENT,

@@ -213,7 +213,7 @@ function handleDeleteMessage(data, socket, connections) {
 
   // update database
   Message.findByIdAndDelete(data.message._id).catch((error) =>
-    console.log(error),
+    console.error(error),
   );
 }
 

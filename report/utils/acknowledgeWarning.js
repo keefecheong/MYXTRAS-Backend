@@ -19,5 +19,5 @@ module.exports = function acknowledgeWarning(user) {
   Promise.all([
     updateCachedUser({ warnings: targetUser.warnings }, targetUser._id, true),
     targetUser.save(),
-  ]).catch((error) => console.log(error));
+  ]).catch((error) => console.error(error));
 };

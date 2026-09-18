@@ -7,8 +7,6 @@ const returnServerErrorReq = require("../../utils/returnReq/returnServerErrorReq
 const { updateCachedUser } = require("../../user/cache/userUpdateCache.js");
 const saveDocAsync = require("../../utils/general/saveDocAsync.js");
 
-const missions = require("../utils/config.json");
-
 const rewards = [50, 100, 100, 100, 150, 200, 500];
 
 async function getCheckInData(req, res) {

@@ -8,7 +8,7 @@ module.exports = async function moderateText(text) {
     return [];
   }
 
-  data = new FormData();
+  const data = new FormData();
   data.append("text", text);
   data.append("lang", "en");
   data.append("mode", "ml");

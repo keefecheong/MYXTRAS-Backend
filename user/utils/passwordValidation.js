@@ -17,7 +17,7 @@ function passwordRequirements(password) {
   if (password.length > 14) {
     this.passwordStrength++;
   }
-  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
     this.passwordStrength++;
   }
   // checks for 3 consecutive characters
@@ -50,7 +50,7 @@ function passwordRequirements(password) {
 function isPasswordSingleType(password) {
   const lowercaseRegex = /^[a-z]+$/;
   const uppercaseRegex = /^[A-Z]+$/;
-  const symbolRegex = /^[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/;
+  const symbolRegex = /^[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]+$/;
   const numberRegex = /^[0-9]+$/;
   if (
     lowercaseRegex.test(password) ||

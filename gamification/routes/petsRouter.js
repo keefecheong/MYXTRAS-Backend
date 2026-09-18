@@ -8,7 +8,6 @@ const petsRouter = express.Router();
 const { selectPet } = require("../controllers/petsController.js");
 
 // checkin
-// petsRouter.get('/', getMissions);
 petsRouter.post("/:pet", selectPet);
 
 module.exports = petsRouter;

@@ -37,8 +37,10 @@ async function search(req, res, type) {
     // check the type of query and execute the corresponding promise(s) for results
     switch (type) {
       case "all":
-        const [users, forums] = await Promise.all([userPromise, forumPromise]);
-        results = [...users, ...forums].slice(0, 6);
+        {
+          const [users, forums] = await Promise.all([userPromise, forumPromise]);
+          results = [...users, ...forums].slice(0, 6);
+        }
         break;
       case "user":
         results = await userPromise;

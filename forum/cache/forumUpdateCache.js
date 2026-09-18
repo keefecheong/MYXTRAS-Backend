@@ -59,7 +59,7 @@ async function updateCachedForum(updatedValues, forumId, creatorId) {
 
   // add promise for each updated key/value
   for (const updatedKey in updatedValues) {
-    if (updatedValues.hasOwnProperty(updatedKey)) {
+    if (Object.prototype.hasOwnProperty.call(updatedValues, updatedKey)) {
       const updatedValue = updatedValues[updatedKey];
 
       promises.push(

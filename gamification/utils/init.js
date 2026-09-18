@@ -29,7 +29,7 @@ async function resetDailyMissions() {
     const users = await User.find({});
     const missions = Object.keys(tasks.missions);
 
-    users.forEach(async (targetUser) => {
+    await Promise.all(users.map(async (targetUser) => {
       const user = new User(targetUser);
       user.isNew = false;
 
@@ -54,12 +54,12 @@ async function resetDailyMissions() {
       const updateCachedResult = await updateCachedUser(
         updatedValues,
         user._id,
-        true
+        true,
       );
 
       // update database asynchronously if cache is updated successfully and synchronously otherwise
       await saveDocAsync(user, updateCachedResult);
-    });
+    }));
 
     console.log("Daily missions reset successfully");
   } catch (error) {
@@ -67,24 +67,6 @@ async function resetDailyMissions() {
   }
 }
 
-const checkDateAndReset = () => {
-  // Get the current date
-  const currentDate = new Date();
-  // Check if the date has changed
-  if (currentDate.getDate() !== checkDateAndReset.lastDate) {
-    // Call the resetDailyMissions function
-    resetDailyMissions();
-    // Update the lastDate to the current date
-    checkDateAndReset.lastDate = currentDate.getDate();
-  }
-};
-// Initialize the lastDate to the current date
-checkDateAndReset.lastDate = new Date().getDate();
-
-// Checks if new day has occured
-//setInterval(checkDateAndReset, 1000 * 60 * 60); // 1 hr
-
 cron.schedule("0 0 * * *", async () => {
-  checkDateAndReset();
   await resetDailyMissions();
 });

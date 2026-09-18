@@ -4,14 +4,14 @@
   "description": "Back end repo for MYXTRAS",
   "main": "server.js",
   "scripts": {
-    "prod": "set NODE_ENV=production& pm2 start server.js",
-    "dev": "set NODE_ENV=development& nodemon server.js",
-    "test": "set NODE_ENV=test& mocha --reporter-options fullTrace=true --slow 0",
+    "prod": "cross-env NODE_ENV=production pm2 start server.js",
+    "dev": "cross-env NODE_ENV=development nodemon server.js",
+    "test": "cross-env NODE_ENV=test mocha --reporter-options fullTrace=true --slow 0",
+    "test:integration": "npm test -- admin/test/userTerminateTest.js && npm test -- chat/test/populateChats.js && npm test -- chat/test/populateMessages.js && npm test -- comment/test/populateComments.js && npm test -- forum/test/forumDeleteTest.js && npm test -- post/test/postDeleteTest.js && npm test -- thread/test/threadDeleteTest.js && npm test -- user/test/userBlockTest.js",
     "lint:ls": "ls-lint",
     "lint:editorconfig": "editorconfig-checker",
-    "lint:css": "stylelint *.css",
-    "lint:js": "eslint ./**/*.js",
-    "lint": "npm run lint:ls && npm run lint:editorconfig"
+    "lint:js": "eslint . --ext .js",
+    "lint": "npm run lint:js && npm run lint:ls"
   },
   "repository": {
     "type": "git",
@@ -23,9 +23,13 @@
     "url": "https://github.com/kc-np/MYXTRAS-Backend/issues"
   },
   "homepage": "https://github.com/kc-np/MYXTRAS-Backend#readme",
+  "engines": {
+    "node": "18.x"
+  },
   "devDependencies": {
     "@ls-lint/ls-lint": "2.0.1",
     "chai": "^4.3.7",
+    "cross-env": "^7.0.3",
     "editorconfig-checker": "5.1.1",
     "eslint": "8.47.0",
     "mocha": "^10.2.0",
@@ -45,7 +49,6 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.1.0",
     "multer": "^1.4.5-lts.1",
-    "node": "^20.1.0",
     "node-cron": "^3.0.2",
     "pm2": "^5.3.0",
     "redis": "^4.6.7",

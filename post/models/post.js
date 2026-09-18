@@ -161,7 +161,7 @@ postSchema.statics.cleanUpOnDeletePost = function (
 postSchema.post("findOneAndDelete", async function (doc, next) {
   this.model
     .cleanUpOnDeletePost(doc._id, doc.content_links, false)
-    .catch((error) => console.log(error));
+    .catch((error) => console.error(error));
 
   next();
 });
