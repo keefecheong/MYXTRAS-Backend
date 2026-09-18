@@ -38,4 +38,3 @@ Recommendations are divided into:
 
 Production hardening, deployment work, feature additions, redesigns, and broad
 dependency modernization are intentionally excluded.
-

@@ -138,4 +138,3 @@ The create-event route is authenticated but does not currently request the
 admin-only branch of the auth middleware. The polish pass should verify intent
 against the frontend and either document this accurately or apply a narrowly
 scoped authorization correction.
-
