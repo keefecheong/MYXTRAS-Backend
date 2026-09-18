@@ -1,0 +1,76 @@
+services:
+  db:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' | grep 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+
+  redis:
+    image: redis/redis-stack-server:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./cache/redis.conf:/redis-stack.conf:ro
+    command: ["redis-stack-server", "/redis-stack.conf"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-3124}:3124"
+    environment:
+      DATABASE_URL: mongodb://db:27017/myxtras
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      FRONTEND_SERVER_URL: ${FRONTEND_SERVER_URL:-http://127.0.0.1:3123}
+      JWT_SECRET: ${JWT_SECRET:-local-development-only-change-me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-90}
+      NODE_ENV: ${NODE_ENV:-development}
+      SIGHTENGINE_USER: ${SIGHTENGINE_USER:-}
+      SIGHTENGINE_API_KEY: ${SIGHTENGINE_API_KEY:-}
+      SIGHTENGINE_WORKFLOW: ${SIGHTENGINE_WORKFLOW:-}
+      AWS_S3_LAMBDA_BASE_URL: ${AWS_S3_LAMBDA_BASE_URL:-}
+    init: true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('net').connect(3000, '127.0.0.1').on('connect', () => process.exit(0)).on('error', () => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  mongodb-data:
+  redis-data:

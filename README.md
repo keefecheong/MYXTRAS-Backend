@@ -23,6 +23,29 @@ implemented project.
 Prerequisites: Node.js 18, MongoDB 6.0 or a compatible MongoDB connection,
 Docker with Redis Stack, and Git.
 
+### Docker Compose
+
+The included Compose file starts the backend, MongoDB, and Redis Stack with
+RedisJSON enabled:
+
+```sh
+cp env_template .env
+# Set JWT_SECRET and any external-service values in .env.
+docker compose up --build
+```
+
+The API is then available at `http://127.0.0.1:3000`. If port 3000 is already
+in use, choose another host port without changing the container port:
+
+```sh
+BACKEND_PORT=3124 docker compose up --build
+```
+
+Inside Compose, the backend reaches MongoDB at `db:27017` and Redis at
+`redis:6379`; these are already configured in `docker-compose.yml`. Stop the
+services with `docker compose down`. Named volumes preserve database and cache
+data between restarts.
+
 1. Install dependencies:
 
    ```sh
