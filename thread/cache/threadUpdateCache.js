@@ -51,7 +51,7 @@ async function updateCachedThread(
 
   // add promise for each updated key/value
   for (const updatedKey in updatedValues) {
-    if (updatedValues.hasOwnProperty(updatedKey)) {
+    if (Object.prototype.hasOwnProperty.call(updatedValues, updatedKey)) {
       promises.push(
         redisClient.json.set(
           forumThreadKey,

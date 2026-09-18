@@ -105,5 +105,5 @@ module.exports = async function seedData() {
 
   await User.insertMany(newUsers)
     .then(() => console.log("Users seeded successfully"))
-    .catch((error) => console.log(error));
+    .catch((error) => console.error(error));
 };

@@ -5,8 +5,6 @@ const Forum = require("../models/forum.js");
 const redisClient = require("../../cache/redis.js");
 const {
   getForumKey,
-  getCreatedForumKey,
-  getForumIdPath,
 } = require("../cache/forumCache.js");
 
 const sendMockRequest = require("../../utils/test/sendMockRequest.js");

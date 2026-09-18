@@ -7,7 +7,6 @@ const forumSpecificRouter = express.Router({ mergeParams: true });
 const subscribeRouter = require("./forumSubscribeRouter.js");
 
 // get middleware
-const { getForum } = require("../middleware/getForumMiddleware.js");
 const {
   multerConfig,
   multerErrorHandler,

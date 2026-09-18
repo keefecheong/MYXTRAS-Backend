@@ -47,7 +47,7 @@ let mainSuite = describe("DELETE /api/forums/:forumId", () => {
       userIds,
       threadCount,
       commentCount,
-    ).catch((error) => console.log(error));
+      ).catch((error) => console.error(error));
 
     const forums = addForumsResult.forumData;
     const forumIds = forums.map((forum) => forum._id);

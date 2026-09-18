@@ -29,12 +29,14 @@ function chatHandler(io) {
   // check if user is authenticated
   chatNamespace.use((socket, next) => {
     // pass to validateUserSocket middleware only if it is the first connection for the socket
-    const existingConnection = connections.some((connection) => {
-      connection.socketId.indexOf(socket.id) != -1;
-    });
+    const existingConnection = connections.some((connection) =>
+      connection.socketId.indexOf(socket.id) !== -1,
+    );
 
     if (!existingConnection) {
       validateUserSocket(socket, next);
+    } else {
+      next();
     }
   });
 

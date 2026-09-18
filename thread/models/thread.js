@@ -173,7 +173,7 @@ threadSchema.statics.cleanUpOnDeleteThread = function (
 threadSchema.post("findOneAndDelete", function (doc, next) {
   this.model
     .cleanUpOnDeleteThread(doc._id, doc.content_link, false)
-    .catch((error) => console.log(error));
+    .catch((error) => console.error(error));
 
   next();
 });

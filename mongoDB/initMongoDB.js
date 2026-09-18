@@ -11,7 +11,6 @@ const mongoose = require("mongoose");
     const memoryServer = await MongoMemoryServer.create();
 
     mongoose.connect(memoryServer.getUri());
-    console.log(memoryServer.getUri());
   }
   // otherwise connect to mongoDB URL specified in env
   else {

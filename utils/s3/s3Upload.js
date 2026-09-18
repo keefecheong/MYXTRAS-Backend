@@ -48,11 +48,6 @@ async function uploadFile(buffer, objId, name, type) {
   // upload file
   const uploadResult = await uploadFunction(buffer, prefix, name, type);
 
-  // delete files if upload unsuccessful
-  if (!uploadResult.success) {
-    deleteFiles(fileLink);
-  }
-
   // return file upload status and link
   return {
     successful: uploadResult.success,
@@ -107,7 +102,7 @@ async function uploadFunction(buffer, prefix, name, type) {
         });
       }
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.error(err));
 
   return { success, link };
 }
